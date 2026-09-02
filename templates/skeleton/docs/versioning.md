@@ -56,8 +56,8 @@ versão - comentário em português
 
 For example: `0.1.0 - estrutura inicial de documentação`.
 
-- The comment is **in Portuguese** — one of the three deliberate carve-outs to
-  the English rule.
+- The comment is **in Portuguese** — one of the only two deliberate carve-outs
+  to the English rule.
 - Descriptive enough to be found later with `git log --grep`. Explain the
   **why**, not only the what.
 - **Forbidden:** Conventional Commits prefixes — `feat:`, `fix:`, `chore:`,

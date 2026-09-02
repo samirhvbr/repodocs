@@ -53,8 +53,8 @@ versão - comentário em português
 
 For example: `1.0.0 - estrutura inicial de documentação do padrão da frota`.
 
-- The comment is **in Portuguese** — this is one of the three deliberate
-  carve-outs to the English rule ([conventions.md §8](conventions.md#8-language)).
+- The comment is **in Portuguese** — one of the only two deliberate carve-outs
+  to the English rule ([conventions.md §8](conventions.md#8-language)).
 - Descriptive enough to be found later with `git log --grep`. Explain the
   **why**, not only the what.
 - **Forbidden:** Conventional Commits prefixes — `feat:`, `fix:`, `chore:`,

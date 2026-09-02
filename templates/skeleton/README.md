@@ -44,5 +44,6 @@ change it.
 
 ## Language
 
-English for documentation and code comments. **Commit messages, end-user-facing
-strings and `LICENSE` stay Portuguese** — deliberate carve-outs, not oversights.
+English for documentation and code comments — and nothing bilingual. Two things
+stay Portuguese and only two: **commit messages** and **end-user-facing
+strings**. Both are deliberate carve-outs, not oversights.

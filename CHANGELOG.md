@@ -8,6 +8,40 @@ whoever does the work and whoever commits it.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 1.1.0 - nada bilingue: o LICENSE passa a ser o MIT em ingles puro
+
+Resposta do dono a medicao da `1.0.1`: *"nao, nada bilingue, so ingles, license
+e etc so ingles"*. A pergunta que estava na fila saiu respondida.
+
+**O que mudou.** O `LICENSE` deixa de ser PT-depois-EN e passa a ser o texto MIT
+em ingles, **byte-identico ao canonico** — o mesmo do `skill-LOOP`, que era o
+controle da medicao e que o GitHub detecta como `MIT License`. O
+`templates/skeleton/LICENSE` acompanha, com `<YEAR>`/`<OWNER>`.
+
+**O que isso custa, dito de frente.** O `LICENSE` deste repo **nao e mais
+byte-identico aos catorze da frota** — ele e byte-identico ao MIT canonico. A
+divergencia esta na direcao certa e fecha substituindo os outros, nao revertendo
+aqui. Entrou na fila junto com o retrofit da norma.
+
+**A regra de idioma encolheu de tres excecoes para duas.** Ficam em portugues
+so a **mensagem de commit** e as **strings voltadas ao usuario final**. O
+`LICENSE` saiu da lista, e o par `README.md`/`README_br.md` fica explicitamente
+recusado pelo mesmo motivo que uma norma copiada: dois documentos dizendo a
+mesma coisa divergem, e um deles fica errado em silencio — o par do
+BLUE3-INTRANET esta em 374 linhas contra 259.
+
+**Onde ficou registrado.** [ADR-010](docs/decisions.md) e a decisao nova;
+supera a clausula bilingue do ADR-006 (que mantem o resto: nome sem extensao,
+MIT, titular, e a regra de o NOTICE nunca contradizer o LICENSE) e revisa a
+lista de excecoes do ADR-005. A norma em `docs/conventions.md` §8, os gemeos
+`CLAUDE.md`/`AGENTS.md`, os dois `README.md`, os dois `versioning.md` e o
+`docs/README.md` foram corrigidos na mesma passada — documento que envelhece em
+silencio e pior que documento ausente.
+
+**A fila perdeu uma linha.** O item *"vale o LICENSE bilingue?"* foi **apagado**
+de `.continue/README.md`, nao marcado como feito: item concluido sai da fila, e
+o registro permanente e este arquivo. Bump **Y** porque houve ADR novo.
+
 ## 1.0.1 - o LICENSE bilingue custa o selo MIT do GitHub, medido
 
 Um push é o único jeito de medir o que o GitHub faz com um `LICENSE`, e a

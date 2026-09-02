@@ -106,30 +106,37 @@ repository that goes to GitHub is written in English. Nothing is rewritten
 merely because of this rule: an old Portuguese document stays Portuguese until
 it is touched again.
 
-**Three carve-outs stay Portuguese:** commit messages (ADR-003), end-user-facing
-strings (product i18n for a Brazilian audience), and `LICENSE` (ADR-006).
+**Two carve-outs stay Portuguese:** commit messages (ADR-003) and
+end-user-facing strings (product i18n for a Brazilian audience). Revised by
+[ADR-010](#adr-010--nothing-bilingual-license-is-the-plain-english-mit-text),
+which removed the third one.
 
 **Consequences.** For a transition period a repository holds documents in both
-languages. That is expected and is not a defect. Some repos already run the
-bilingual `README.md` + `README_br.md` pair; that pair is allowed, and both
-halves must be kept in sync — BLUE3-INTRANET's drifted to 374 lines against 259,
-which is the failure mode to avoid.
+languages. That is expected and is not a defect — what is not allowed is one
+*document* in two languages, whether inside a single file or as a
+`README.md` + `README_br.md` pair (ADR-010).
 
 ---
 
-## ADR-006 — `LICENSE` and `NOTICE` without extension; MIT, bilingual
+## ADR-006 — `LICENSE` and `NOTICE` without extension; MIT
 
-**Status:** `ACCEPTED` · 02/09/2026
+**Status:** `ACCEPTED` · 02/09/2026 · **The bilingual half is `SUPERSEDED` by
+[ADR-010](#adr-010--nothing-bilingual-license-is-the-plain-english-mit-text)
+(02/09/2026).** The extensionless naming, the MIT choice, the copyright holder
+and the NOTICE-agrees-with-LICENSE rule all stand.
 
 **Context.** The fleet carries 41 `LICENSE` files against 1 `LICENSE.md`, and 11
 `NOTICE` against zero `NOTICE.md`. GitHub's detector recognises both spellings,
 so the choice is convention, not capability. Fourteen repositories share a
 byte-identical MIT text presented bilingually PT-then-EN.
 
-**Decision.** `LICENSE` and `NOTICE`, no extension. MIT, bilingual,
-`Copyright (c) 2026 Samir Hanna Verza`, byte-identical to the fleet's text.
-**`NOTICE` must never contradict `LICENSE`** about the license or the copyright
-holder.
+**Decision.** `LICENSE` and `NOTICE`, no extension. MIT,
+`Copyright (c) 2026 Samir Hanna Verza`. **`NOTICE` must never contradict
+`LICENSE`** about the license or the copyright holder.
+
+*(As originally written this ADR also specified the bilingual PT-then-EN
+presentation, to stay byte-identical to the fleet's fourteen copies. ADR-010
+reversed that part.)*
 
 **Measured cost (02/09/2026).** GitHub's license detector reports `Other`, not
 `MIT License`, for every repository carrying the bilingual text — this one,
@@ -137,17 +144,13 @@ SHVIA-WEB, SHVIA-SITE, BLUE3-AI-LOGIN. Control: `skill-LOOP`, which carries the
 plain English MIT, is detected as `MIT License`. The detector compares the whole
 file against a template and the Portuguese half drops the similarity below its
 threshold. The license *is* MIT regardless; what is lost is the sidebar badge and
-API-level detectability. The trade-off was accepted deliberately in favour of
-fleet-identical license files; it is recorded in
-[`.continue/README.md` §3](../.continue/README.md) as an open decision, and
-reversing it would revise this ADR.
+API-level detectability. **This measurement is what ADR-010 acted on**, the same
+day.
 
 **Consequences.** Settles the live contradiction in SHVIA-WEB, whose `LICENSE`
 says MIT under a personal copyright while its `NOTICE` says
 *"Copyright (c) Blue3. Proprietary software"*. Those cannot both be true; this
-repository's `NOTICE` agrees with its `LICENSE`. The bilingual `LICENSE` is a
-deliberate carve-out to ADR-005 — legal text, and diverging one repository for a
-style reason would make the fleet's licenses non-identical.
+repository's `NOTICE` agrees with its `LICENSE`. Those cannot both be true.
 
 ---
 
@@ -207,3 +210,44 @@ people to ignore CI, and an ignored check is worse than an absent one. If a
 docs-lint is ever written for this fleet, it enters as a `pre-commit` hook first
 and a workflow second — the EOP topology, where each of the three hooks exists
 because the other two cannot reach its moment.
+
+---
+
+## ADR-010 — nothing bilingual; `LICENSE` is the plain English MIT text
+
+**Status:** `ACCEPTED` · 02/09/2026 · Supersedes the bilingual clause of
+[ADR-006](#adr-006--license-and-notice-without-extension-mit) and revises the
+carve-out list of [ADR-005](#adr-005--documentation-in-english-from-02092026)
+
+**Context.** ADR-006 kept `LICENSE` bilingual — Portuguese text, then English —
+so that the file would stay byte-identical across the fourteen repositories that
+already carried it. The measurement recorded in ADR-006 showed what that costs:
+GitHub reports `licenseInfo: Other`, not `MIT License`, for every one of them,
+because its detector compares the whole file against a template and the
+Portuguese half drops the similarity below the threshold. The control was
+`skill-LOOP`, whose plain English MIT **is** detected.
+
+The owner's decision, on being shown the measurement: **no bilingual anything.**
+
+**Decision.** `LICENSE` carries the plain English MIT text, byte-identical to
+the canonical one. No PT/EN presentation in a single file, and no translated
+companion — a `README_br.md` beside a `README.md` is not the pattern either.
+
+The English documentation rule (ADR-005) now has **two** carve-outs, not three:
+commit messages and end-user-facing strings. `LICENSE` is no longer one.
+
+**Consequences.** GitHub detects the license again, which is the point — the
+sidebar badge and API-level detectability come back. The cost is that this
+repository's `LICENSE` is **no longer byte-identical to the fleet's fourteen
+other copies**; it is byte-identical to the canonical MIT instead. That
+divergence is the correct direction and is expected to be closed by replacing
+the bilingual copies, not by reverting this.
+
+Retrofitting the English `LICENSE` into the sibling repositories is part of the
+same pass as [ADR-001](#adr-001--repodocs-is-the-fleets-documentation-standard);
+it has not been done, and it is the owner's to schedule.
+
+A translated pair is rejected for the same reason a copied norm is: two
+documents saying the same thing drift, and one of them becomes wrong in silence.
+BLUE3-INTRANET's `README.md`/`README_br.md` pair is the worked example, at 374
+lines against 259.

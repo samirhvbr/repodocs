@@ -99,12 +99,14 @@ reason.
 merely because of the rule: an old Portuguese document stays Portuguese until it
 is touched again.
 
-**Three carve-outs stay Portuguese** — do not "fix" them:
+**Two carve-outs stay Portuguese** — do not "fix" them:
 
 - **Commit messages** — `versão - comentário em português`.
 - **End-user-facing strings** — UI text, transactional email, product copy. That
   is product i18n for a Brazilian audience, not technical documentation.
-- **`LICENSE`** — bilingual PT/EN, byte-identical across the fleet.
+
+**Nothing else, and nothing bilingual** — `LICENSE` is the plain English MIT
+text, and a translated `README_br.md` pair is not the pattern.
 
 Code identifiers are English, and always were.
 

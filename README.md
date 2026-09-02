@@ -16,7 +16,7 @@ source; everything else here either enforces it or is an example of it.
 The standard already existed. It just had to be inferred by opening sixteen
 repositories and noticing what they had in common: `LICENSE` without an
 extension in 41 of them against one `LICENSE.md`, a bare `version.md` in 63
-against one `VERSION`, the same bilingual MIT text byte-identical in 14, the
+against one `VERSION`, the same MIT text byte-identical in 14, the
 same `versão - comentário em português` commit rule written out separately in
 five.
 
@@ -44,7 +44,7 @@ opens another. It lives here now ([ADR-001](docs/decisions.md)).
 | [AGENTS.md](AGENTS.md) | The same instructions, byte-identical below the H1 | Other agent tooling (`agents.md` standard) |
 | [SECURITY.md](SECURITY.md) | The reporting path. Thin, and points at the source | GitHub, whoever reports a vulnerability |
 | [CHANGELOG.md](CHANGELOG.md) | Newest first. **Each `##` heading is the commit subject** | Humans, the commit automation |
-| [LICENSE](LICENSE) | MIT, bilingual PT/EN, `Copyright (c) 2026 Samir Hanna Verza` | GitHub, lawyers |
+| [LICENSE](LICENSE) | MIT, English, `Copyright (c) 2026 Samir Hanna Verza` | GitHub, lawyers |
 | [NOTICE](NOTICE) | Third-party attribution. **Must never contradict `LICENSE`** | GitHub, lawyers |
 | [.gitignore](.gitignore) | Everything is versioned; the only exception is a secret | git |
 
@@ -99,6 +99,7 @@ commit with the entry's heading as the subject —
 ## Language
 
 English for everything new, and for every edit to an existing document (rule in
-force 02/09/2026). **Commit messages, end-user-facing strings and `LICENSE` stay
-Portuguese** — deliberate carve-outs, not oversights. See
+force 02/09/2026). **Nothing is bilingual** — not `LICENSE`, not a `README_br.md`
+pair. Two things stay Portuguese and only two: **commit messages** and
+**end-user-facing strings**. Both are deliberate carve-outs, not oversights. See
 [docs/conventions.md §8](docs/conventions.md#8-language).

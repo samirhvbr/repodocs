@@ -227,13 +227,17 @@ Nothing gets rewritten just because of this rule. An old Portuguese document
 stays Portuguese until it is touched again — at which point the edit (or the
 whole file, when practical) comes out in English.
 
-**Three carve-outs, stated here so nobody re-litigates them:**
+**Two carve-outs, stated here so nobody re-litigates them:**
 
 | Stays Portuguese | Why |
 |---|---|
 | **Commit messages** — `versão - comentário em português` | The per-repo commit convention is unchanged. See [versioning.md](versioning.md). |
 | **End-user-facing strings** — UI text, transactional email, product copy | That is product i18n for a Brazilian audience, not technical documentation. |
-| **`LICENSE`** — bilingual PT/EN | Legal text, byte-identical across the fleet. Diverging one repo for a style reason would make the licenses non-identical. |
+
+**Nothing else, and nothing bilingual.** `LICENSE` is the plain English MIT text
+— not a PT/EN presentation ([ADR-010](decisions.md)). A `README_br.md` beside a
+`README.md` is not the pattern either: a translated pair is two documents that
+drift, and BLUE3-INTRANET's pair proves it, at 374 lines against 259.
 
 Code identifiers — class, method, variable and column names — are English, and
 always were.

@@ -12,7 +12,7 @@ This index is curated, not exhaustive.
 
 | Document | What it answers |
 |---|---|
-| [conventions.md](conventions.md) | **The norm, and the reason this repository exists.** Queue vs. record vs. history · filenames carry state · the status vocabulary · a document is a release gate · plan-`.md` vs. diagnostic-`.sh` · measurement traps already paid for · the root file standard · the language rule and its three carve-outs. **Single source for the whole fleet.** |
+| [conventions.md](conventions.md) | **The norm, and the reason this repository exists.** Queue vs. record vs. history · filenames carry state · the status vocabulary · a document is a release gate · plan-`.md` vs. diagnostic-`.sh` · measurement traps already paid for · the root file standard · the language rule and its two carve-outs. **Single source for the whole fleet.** |
 | [versioning.md](versioning.md) | How a version is set and a commit is written. `version.md` is the sole authority; the `X`/`Y`/`Z` criteria; `versão - comentário em português`; why the CHANGELOG heading *is* the commit message; what the two git hooks check and why each one lives where it does. |
 | [decisions.md](decisions.md) | **ADRs 001–009** — the chronological record of what was decided here and why, so it is not re-litigated. |
 | [security.md](security.md) | The normative security document. Threat model, the inheritable vulnerability catalogue (§4), secrets and rotation, incident response, the pre-commit checklist. In a conflict with any other document, it wins. |

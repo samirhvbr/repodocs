@@ -1,6 +1,6 @@
 # `.continue/` — the queue
 
-> **Status:** `ACTIVE` · Last reviewed 02/09/2026, repository at `1.0.0`
+> **Status:** `ACTIVE` · Last reviewed 02/09/2026, repository at `1.1.0`
 
 Work in progress: drafts, plans under discussion, notes on things still being
 built, briefings for picking the work back up later.
@@ -36,11 +36,14 @@ One item is genuinely open, and it is not work here:
 
 | Item | State | Who unblocks it |
 |---|---|---|
-| **Retrofit pass into the sibling repositories** — turn `BLUE3-INTRANET/docs/CONVENCAO-DOCUMENTACAO.md` into a pointer to [`../docs/conventions.md`](../docs/conventions.md), and add the pointer to each repo's own `.continue/README.md` | **Pending — not started.** Decided in [ADR-001](../docs/decisions.md), deliberately out of scope for `1.0.0`: no other repository was touched | **The owner**, to schedule. It edits ~16 repositories, each with its own version bump and commit |
+| **Retrofit pass into the sibling repositories** — turn `BLUE3-INTRANET/docs/CONVENCAO-DOCUMENTACAO.md` into a pointer to [`../docs/conventions.md`](../docs/conventions.md), add the pointer to each repo's own `.continue/README.md`, **and replace the bilingual `LICENSE` with the English MIT text** ([ADR-010](../docs/decisions.md)) | **Pending — not started.** Decided in [ADR-001](../docs/decisions.md) and [ADR-010](../docs/decisions.md), deliberately out of scope: no other repository has been touched | **The owner**, to schedule. It edits ~16 repositories, each with its own version bump and commit |
 
-⚠️ **Consequence while that item is open:** two copies of the norm exist. **This
-repository is the source.** If the two disagree, the copy in BLUE3-INTRANET is
-the stale one.
+⚠️ **Consequences while that item is open:** two copies of the norm exist —
+**this repository is the source**, and if the two disagree the copy in
+BLUE3-INTRANET is the stale one. And this repository's `LICENSE` is deliberately
+**no longer byte-identical to the fleet's**: it is the English MIT, the others
+are still bilingual. That divergence is the correct direction and closes by
+replacing them, not by reverting here.
 
 ## 2. Where things went
 
@@ -58,8 +61,12 @@ find it."*
 |---|---|---|
 | When to run the retrofit pass (§1) | The owner | It is scheduling, not design — the design is ADR-001 |
 | Whether `defaultMode` in `.claude/settings.json` stays `plan` for repositories created from the skeleton | The owner, per repository | The skeleton ships `plan` because it is the safe default to start from, not because every project must keep it. See [`../.claude/README.md`](../.claude/README.md) |
-| **Whether the bilingual `LICENSE` is worth the lost MIT badge** | The owner | **Measured 02/09/2026:** GitHub reports `Other`, not `MIT License`, for this repository and for SHVIA-WEB, SHVIA-SITE and BLUE3-AI-LOGIN. Control: `skill-LOOP`, which carries the plain English MIT, is detected as `MIT License`. GitHub's detector compares the whole file against a template, and the Portuguese half drops the similarity below its threshold. The license *is* MIT either way — what is lost is the sidebar badge and API-level detectability. The fix, if it is wanted, mirrors the `README.md`/`README_br.md` pattern the fleet already uses: plain English MIT in `LICENSE`, the Portuguese translation in a companion file. That would revise [ADR-006](../docs/decisions.md) |
 
-Neither of the first two blocks anything. The third is a live trade-off, not a
-defect: it was chosen deliberately, and the cost is now measured rather than
-assumed.
+Neither blocks anything. Nothing is waiting on an answer to continue.
+
+> **Left this section on 02/09/2026 (`1.1.0`):** *"is the bilingual `LICENSE`
+> worth the lost MIT badge?"* — answered **no**. `LICENSE` is now the plain
+> English MIT text and nothing in the fleet is bilingual any more
+> ([ADR-010](../docs/decisions.md)). The row is deleted rather than ticked off,
+> per §"a finished item leaves"; the permanent record is
+> [`../CHANGELOG.md`](../CHANGELOG.md).
