@@ -8,6 +8,32 @@ whoever does the work and whoever commits it.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 1.0.1 - o LICENSE bilingue custa o selo MIT do GitHub, medido
+
+Um push é o único jeito de medir o que o GitHub faz com um `LICENSE`, e a
+medição contradisse a expectativa.
+
+**O que foi medido.** Depois do push da `1.0.0`, `gh repo view` devolveu
+`licenseInfo: Other` — não `MIT License`. O mesmo vale para SHVIA-WEB,
+SHVIA-SITE e BLUE3-AI-LOGIN, os três que carregam o mesmo texto bilíngue.
+Controle: `skill-LOOP`, que carrega o MIT puro em inglês, é detectado como
+`MIT License`.
+
+**Por que.** O detector do GitHub compara o arquivo inteiro com um template de
+licença. A metade em português derruba a similaridade abaixo do limiar dele. A
+licença **é** MIT nos dois casos — o que se perde é o selo na barra lateral e a
+detectabilidade via API.
+
+**O que mudou aqui.** Nada no LICENSE: a escolha do bilíngue foi deliberada e
+segue valendo. O que mudou é que o custo dela está medido em vez de suposto —
+[ADR-006](docs/decisions.md) ganhou a seção do custo, e a decisão de manter ou
+inverter entrou na fila em [.continue/README.md §3](.continue/README.md) como
+chamada do dono. A inversão, se vier, espelha o par `README.md`/`README_br.md`
+que a frota já usa.
+
+**Também confirmado no mesmo push:** o `SECURITY.md` na raiz funcionou — o
+`securityPolicyUrl` do repositório passou a existir.
+
 ## 1.0.0 - estrutura inicial de documentação do padrão da frota
 
 The first real content of `repodocs`, which until now was one commit and an

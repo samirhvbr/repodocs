@@ -131,6 +131,17 @@ byte-identical MIT text presented bilingually PT-then-EN.
 **`NOTICE` must never contradict `LICENSE`** about the license or the copyright
 holder.
 
+**Measured cost (02/09/2026).** GitHub's license detector reports `Other`, not
+`MIT License`, for every repository carrying the bilingual text — this one,
+SHVIA-WEB, SHVIA-SITE, BLUE3-AI-LOGIN. Control: `skill-LOOP`, which carries the
+plain English MIT, is detected as `MIT License`. The detector compares the whole
+file against a template and the Portuguese half drops the similarity below its
+threshold. The license *is* MIT regardless; what is lost is the sidebar badge and
+API-level detectability. The trade-off was accepted deliberately in favour of
+fleet-identical license files; it is recorded in
+[`.continue/README.md` §3](../.continue/README.md) as an open decision, and
+reversing it would revise this ADR.
+
 **Consequences.** Settles the live contradiction in SHVIA-WEB, whose `LICENSE`
 says MIT under a personal copyright while its `NOTICE` says
 *"Copyright (c) Blue3. Proprietary software"*. Those cannot both be true; this

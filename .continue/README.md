@@ -58,5 +58,8 @@ find it."*
 |---|---|---|
 | When to run the retrofit pass (§1) | The owner | It is scheduling, not design — the design is ADR-001 |
 | Whether `defaultMode` in `.claude/settings.json` stays `plan` for repositories created from the skeleton | The owner, per repository | The skeleton ships `plan` because it is the safe default to start from, not because every project must keep it. See [`../.claude/README.md`](../.claude/README.md) |
+| **Whether the bilingual `LICENSE` is worth the lost MIT badge** | The owner | **Measured 02/09/2026:** GitHub reports `Other`, not `MIT License`, for this repository and for SHVIA-WEB, SHVIA-SITE and BLUE3-AI-LOGIN. Control: `skill-LOOP`, which carries the plain English MIT, is detected as `MIT License`. GitHub's detector compares the whole file against a template, and the Portuguese half drops the similarity below its threshold. The license *is* MIT either way — what is lost is the sidebar badge and API-level detectability. The fix, if it is wanted, mirrors the `README.md`/`README_br.md` pattern the fleet already uses: plain English MIT in `LICENSE`, the Portuguese translation in a companion file. That would revise [ADR-006](../docs/decisions.md) |
 
-Neither blocks anything. Nothing is waiting on an answer to continue.
+Neither of the first two blocks anything. The third is a live trade-off, not a
+defect: it was chosen deliberately, and the cost is now measured rather than
+assumed.
