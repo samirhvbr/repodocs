@@ -2,10 +2,16 @@
 
 > **Status:** `ACTIVE`
 
-[`skeleton/`](skeleton/) is the documentation structure a new repository starts
-from. Copying it and substituting the placeholders is the whole bootstrap; the
-step-by-step, including what genuinely needs a per-repo decision, is in
-[../docs/runbook.md](../docs/runbook.md).
+Two things live here, one for each direction a standard travels.
+
+[`skeleton/`](skeleton/) is the documentation structure a **new** repository
+starts from. Copying it and substituting the placeholders is the whole
+bootstrap; the step-by-step, including what genuinely needs a per-repo decision,
+is in [../docs/runbook.md](../docs/runbook.md).
+
+[`echo-blocks/`](echo-blocks/) is how a rule reaches the repositories that
+**already exist** — delimited blocks stamped into every `CLAUDE.md` and
+`AGENTS.md`, and regenerated in place when the rule changes.
 
 ```bash
 # from inside the new, empty repository
@@ -58,6 +64,33 @@ skeleton/
 ├── tools/git-hooks/       commit-msg · pre-push
 └── tools/release.sh       tag + GitHub Release for version.md
 ```
+
+## `echo-blocks/` — the blocks stamped across the fleet
+
+A rule that every repository must follow has two audiences that need it in two
+places: the norm needs one source, and the agent needs it in the file it
+actually reads. `echo-blocks/` is how both are satisfied without forking the
+text.
+
+Each file is one delimited block, `<!-- NAME:repodocs -->` … `<!-- /NAME -->`,
+carrying a link back to its source in `docs/`. It is copied verbatim into every
+repository's `CLAUDE.md` and `AGENTS.md`, and **regenerated** by replacing
+everything between the markers — which is what makes a fleet-wide correction one
+pass instead of an archaeology.
+
+| Block | Source | Says |
+|---|---|---|
+| [`COMMIT-RULE.md`](echo-blocks/COMMIT-RULE.md) | [`../docs/versioning.md`](../docs/versioning.md#who-commits-and-when) | The agent commits; nothing is finished until it is committed; one subject per commit; a large delivery is split into blocks ([ADR-016](../docs/decisions.md)) |
+
+`RELEASES-RULE` is the same shape and is in 113 files across the fleet, but it
+predates this folder and has no source file here yet. It gets one when it is
+next regenerated.
+
+**Editing a block is a fleet change, not a file change.** The block is the
+strongest instrument in this repository: it lands in every agent's context in
+every repository. Treat it the way `docs/conventions.md` is treated.
+
+---
 
 ## What is deliberately NOT in the skeleton
 
