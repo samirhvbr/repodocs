@@ -55,6 +55,30 @@ commit of its own.
 | **Y** | _e.g. a new main service, an API redesign, a compatibility break, a completed phase_ | When it lands |
 | **X** | Reserved — a stable release | Manual, owner's call |
 
+## Who commits, and when
+
+**The agent commits.** Not "leave the tree ready and something downstream
+packages it" — the agent runs `git commit`, and `git push`, as the last step of
+the work it was asked to do. There is no commit automation in this fleet; if the
+agent does not commit, nobody does.
+
+- **A delivery is not delivered until it is committed.** Do not report a task as
+  finished before the commit exists. "Done" means the work is in `git log`, not
+  that it is sitting uncommitted where only the current session can see it.
+- **One subject per commit.** The subject has to describe the whole commit
+  honestly — the moment it needs an "and" to be true, it is two commits.
+- **A large delivery is split into blocks**, grouped by subject, each small
+  enough to be described in one line and read on its own. They may share a
+  version: bump `version.md` in the first and repeat the number in the rest.
+  Splitting is the default for anything non-trivial, because the history is the
+  documentation of *how* the work was done.
+
+The test to run before committing: could someone reading `git log` alone, a year
+from now, say what happened, when, why, and at which version?
+
+Full text and the reasoning:
+[samirhvbr/repodocs `docs/versioning.md`](https://github.com/samirhvbr/repodocs/blob/master/docs/versioning.md#who-commits-and-when).
+
 ## Commit message
 
 **Mandatory format:**
@@ -132,10 +156,11 @@ first wins and the other is a no-op:
 
 - **`.github/workflows/release.yml`** — every push that touches `version.md`,
   whoever made it.
-- **The COMMITTER skill** — right after its own push succeeds, where the marker
-  is active and `release: true`.
+- **`tools/release.sh`** — run by hand, to close it now instead of waiting for
+  Actions, or to backfill.
 
-Neither ever *decides* a version: both copy the number already in `version.md`.
+Neither ever *decides* a version: both copy the number the agent already wrote
+into `version.md`.
 
 ### `tools/release.sh`
 

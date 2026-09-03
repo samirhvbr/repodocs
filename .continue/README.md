@@ -1,6 +1,6 @@
 # `.continue/` — the queue
 
-> **Status:** `ACTIVE` · Last reviewed 02/09/2026, repository at `1.1.0`
+> **Status:** `ACTIVE` · Last reviewed 03/09/2026, repository at `1.5.0`
 
 Work in progress: drafts, plans under discussion, notes on things still being
 built, briefings for picking the work back up later.
@@ -32,11 +32,19 @@ Nothing, in the sense of unfinished work **inside this repository**. Version
 `1.0.0` shipped the whole set the plan named — the root files, `docs/`,
 `.claude/`, the two hooks and `templates/skeleton/`.
 
-One item is genuinely open, and it is not work here:
+Two items are genuinely open, and neither is work inside this repository —
+both are passes over the sibling repositories:
 
 | Item | State | Who unblocks it |
 |---|---|---|
 | **Retrofit pass into the sibling repositories** — turn `BLUE3-INTRANET/docs/CONVENCAO-DOCUMENTACAO.md` into a pointer to [`../docs/conventions.md`](../docs/conventions.md), add the pointer to each repo's own `.continue/README.md`, **and replace the bilingual `LICENSE` with the English MIT text** ([ADR-010](../docs/decisions.md)) | **Pending — not started.** Decided in [ADR-001](../docs/decisions.md) and [ADR-010](../docs/decisions.md), deliberately out of scope: no other repository has been touched | **The owner**, to schedule. It edits ~16 repositories, each with its own version bump and commit |
+| **Stamp the `COMMIT-RULE` block into the fleet** — replace the now-false `PS — Commits: a skill COMMITTER cuida disso` block in every `CLAUDE.md`/`AGENTS.md` that carries it (42 files across ~35 repositories) with [`../templates/echo-blocks/COMMIT-RULE.md`](../templates/echo-blocks/COMMIT-RULE.md), and add the block to the agent files that never had a PS block | **Pending — decided, not started.** [ADR-016](../docs/decisions.md) is accepted and the block exists; this repository is the only one that carries it so far | **The owner**, to schedule. Each repository is its own version bump and commit, and the twins must stay byte-identical below the H1 |
+
+⚠️ **While `COMMIT-RULE` is not stamped, the fleet's agent files actively
+contradict this repository**: they still say *"commitar e pushar não é trabalho
+seu"* while the skill that was supposed to do it is `enabled: false` everywhere.
+An agent reading one of those files will not commit, and nothing downstream
+will either. That is the most expensive open item here.
 
 ⚠️ **Consequences while that item is open:** two copies of the norm exist —
 **this repository is the source**, and if the two disagree the copy in
