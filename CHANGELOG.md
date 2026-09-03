@@ -2,11 +2,69 @@
 
 Entries in the commit-message format (`version - short description in English`,
 see [docs/versioning.md](docs/versioning.md)), newest first. **Each `##` heading is
-literally the commit subject** — this file is the handoff artefact between
-whoever does the work and whoever commits it.
+literally the commit subject** — the entry is written before the commit, so the
+sentence that lands in `git log` is one that was weighed rather than improvised
+at `git commit` time.
 
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
+
+## 1.5.0 - the agent commits again, and nothing is finished until it is committed
+
+For a month the agents in this fleet did not commit. The COMMITTER skill existed
+to take that work off them: from 30/07/2026 a `.committer.yml` marker was the
+opt-in, a cron cycle read the changelog entry the agent had left behind, built
+the `X.Y.Z - description` subject from it, committed and pushed. The rollout put
+the marker in 43 repositories and a matching block into 42 `CLAUDE.md`/`AGENTS.md`
+files, and that block said it plainly: *"commitar e pushar não é trabalho seu"*.
+
+On 03/09/2026 the owner switched the skill off across the fleet — 35 markers
+flipped to `enabled: false`, and the sweep in `~/x/GIT/run.sh` now reports
+`no-op: kill-switch` for all 44 repositories it discovers.
+
+**Switching off the automation did not unwrite the delegation.** That is the
+defect this version closes. The instruction "do not commit" is still sitting in
+42 agent files; the cycle that was supposed to follow it no longer runs. An agent
+reading one of those files stops at a dirty working tree that nothing is
+watching — a state strictly worse than before the skill existed, because before
+it the agent at least knew the commit was its job.
+
+**[ADR-016](docs/decisions.md)** puts it back, and puts back more than was taken.
+The old rule was only *how* a commit is written; this one covers *who* writes it
+and *when*:
+
+- **The agent commits** — `git commit` and `git push` as the last step of the
+  work, with no automation downstream.
+- **A delivery is not delivered until it is committed.** No task is reported as
+  finished while it sits uncommitted. "Done" means it is in `git log`.
+- **One subject per commit.** When the description needs an "and" to be true, it
+  is two commits.
+- **A large delivery is split into blocks**, grouped by subject, sharing one
+  version — because the history is the documentation of *how* the work was done.
+
+The normative text is the new
+[`versioning.md` §"Who commits, and when"](docs/versioning.md#who-commits-and-when).
+Two passages there had gone stale on the same day and were corrected in this
+pass: the "Who creates it" table still listed COMMITTER as an owner of Releases,
+and `CHANGELOG.md`'s own header still called itself *"the handoff artefact
+between whoever does the work and whoever commits it"* — there is no handoff any
+more, the two are the same agent.
+
+**How it reaches the fleet is the part that was designed rather than written.**
+The rule ships as `templates/echo-blocks/COMMIT-RULE.md`, a delimited block in
+the shape `RELEASES-RULE` already uses in 113 files, and `templates/echo-blocks/`
+is new in this version for exactly that purpose. The reasoning is in the ADR: the
+COMMITTER rollout is itself the proof that per-repo wording does not survive a
+reversal — it put bespoke prose into 42 files, and when the decision behind it
+was undone there was no mechanical way to find and replace it. A named,
+delimited block can be regenerated in one pass.
+
+**What is done here and what is not.** repodocs carries the block, the golden
+rule, the release-gate line in `conventions.md` §4 and the skeleton, so every
+repository created from now on is born with the rule. The 42 files in the
+existing fleet still carry the false PS block; that pass is queued in
+`.continue/README.md` with a warning that it is the most expensive open item,
+because until it runs the fleet's agent instructions contradict this repository.
 
 ## 1.4.3 - correcting the activation claim in 1.4.2: the hooks are live here
 

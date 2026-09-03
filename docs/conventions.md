@@ -122,6 +122,10 @@ version:**
       commit body.
 - [ ] A finished item **left** `.continue/`.
 - [ ] A document made **stale by this delivery** was corrected in the same pass.
+- [ ] **The work is committed** — by the agent that did it, as the last step of
+      the task and before it is reported as finished, split into one commit per
+      subject when the delivery covered more than one
+      ([versioning.md](versioning.md#who-commits-and-when), [ADR-016](decisions.md)).
 - [ ] The **tag and the GitHub Release** for this version exist, **and the
       `Latest` badge is on it**. The bump and the Release are one act, not two —
       a version with no tag is a number in a commit message (`git diff` cannot

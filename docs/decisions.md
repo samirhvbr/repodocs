@@ -513,3 +513,76 @@ listed `branches: [master, main]`, which is not the same as "the default branch"
 no branch filter and the job checks `github.ref_name` against the repository's
 actual default branch. Whoever moves a repository to a non-standard branch
 checks that its `release.yml` is the current one.
+
+---
+
+## ADR-016 — the agent commits, and a delivery is not delivered until it is
+
+**Status:** `ACCEPTED` · 03/09/2026 · Extends
+[ADR-003](#adr-003--commit-format-xyz---description) from *how* a commit is
+written to *who* writes it and *when*. The decision it reverses was never an ADR
+here — it lived in the COMMITTER skill's own log, which is part of why it was
+this hard to find and undo.
+
+**Context.** Between 30/07/2026 and 03/09/2026 the agents in this fleet did not
+commit. The COMMITTER skill existed to take that work off them: a
+`.committer.yml` marker at a repository's root was the opt-in, a cron cycle read
+the changelog entry the agent had left behind, built the `X.Y.Z - description`
+subject from it, committed and pushed. The rollout put the marker in 43
+repositories and a matching block into 42 `CLAUDE.md`/`AGENTS.md` files, and
+that block said it plainly: *"commitar e pushar não é trabalho seu"*.
+
+On 03/09/2026 the owner switched the skill off across the fleet — 35 markers
+flipped to `enabled: false`, the sweep in `~/x/GIT/run.sh` now reporting `no-op:
+kill-switch` for every repository it finds. The reasons are recorded where they
+happened, per repository; the one that generalises is that automatic commits on
+`master` stopped composing with agents that open pull requests.
+
+That left a gap, and the gap is worse than what preceded the skill. The
+delegation was written into the agent instructions of 42 repositories; switching
+off the automation does not unwrite it. An agent reading those files still finds
+"do not commit", the cycle that was supposed to follow no longer runs, and the
+work stops in a dirty working tree that nothing is watching.
+
+**Decision.** **The agent commits.** As the last step of the work it was asked
+to do, in every repository of this fleet, with no automation downstream.
+
+Four clauses, all of them normative:
+
+1. **A delivery is not delivered until it is committed.** An agent does not
+   report a task as finished before the commit exists. "Done" means the work is
+   in `git log`, never that it is sitting uncommitted in a working tree.
+2. **Every commit obeys the versioning rules** already in force — subject
+   `X.Y.Z - description`, `version.md` bumped in the same commit, the
+   `CHANGELOG.md` heading *is* the subject, no Conventional Commits prefix, no
+   vague subject.
+3. **English (US)**, as [ADR-014](#adr-014--everything-in-a-repository-is-english-us-commit-messages-included)
+   already requires of every commit message.
+4. **One subject per commit, and a large delivery is split into blocks.** When a
+   description needs an "and" to be true, it is two commits. Splitting is the
+   default for anything non-trivial, because the history is the documentation of
+   how the work was done.
+
+The normative text is [`versioning.md` §"Who commits, and when"](versioning.md#who-commits-and-when).
+It reaches the fleet as the `COMMIT-RULE` marked echo in every `CLAUDE.md` and
+`AGENTS.md`, the same mechanism [ADR-011](#adr-011--every-version-gets-a-tag-named-after-it-and-a-published-release)
+uses for the Releases rule.
+
+**Why an echo block and not a line in each repository's own prose.** Because the
+COMMITTER rollout is the proof that the per-repo variant does not survive: it
+put bespoke wording into 42 files, and when the decision behind that wording was
+reversed there was no mechanical way to find and replace it. A delimited block
+with a named source can be regenerated across the fleet in one pass, and it
+carries the link back to the source so the next reader knows where to argue.
+
+**Consequences.** The `PS — Commits: a skill COMMITTER cuida disso` block in the
+fleet's agent files is now false and gets replaced by the `COMMIT-RULE` block in
+the same pass. The markers themselves stay: they are kill-switches holding the
+per-repository settings and the reasoning attached to them, and deleting them
+would throw away the record of why each repository was configured the way it
+was.
+
+The cost is that agents spend tokens on commit messages again, which is the
+expense COMMITTER was built to avoid. That trade was re-taken knowingly: the
+saving was real but it bought a history nobody could steer, and a delivery whose
+last step belonged to a cron job that ran up to 55 minutes later.

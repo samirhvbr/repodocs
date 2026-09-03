@@ -73,6 +73,61 @@ runtime capability is a `Y` in SHVIA-DESKTOP. **The slots and the discipline are
 the convention; the triggers are per-repo** and belong in that repo's
 `CLAUDE.md`.
 
+## Who commits, and when
+
+**The agent commits.** Not "the agent leaves the tree ready and something else
+picks it up" — the agent runs `git commit`, and `git push`, as the last step of
+the work it was asked to do.
+
+This has to be said out loud because for a month it was not true. The COMMITTER
+skill was built precisely to take commits off the agents: from 30/07/2026 a
+`.committer.yml` marker in a repository meant *"commitar e pushar não é trabalho
+seu"*, and a cron cycle packaged the commit out of the changelog entry the agent
+had left behind. On **03/09/2026 that skill was switched off in every repository
+of the fleet** — the markers stay behind as kill-switches and nothing acts on
+them any more. There is no automation waiting downstream. **If the agent does
+not commit, nobody does**, and the work exists only as a dirty working tree on
+one machine.
+
+### A delivery is not delivered until it is committed
+
+**Do not report a task as finished before the commit exists.** "Done",
+"delivered", "concluded" mean the work is in `git log` — not that it is sitting
+uncommitted where only the current session can see it. The commit is the last
+step *of the task*, not a follow-up for someone else.
+
+The failure this prevents is specific, and it is not hypothetical. A session
+ends saying "finished"; the next one opens the repository and finds a state that
+is neither the old version nor the delivered one. Work in flight is
+indistinguishable from work abandoned, and the changelog entry describing the
+delivery names a version that was never committed.
+
+### One subject per commit
+
+**A commit's subject has to describe the whole commit honestly.** The moment the
+description needs an "and" to be true, it is two commits.
+
+This is the same discipline that makes `git log --grep` worth using. A subject
+reading "several improvements" is not a short description of the change — it is
+an admission that the change has no single subject.
+
+### A large delivery is split into blocks
+
+**A complex task is committed as a series of commits grouped by subject**, each
+one small enough to be described in a single line and to be read on its own.
+
+They may share a version: bump `version.md` in the first and repeat the number
+in the rest (see above — two commits carrying one version is expected, not a
+mistake). **Splitting is the default** for anything non-trivial, not a measure
+reserved for the enormous. The commit history is the documentation of *how* the
+work was done, and one commit touching six unrelated subjects documents none of
+them.
+
+The test to run before committing: **could someone reading `git log` alone — a
+year from now, without the conversation that produced the work — say what
+happened, when, why, and at which version?** If not, the commit is too big or
+its subject too vague, and both are fixed the same way.
+
 ## Commit message
 
 **Mandatory format:**
@@ -111,9 +166,11 @@ that lands in git:
 <narrative body: what changed, why, and what it measured>
 ```
 
-This is not decoration. It is what lets a commit automation build the message
-without inventing one, and it means the changelog entry — not the commit — is
-the handoff artefact between an agent and whoever commits.
+This is not decoration. Writing the entry first is what stops the subject from
+being invented at `git commit` time: by the time the commit is made, the
+sentence describing it has already been written, weighed and put where it will
+be read again. It also means the changelog and the history cannot drift apart —
+they are the same sentence, stored twice on purpose.
 
 Bodies here are narrative, not bullet lists: the fleet's changelogs read as
 engineering post-mortems ("how it is proven", "where it came from", "measured",
@@ -234,17 +291,21 @@ Two owners, both guarding on the same question — *does this tag already exist?
 
 | Owner | When | Covers |
 |---|---|---|
-| **`.github/workflows/release.yml`** | Every push that touches `version.md` | Every push, whoever made it — by hand, by an agent, or by the cron cycle |
-| **The COMMITTER skill** | Right after its own push succeeds | Its participating repos, immediately, without waiting for Actions |
+| **`.github/workflows/release.yml`** | Every push that touches `version.md` | Every push, whoever made it — by hand or by an agent |
+| **`tools/release.sh`** | Run by hand | The same logic, for closing it now instead of waiting for Actions, and for a backfill |
 
-The workflow is what actually delivers this today: the COMMITTER marker is
-`enabled: false` in BLUE3-INTRANET, SHVIA-DESKTOP and SHVIA-WEB, and
-`push: false` in EOP — a skill-only design would have left most of the fleet
-without Releases.
+There used to be a third owner: the COMMITTER skill published the Release right
+after its own push succeeded. It was switched off across the fleet on
+03/09/2026 (see [Who commits, and when](#who-commits-and-when)), and the
+workflow — which was already carrying most of the fleet, because the marker was
+`enabled: false` in BLUE3-INTRANET, SHVIA-DESKTOP and SHVIA-WEB and
+`push: false` in EOP — now carries all of it. That the design never depended on
+the skill is why removing it cost nothing.
 
 Neither owner ever *decides* a version. Both copy the number the agent already
-wrote into `version.md`, which is what keeps COMMITTER's inviolable
-"nunca bumpa versão" rule intact.
+wrote into `version.md`. Deciding the version is the agent's judgement and
+nothing else's — that was true when an automation did the committing, and it is
+more obviously true now that the agent does.
 
 ### `tools/release.sh`
 
