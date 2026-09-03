@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# commit-msg — the commit subject must be `X.Y.Z - comentário em português`.
+# commit-msg — the commit subject must be `X.Y.Z - description in English`.
 #
 # Why here: this is the only moment the message exists and the commit does not.
 # It cannot see the remote (that is pre-push's job) and it does not run any
@@ -25,8 +25,8 @@ die() {
   echo "commit-msg: REJECTED — $1" >&2
   echo "" >&2
   echo "  subject read: ${subject:-(empty)}" >&2
-  echo "  required:     X.Y.Z - comentário em português" >&2
-  echo "  example:      1.0.0 - estrutura inicial de documentacao" >&2
+  echo "  required:     X.Y.Z - description in English" >&2
+  echo "  example:      1.0.0 - initial documentation structure" >&2
   echo "" >&2
   echo "  The version comes from version.md and is bumped in this same commit." >&2
   echo "  Rules: docs/versioning.md · bypass: $HOOK_ESCAPE_VAR=1" >&2
@@ -49,7 +49,7 @@ fi
 comment="${subject#* - }"
 # A comment must actually describe something. Single vague words are the
 # failure mode the norm names explicitly.
-if printf '%s' "$comment" | grep -qiE '^(ajuste|ajustes|update|updates|fix|correcao|correção|wip|teste|test|misc|varios|vários)[[:space:]]*\.?$'; then
+if printf '%s' "$comment" | grep -qiE '^(ajuste|ajustes|update|updates|fix|fixes|correcao|correção|wip|teste|test|tests|misc|varios|vários|changes|stuff|tweak|tweaks|cleanup|refactor|improvements?)[[:space:]]*\.?$'; then
   die "vague comment ('$comment') — say what changed and why"
 fi
 

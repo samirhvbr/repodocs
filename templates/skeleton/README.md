@@ -32,7 +32,7 @@ git config core.hooksPath tools/git-hooks   # once per clone
 ```
 
 Write the `CHANGELOG.md` entry, bump `version.md` in the same commit, and commit
-with the entry's heading as the subject — `0.1.1 - comentário em português`.
+with the entry's heading as the subject — `0.1.1 - short description`.
 Rules: [docs/versioning.md](docs/versioning.md).
 
 ## Standard
@@ -44,6 +44,7 @@ change it.
 
 ## Language
 
-English for documentation and code comments — and nothing bilingual. Two things
-stay Portuguese and only two: **commit messages** and **end-user-facing
-strings**. Both are deliberate carve-outs, not oversights.
+English (US) for everything in the repository — documents, commit messages,
+pull requests, issues, code comments — and nothing bilingual. Exactly one thing
+stays Portuguese: **end-user-facing strings**, because that is product i18n, not
+repository content.

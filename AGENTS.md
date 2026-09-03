@@ -38,7 +38,7 @@ Two hooks then run, and each exists because the other cannot reach its moment:
 
 | Hook | What it checks | Why there |
 |---|---|---|
-| `commit-msg` | The subject is `X.Y.Z - comentário em português`; no Conventional Commits prefix, no vague comment | It is the only moment the message exists and the commit does not |
+| `commit-msg` | The subject is `X.Y.Z - description in English`; no Conventional Commits prefix, no vague comment | It is the only moment the message exists and the commit does not |
 | `pre-push` | `version.md` against `origin/master` — duplicate and monotonicity | It is the only hook that sees the **remote**, and `commit-msg` provably does not run during a rebase, which is how duplicate versions get born |
 
 ⚠️ **`pre-push` runs no suite, and that is a choice:** a push that waits four
@@ -99,14 +99,16 @@ reason.
 merely because of the rule: an old Portuguese document stays Portuguese until it
 is touched again.
 
-**Two carve-outs stay Portuguese** — do not "fix" them:
+**Everything in this repository is English (US)** — documents, commit
+messages, pull requests, issues, code comments, changelog entries.
 
-- **Commit messages** — `versão - comentário em português`.
-- **End-user-facing strings** — UI text, transactional email, product copy. That
-  is product i18n for a Brazilian audience, not technical documentation.
+**One carve-out, and only one:** end-user-facing strings — UI text,
+transactional email, product copy. That is product i18n for a Brazilian
+audience, not repository content.
 
-**Nothing else, and nothing bilingual** — `LICENSE` is the plain English MIT
-text, and a translated `README_br.md` pair is not the pattern.
+Commit messages used to be a second carve-out and are not any more
+([ADR-014](docs/decisions.md)). **Nothing is bilingual** — `LICENSE` is the plain
+English MIT text, and a translated `README_br.md` pair is not the pattern.
 
 Code identifiers are English, and always were.
 
@@ -114,7 +116,7 @@ Code identifiers are English, and always were.
 
 ## Version and commits (mandatory)
 
-Format: `versão - comentário em português`. The version comes from
+Format: `version - short description in English`. The version comes from
 [version.md](version.md), **bumped in the same commit**:
 
 - **Z** — documentation, wording, adjustment, a new section. The normal case.

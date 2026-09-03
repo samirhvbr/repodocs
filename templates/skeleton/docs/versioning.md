@@ -60,13 +60,12 @@ commit of its own.
 **Mandatory format:**
 
 ```
-versão - comentário em português
+version - short description in English
 ```
 
-For example: `0.1.0 - estrutura inicial de documentação`.
+For example: `0.1.0 - initial documentation structure`.
 
-- The comment is **in Portuguese** — one of the only two deliberate carve-outs
-  to the English rule.
+- **English (US)**, like everything else in the repository.
 - Descriptive enough to be found later with `git log --grep`. Explain the
   **why**, not only the what.
 - **Forbidden:** Conventional Commits prefixes — `feat:`, `fix:`, `chore:`,
@@ -85,7 +84,7 @@ expected, not a mistake.
 that lands in git:
 
 ```markdown
-## 0.1.0 - estrutura inicial de documentação
+## 0.1.0 - initial documentation structure
 
 <narrative body: what changed, why, and what it measured>
 ```

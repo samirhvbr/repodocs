@@ -78,13 +78,16 @@ the convention; the triggers are per-repo** and belong in that repo's
 **Mandatory format:**
 
 ```
-versão - comentário em português
+version - short description in English
 ```
 
-For example: `1.0.0 - estrutura inicial de documentação do padrão da frota`.
+For example: `1.0.0 - initial documentation structure for the fleet standard`.
 
-- The comment is **in Portuguese** — one of the only two deliberate carve-outs
-  to the English rule ([conventions.md §8](conventions.md#8-language)).
+- **English (US)**, like everything else in the repository
+  ([conventions.md §8](conventions.md#8-language)). Until 03/09/2026 this was
+  the one place where Portuguese stayed; it is not any more
+  ([ADR-014](decisions.md)). Messages already in history are left as they are —
+  history is not rewritten.
 - Descriptive enough to be found later with `git log --grep`. Explain the
   **why**, not only the what.
 - **Forbidden:** Conventional Commits prefixes — `feat:`, `fix:`, `chore:`,
@@ -103,7 +106,7 @@ expected, not a mistake.
 that lands in git:
 
 ```markdown
-## 1.0.0 - estrutura inicial de documentação do padrão da frota
+## 1.0.0 - initial documentation structure for the fleet standard
 
 <narrative body: what changed, why, and what it measured>
 ```

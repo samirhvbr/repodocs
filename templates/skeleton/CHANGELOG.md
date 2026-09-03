@@ -8,10 +8,10 @@ whoever does the work and whoever commits it.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
-## 0.1.0 - estrutura inicial de documentação
+## 0.1.0 - initial documentation structure
 
 <!-- Replace this entry. The heading IS the commit subject, so write it in
-     Portuguese in the format `X.Y.Z - comentário`. The body is prose: what
+     English, in the format `X.Y.Z - description`. The body is prose: what
      changed, why, and what you measured — not a bullet list. -->
 
 First commit of <PROJECT_NAME>: <PROJECT_DESCRIPTION>.

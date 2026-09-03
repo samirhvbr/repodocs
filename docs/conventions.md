@@ -227,21 +227,25 @@ And these directories:
 
 ## 8. Language
 
-**Rule in force since 02/09/2026:** every new document, and every edit to an
-existing document, inside a repository that goes to GitHub is written in
-**English**. That covers `README.md`, `CLAUDE.md`, `AGENTS.md`, anything under
-`docs/`, code comments, changelog prose, PR messages and issue descriptions.
+**Rule in force since 03/09/2026: everything in a repository is written in
+English (US).** Every document, every edit, **every commit message**, every pull
+request, every issue, every code comment, every changelog entry. If it lives in
+a repository or in GitHub's interface around one, it is English.
 
 Nothing gets rewritten just because of this rule. An old Portuguese document
 stays Portuguese until it is touched again — at which point the edit (or the
 whole file, when practical) comes out in English.
 
-**Two carve-outs, stated here so nobody re-litigates them:**
+**One carve-out, and only one:**
 
 | Stays Portuguese | Why |
 |---|---|
-| **Commit messages** — `versão - comentário em português` | The per-repo commit convention is unchanged. See [versioning.md](versioning.md). |
-| **End-user-facing strings** — UI text, transactional email, product copy | That is product i18n for a Brazilian audience, not technical documentation. |
+| **End-user-facing strings** — UI text, transactional email, product copy | That is product i18n for a Brazilian audience, not repository content. A Brazilian user does not read the repo. |
+
+Commit messages **used to** be the second carve-out. They are not any more
+([ADR-014](decisions.md)) — a commit message is repository content, read in
+`git log`, in blame, in a PR diff and in the Releases page, by exactly the
+audience the English rule exists for.
 
 **Nothing else, and nothing bilingual.** `LICENSE` is the plain English MIT text
 — not a PT/EN presentation ([ADR-010](decisions.md)). A `README_br.md` beside a

@@ -8,6 +8,63 @@ whoever does the work and whoever commits it.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 1.3.0 - everything is English (US), commit messages included
+
+The owner rejected the last language split, and the trigger was a commit this
+very rollout had just written across the fleet:
+
+> `1.0.1 - Regra de Releases no doc de agente: bump e Release sao um ato so`
+
+> *"precisamos documentar a regra de que commits tambem, tudo em ingles"*
+> *"todo commit em ingles, PR em ingles, issues em ingles, tudo ingles-US"*
+
+### Why the split did not survive
+
+ADR-005 put documents in English but kept commit messages in Portuguese,
+reasoning that the commit convention was a separate per-repo rule. That reasoning
+ignores where a commit message is actually read: `git log`, `git blame`, the diff
+of a pull request, the body of a Release, and the changelog entry it was copied
+from. It is exactly the surface the English rule exists for — the first thing a
+collaborator or a tool that does not read Portuguese meets.
+
+### The rule now
+
+**Everything in a repository, and in GitHub's interface around it, is English
+(US)** — documents, commit messages, PR titles and bodies, issues, code comments,
+changelog entries, release notes.
+
+**Exactly one carve-out remains:** end-user-facing strings — UI text,
+transactional email, product copy. A Brazilian user does not read the repository.
+
+That takes the carve-out list from three, to two after `LICENSE` fell in
+[ADR-010](docs/decisions.md), to **one** here in
+[ADR-014](docs/decisions.md).
+
+### What was changed
+
+`docs/conventions.md` §8, `docs/versioning.md` (format and examples),
+`docs/README.md`, `README.md`, the `CLAUDE.md`/`AGENTS.md` twins, and the whole
+`templates/skeleton/`. ADR-003's language clause is marked superseded rather than
+edited away; ADR-005's carve-out list now points here.
+
+### What enforces it, and what does not
+
+`tools/git-hooks/commit-msg` checks the **shape** — `X.Y.Z - description`, no
+Conventional Commits prefix, no vague one-word message — and its reject list
+gained the English offenders (`cleanup`, `changes`, `tweak`, `stuff`,
+`refactor`) next to the Portuguese ones already there.
+
+It does **not** check the language, on purpose. Detecting language mechanically
+is guesswork, and a guard that fires on a false positive is a guard that gets
+bypassed with `--no-verify` — which disables every other guard with it. The
+shape is mechanical; the language is the norm's job.
+
+### History is not rewritten
+
+Portuguese messages already in the fleet's history stay. `git log` will read
+bilingual across the 03/09/2026 boundary, which is the same shape ADR-005
+already accepted for documents, for the same reason.
+
 ## 1.2.4 - Regra de Releases no doc de agente: bump e Release sao um ato so
 
 Eco marcado da norma unica em samirhvbr/repodocs (docs/versioning.md). O
@@ -16,6 +73,7 @@ um commit que bumpa o `version.md` nao esta terminado ate aquela versao ter tag,
 Release e o badge `Latest`.
 
 Bloco delimitado por marcador: rodar de novo substitui, nao duplica.
+
 
 ## 1.2.3 - o bump e a Release sao um ato so, e o badge Latest obedece ao version.md
 

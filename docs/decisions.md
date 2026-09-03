@@ -58,16 +58,19 @@ the file existed and `CLAUDE.md` called it authoritative. See
 
 ---
 
-## ADR-003 — commit format `versão - comentário em português`
+## ADR-003 — commit format `X.Y.Z - description`
 
-**Status:** `ACCEPTED` · 02/09/2026
+**Status:** `ACCEPTED` · 02/09/2026 · **Language clause superseded by
+[ADR-014](#adr-014--everything-in-a-repository-is-english-us-commit-messages-included)
+(03/09/2026)** — the shape stands, the Portuguese requirement does not.
 
 **Context.** The format is already normative and identical in EOP,
 SHVIA-DESKTOP, SHVIA-SITE, SHVIA-WEB and BLUE3-INTRANET, and all five explicitly
 ban Conventional Commits prefixes.
 
-**Decision.** The subject is `X.Y.Z - comentário em português`. The version comes
-from `version.md`, bumped in the same commit. `feat:`/`fix:`/`chore:` and vague
+**Decision.** The subject is `X.Y.Z - description`. The version comes
+from `version.md`, bumped in the same commit. *(As originally written the
+description had to be in Portuguese; ADR-014 made it English.)* `feat:`/`fix:`/`chore:` and vague
 comments are rejected. Several commits may share one version; only the first
 bumps.
 
@@ -110,10 +113,12 @@ repository that goes to GitHub is written in English. Nothing is rewritten
 merely because of this rule: an old Portuguese document stays Portuguese until
 it is touched again.
 
-**Two carve-outs stay Portuguese:** commit messages (ADR-003) and
-end-user-facing strings (product i18n for a Brazilian audience). Revised by
-[ADR-010](#adr-010--nothing-bilingual-license-is-the-plain-english-mit-text),
-which removed the third one.
+**Carve-outs:** originally three, then two after
+[ADR-010](#adr-010--nothing-bilingual-license-is-the-plain-english-mit-text)
+removed `LICENSE`, and **one** after
+[ADR-014](#adr-014--everything-in-a-repository-is-english-us-commit-messages-included)
+removed commit messages. What remains is end-user-facing strings — product i18n
+for a Brazilian audience.
 
 **Consequences.** For a transition period a repository holds documents in both
 languages. That is expected and is not a defect — what is not allowed is one
@@ -405,3 +410,54 @@ It also **never fails a push**: no `version.md`, no `tools/release.sh`, no
 parseable version — all exit 0 with a notice. A guard that blocks work when it
 cannot measure is a guard that gets switched off, which is the same reasoning
 already written into `pre-push`.
+
+---
+
+## ADR-014 — everything in a repository is English (US), commit messages included
+
+**Status:** `ACCEPTED` · 03/09/2026 · Supersedes the language clause of
+[ADR-003](#adr-003--commit-format-xyz---description) and narrows
+[ADR-005](#adr-005--documentation-in-english-from-02092026) to a single carve-out
+
+**Context.** ADR-005 put documentation in English but kept commit messages in
+Portuguese, on the reasoning that the commit convention was a separate,
+per-repo rule. The owner rejected that split on seeing it applied — the trigger
+was a commit this very rollout had just written across the fleet:
+
+> `1.0.1 - Regra de Releases no doc de agente: bump e Release sao um ato so`
+
+*"precisamos documentar a regra de que commits tambem, tudo em ingles"* ·
+*"todo commit em ingles, PR em ingles, issues em ingles, tudo ingles-US"*
+
+The split does not survive contact with where a commit message is actually read.
+It is not a private note: it shows up in `git log`, in `git blame`, in the diff
+of a pull request, in the body of a Release, and in the changelog entry it was
+copied from. That is precisely the surface ADR-005 wanted in English — the one a
+collaborator or a tool that does not read Portuguese meets first.
+
+**Decision.** **Everything in a repository, and in GitHub's interface around it,
+is English (US).** Documents, commit messages, pull request titles and bodies,
+issues, code comments, changelog entries, release notes.
+
+**Exactly one carve-out remains:** end-user-facing strings — UI text,
+transactional email, product copy. That is product i18n for a Brazilian
+audience, and a Brazilian user does not read the repository.
+
+**Consequences.** Existing Portuguese commit messages stay as they are: history
+is not rewritten, and the fleet's `git log` will read bilingual across the
+03/09/2026 boundary. That is the same shape ADR-005 already accepted for
+documents, and for the same reason — rewriting to satisfy a style rule costs
+more than it buys.
+
+**What enforces it, and what does not.** `tools/git-hooks/commit-msg` checks the
+**shape** (`X.Y.Z - description`), rejects Conventional Commits prefixes and
+rejects vague one-word messages — its reject list gained the English ones
+(`cleanup`, `changes`, `tweak`, `stuff`, `refactor`) alongside the Portuguese
+ones already there. It does **not** check the language, and deliberately so:
+detecting language mechanically is guesswork, and a guard that fires on a false
+positive is a guard that gets bypassed. The shape is mechanical; the language is
+the norm's job and the author's.
+
+**The `.committer.yml` skill follows.** Its fallback prompt asked the model for
+a Portuguese message; leaving that would have made the automation contradict the
+norm on every commit it wrote.

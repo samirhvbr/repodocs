@@ -17,7 +17,7 @@ The standard already existed. It just had to be inferred by opening sixteen
 repositories and noticing what they had in common: `LICENSE` without an
 extension in 41 of them against one `LICENSE.md`, a lowercase `version.md` in 63
 against one `VERSION`, the same MIT text byte-identical in 14, the
-same `versão - comentário em português` commit rule written out separately in
+same `X.Y.Z - description` commit rule written out separately in
 five.
 
 An inferred standard drifts. And the fleet already paid for the drift: a
@@ -80,7 +80,7 @@ git config core.hooksPath tools/git-hooks   # once per clone
 
 Then: write the `CHANGELOG.md` entry, bump `version.md` in the same commit, and
 commit with the entry's heading as the subject —
-`1.0.1 - comentário em português`. On push, the release workflow tags that
+`1.0.1 - short description in English`. On push, the release workflow tags that
 version and publishes its Release automatically. The rules, and the reasons
 behind them, are in [docs/versioning.md](docs/versioning.md).
 
@@ -100,7 +100,8 @@ behind them, are in [docs/versioning.md](docs/versioning.md).
 ## Language
 
 English for everything new, and for every edit to an existing document (rule in
-force 02/09/2026). **Nothing is bilingual** — not `LICENSE`, not a `README_br.md`
-pair. Two things stay Portuguese and only two: **commit messages** and
-**end-user-facing strings**. Both are deliberate carve-outs, not oversights. See
+force 03/09/2026): documents, **commit messages**, pull requests, issues, code
+comments. **Nothing is bilingual** — not `LICENSE`, not a `README_br.md` pair.
+Exactly one thing stays Portuguese: **end-user-facing strings**, because that is
+product i18n for a Brazilian audience, not repository content. See
 [docs/conventions.md §8](docs/conventions.md#8-language).
