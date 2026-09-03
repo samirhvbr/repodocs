@@ -9,6 +9,53 @@ at `git commit` time.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 1.5.1 - the COMMIT-RULE pass over the fleet is done, and the ADR-007 twins with it
+
+`1.5.0` decided that the agent commits and shipped the `COMMIT-RULE` block, but
+left the pass over the sibling repositories queued, with a warning that it was
+the most expensive open item: until it ran, 91 agent files across the fleet still
+carried the `PS — Commits: a skill COMMITTER cuida disso` block telling agents
+*not* to commit, pointing at a cycle that no longer runs.
+
+It ran the same day. The block is now in **147** `CLAUDE.md`/`AGENTS.md` files —
+50 repositories (each with its own bump, commit, push and Release) and 26
+worktrees (no bump: the version belongs to the mainline, and repeating one number
+across 20 branches manufactures exactly the duplicate the `pre-push` hook exists
+to reject). No PS block survives outside the quarantine directory.
+
+Two things the sweep found that a naive replacement would have missed, recorded
+because the next fleet pass will meet them again:
+
+- **The PS block had two heading variants** — the Portuguese original in 38 files
+  and an English translation, `## PS — Commits: the COMMITTER skill handles them`,
+  in the 6 SSHVTERM files. A pattern matching only the first would have left the
+  false instruction standing in three repositories.
+- **`_quarentena/2026-09-03/` is not inert.** Its copies are full clones pointing
+  at the same production remotes as the live repositories — the SHVIA-WEB copy
+  was three commits behind the live one — and several sit on a detached HEAD.
+  Committing or pushing from there publishes stale state to a live remote. It was
+  left out deliberately; 14 files there still carry the old block.
+
+**The ADR-007 twins came with it.** Six repositories — `BLUE3-F1`,
+`BLUE3-INTRANET-MOBILE`, `BLUE3-NDRIVE-SERVER`, `BLUE3-SITE-FRONT`,
+`BLUE3-WCUP-2026` and `BRASILEIRAO_A_2026` — still used the older shape where
+`AGENTS.md` was the real document and `CLAUDE.md` a summary of it (or, in
+NDRIVE's case, the reverse, with `AGENTS.md` reduced to a pointer). They are one
+document now, byte-identical below the H1, following the shape SHVIA-WEB set at
+`2.110.166`.
+
+Merging them was not concatenation. Three of the pairs **contradicted each other
+about the commit convention**: `BLUE3-INTRANET-MOBILE` and `BLUE3-F1` had
+`AGENTS.md` mandating Conventional Commits (`feat:`, `fix:`) while `CLAUDE.md`
+mandated `X.Y.Z - description`, and Conventional Commits is what
+[ADR-003](docs/decisions.md) forbids. Every such conflict was resolved toward the
+fleet norm, and the same pass corrected the `Mensagem em português` lines that
+[ADR-014](docs/decisions.md) had made false — they were sitting in the same file
+as a `COMMIT-RULE` block saying English (US).
+
+Every repository touched has its tag and Release: 57 checked, `version.md`
+matching the published `Latest` in all of them.
+
 ## 1.5.0 - the agent commits again, and nothing is finished until it is committed
 
 For a month the agents in this fleet did not commit. The COMMITTER skill existed
