@@ -9,6 +9,37 @@ at `git commit` time.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 1.7.0 - the human gate is a refused push, and the rule that said otherwise leaves the fleet
+
+`1.5.0` said the agent commits and pushes. It never said where a person is still
+required, and the gap produced a wrong answer within hours.
+
+SHVIA-WEB carried one line from the COMMITTER era — *"Nada é commitado sem revisão
+humana"* — which back then meant "the robot must not publish unreviewed work". Read
+next to ADR-016 it says the opposite of ADR-016: if nothing may be committed without
+review, an agent cannot commit its own delivery, and the delivery stops in a dirty
+tree. Reconciling it, this session proposed *"nothing reaches `master` without human
+review"*, reasoning that the repository reviews at merge, and flagged it as a
+judgement made on the owner's behalf.
+
+**The owner rejected that reading**, and the correction is the substance of this
+version: commits and pushes both happen on **every** delivery, and review is not a
+checkpoint the work waits at. The gate is a **refused** push — conflict,
+non-fast-forward, protected branch. There the agent stops and says so; it does not
+force, does not rewrite history to get past it, and does not invent a merge
+resolution it has not verified.
+
+[ADR-018](docs/decisions.md) records it. The gate sits there and nowhere else because
+a refused push is the only one of the three moments that is *about someone else's
+work* — someone changed the same lines, or a rule says this branch is not yours to
+move. A gate on the commit stops the work existing; a gate on a clean push stops it
+being visible. Only the third is a decision with another person on the other side,
+and that is the one an agent should not take alone.
+
+The `COMMIT-RULE` block gains the clause and is regenerated — the third regeneration
+in a day. The phrase *"nada é commitado sem revisão humana"* leaves the fleet, because
+under this ADR it is false.
+
 ## 1.6.0 - the bump clause gets a written escape hatch, because one repository already had one
 
 `1.5.0` stated the bump as unconditional — *"the version taken from `version.md`

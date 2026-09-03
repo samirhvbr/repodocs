@@ -130,6 +130,27 @@ subject per commit still holds, and a delivery is still not delivered until it i
 committed. A repository with no written override bumps in the commit, like
 everyone else.
 
+### Push is part of the delivery, and a refused push is where a human enters
+
+**Every delivery is committed *and* pushed.** Not committed now and pushed when
+someone gets round to it: the two are one act, for the same reason the bump and
+the Release are. Work that exists only in a local clone is work one disk failure
+away from never having happened, and work nobody else can see is work two people
+can redo.
+
+**The one place a human enters is a push that is refused** — a conflict, a
+non-fast-forward, a protected branch, a rejected ruleset. Stop there and say so.
+
+Do not force. Do not rewrite history to get past it. Do not invent a merge
+resolution you have not verified. A clean push needs nobody's permission and
+should never be held back for review; a refused push is a decision about someone
+else's work, and that decision is not the agent's to take alone.
+
+This is what "nothing is committed without human review" means in a fleet where
+the agent commits: **the gate is the refused push, not the commit.** A rule that
+puts the gate on the commit stops the work from existing at all, which is the
+failure the previous section describes.
+
 ### One subject per commit
 
 **A commit's subject has to describe the whole commit honestly.** The moment the

@@ -518,7 +518,7 @@ checks that its `release.yml` is the current one.
 
 ## ADR-016 — the agent commits, and a delivery is not delivered until it is
 
-**Status:** `ACCEPTED` · 03/09/2026 · **Amended by [ADR-017](#adr-017--the-bump-clause-may-be-overridden-by-a-repository-in-writing)** · Extends
+**Status:** `ACCEPTED` · 03/09/2026 · **Amended by [ADR-017](#adr-017--the-bump-clause-may-be-overridden-by-a-repository-in-writing)** · **Completed by [ADR-018](#adr-018--the-human-gate-is-a-refused-push-never-the-commit)** · Extends
 [ADR-003](#adr-003--commit-format-xyz---description) from *how* a commit is
 written to *who* writes it and *when*. The decision it reverses was never an ADR
 here — it lived in the COMMITTER skill's own log, which is part of why it was
@@ -643,3 +643,58 @@ and this one was written the same day as the rule it weakens. The alternative wa
 worse: a block that is provably false in one repository teaches every reader that
 the block is approximately true, and an approximately-true instruction is one
 nobody stops at.
+
+---
+
+## ADR-018 — the human gate is a refused push, never the commit
+
+**Status:** `ACCEPTED` · 03/09/2026 · Completes
+[ADR-016](#adr-016--the-agent-commits-and-a-delivery-is-not-delivered-until-it-is)
+by naming where a person enters
+
+**Context.** ADR-016 said the agent commits and pushes as the last step of its
+work. It did not say where a human still has to be involved, and that gap
+produced a wrong answer within hours.
+
+SHVIA-WEB's `CLAUDE.md` carried one line — *"Nada é commitado sem revisão
+humana"* — written when a cron automation did the committing, where it meant
+"the robot must not publish unreviewed work". Read next to ADR-016 it says the
+opposite of ADR-016: if nothing may be committed without review, the agent cannot
+commit its own delivery, and the delivery stops in a dirty tree.
+
+Reconciling it, this session proposed *"nothing reaches `master` without human
+review"*, on the reasoning that SHVIA-WEB reviews at merge. **The owner rejected
+that reading**: commits and pushes both happen on every delivery, and review is
+not a checkpoint the work waits at.
+
+> *"commit pode ser feito sem problema … quando for fazer o push e der conflito
+> aí sim entra a revisão humana. Mas commits e push são feitos sempre que uma
+> entrega é feita"*
+
+**Decision.** **Every delivery is committed and pushed. The human gate is a
+refused push.**
+
+A clean push needs nobody's permission and is never held back for review. When a
+push is refused — conflict, non-fast-forward, protected branch, rejected ruleset
+— the agent stops there and says so. It does not force, does not rewrite history
+to get past it, and does not invent a merge resolution it has not verified.
+
+**Why the gate sits there and nowhere else.** A gate on the commit stops the work
+from existing; a gate on the clean push stops it from being visible, and both
+turn a finished delivery into something only one session knows about. A refused
+push is different in kind: it is the only one of the three that is *about someone
+else's work*. Someone changed the same lines, or a rule says this branch is not
+yours to move. That is a decision with another person on the other side of it,
+and it is the one an agent should not take alone.
+
+**Consequences.** The `COMMIT-RULE` block gains the clause and is regenerated
+across the fleet — the third regeneration in a day, and the third time the
+delimited-block design has paid for itself. SHVIA-WEB's line is rewritten to say
+what it now means; the words *"nada é commitado sem revisão humana"* leave the
+fleet, because they are false under this ADR.
+
+The obvious risk is that an agent pushes something wrong and it is immediately
+visible. That is accepted, and it is not new: it is the same trade as
+[ADR-016](#adr-016--the-agent-commits-and-a-delivery-is-not-delivered-until-it-is)
+took on committing, and the history is recoverable in a way an uncommitted
+working tree is not.

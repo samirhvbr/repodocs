@@ -10,7 +10,7 @@
 > where we stopped, **always first**) · [docs/conventions.md](docs/conventions.md)
 > (the norm this repository exists to hold) ·
 > [docs/versioning.md](docs/versioning.md) (how a version and a commit are
-> written) · [docs/decisions.md](docs/decisions.md) (ADRs 001–017 — do not
+> written) · [docs/decisions.md](docs/decisions.md) (ADRs 001–018 — do not
 > re-litigate a decided direction, link the ADR) ·
 > [docs/security.md](docs/security.md) (normative; wins any conflict).
 
@@ -137,6 +137,13 @@ nobody does.**
 uncommitted where only this session can see it. The commit is the last step *of
 the task*, not a follow-up for someone else. If you are about to write
 "finished", commit first, then write it.
+
+**Push is part of the delivery, and a refused push is the one place a human enters.**
+Commit *and* push, every delivery — a clean push needs nobody's permission and is never
+held back for review. When the push is **refused** (conflict, non-fast-forward, protected
+branch), stop there and say so: never force, never rewrite history to get past it, never
+invent a merge resolution you have not verified. The gate is the refused push, not the
+commit.
 
 **Every commit obeys the versioning rules**, with no exception:
 
