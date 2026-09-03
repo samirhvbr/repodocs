@@ -109,6 +109,11 @@ full of `X.Y.Z - …` commits still shows *"No releases published"*, and
 what pins a version number to the exact code it named — and what a bad deploy
 rolls back to.
 
+> **The `version.md` on GitHub equals the Releases on GitHub.** The local
+> checkout does not enter the calculation — `tools/release.sh` reads the version
+> from the remote default branch and tags that commit. A PR publishes nothing;
+> the moment it merges, the workflow fires and the Release becomes that version.
+
 | Thing | Value |
 |---|---|
 | Tag | The version **exactly as `version.md` holds it — no `v` prefix** |

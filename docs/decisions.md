@@ -303,6 +303,23 @@ first wins and the other is a no-op:
 COMMITTER skill right after its own push succeeds. Both call the same
 `tools/release.sh`.
 
+**The authority is the remote, never the working tree** — stated by the owner as
+*"o version.md do GitHub = Releases do GitHub"*. `release.sh` reads `version.md`
+from `origin/<default branch>` and tags that commit, falling back to `HEAD` only
+when the remote ref is not resolvable (the CI case, where `HEAD` **is** the
+pushed commit). A local file that disagrees produces a note, not a different
+Release.
+
+This is what makes the PR flow work with nothing to remember: a branch at
+`1.3.25` publishes nothing while it is a branch; the merge pushes `version.md`
+to the default branch, the workflow fires, and the Release becomes `1.3.25`.
+
+It also fixes a real class of error rather than a hypothetical one. Measured the
+same day: `sshvterm-desktop` held `1.3.19` locally against `1.2.80` on the
+remote (8 unpushed commits), and `shvia-web` held `2.110.154` against
+`2.110.161`. Publishing from the working tree would have tagged commits GitHub
+does not have.
+
 **Consequences.** `git diff <old>..<new>` works across the whole history, and a
 bad deploy has a ref to roll back to.
 

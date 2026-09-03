@@ -193,7 +193,7 @@ naming is the convention, and tooling depends on it.
 | File | Who reads it | Rule |
 |---|---|---|
 | `README.md` | humans, GitHub | What the project is and how to run it. English. |
-| `version.md` | the app, the hooks, the deploy, the release automation | The single authority on the version. **The version is the first semver (`X.Y.Z`) in the file** — a bare string and a markdown document both satisfy that, and both exist in this fleet. See [versioning.md](versioning.md). |
+| `version.md` | the app, the hooks, the deploy, the release automation | The single authority on the version. **The version is the first semver (`X.Y.Z`) in the file** — a bare string and a markdown document both satisfy that, and both exist in this fleet. **The copy on GitHub is what the Releases on GitHub must match**; the local checkout is not published. See [versioning.md](versioning.md). |
 | `CLAUDE.md` | Claude Code | Agent instructions. |
 | `AGENTS.md` | other agent tooling (agents.md standard) | **Byte-identical to `CLAUDE.md` below the H1.** Edit one, edit the other. |
 | `SECURITY.md` | GitHub, whoever reports a vulnerability | Thin, at the root because that path is what triggers GitHub's *"Report a vulnerability"*. Points at the normative source; does not duplicate it. |

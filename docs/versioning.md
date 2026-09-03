@@ -131,6 +131,31 @@ The tag is what pins a version number to the exact code it named. Without it the
 number is a string in a commit message; with it, a bad deploy has something to
 roll back **to**.
 
+### The rule, in one line
+
+> **The `version.md` on GitHub equals the Releases on GitHub.**
+
+The local checkout does not enter the calculation. It can be behind, ahead, or
+mid-work, and none of that is published — GitHub cannot tag a commit it does not
+have, and a Release for a version nobody can fetch is a lie.
+
+So the authority is the **remote default branch**, not the working tree.
+`tools/release.sh` reads `version.md` from `origin/<default>` and tags that
+commit; when the remote branch is not resolvable — the CI case, where `HEAD`
+*is* the pushed commit — it falls back to `HEAD`. If the local file disagrees, it
+says so and publishes the remote's number anyway.
+
+**What that looks like in practice.** An agent opens a PR at `1.3.25`. Nothing is
+published while it is a PR — the version is not on the default branch yet. The
+moment it merges, the push to `master` touches `version.md`, the workflow fires,
+and the Release becomes `1.3.25`. Merge is the event; nothing has to be
+remembered.
+
+Measured while writing this: `sshvterm-desktop` had `1.3.19` locally and
+`1.2.80` on `origin/master` (8 unpushed commits), and `shvia-web` had
+`2.110.154` locally and `2.110.161` on the remote. In both, the Release that
+belongs on GitHub is the remote's number.
+
 ### The naming
 
 | Thing | Value | Example |

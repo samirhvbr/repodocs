@@ -138,6 +138,10 @@ published GitHub Release.** `.github/workflows/release.yml` does it on every pus
 that touches `version.md`, calling `tools/release.sh`; run that script by hand
 for a backfill. Both skip what already exists.
 
+**The `version.md` on GitHub equals the Releases on GitHub.** Your local checkout
+does not enter the calculation. A PR publishes nothing; the moment it merges, the
+Release becomes that version.
+
 Full rules: [docs/versioning.md](docs/versioning.md).
 
 ---

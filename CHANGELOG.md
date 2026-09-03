@@ -8,6 +8,48 @@ whoever does the work and whoever commits it.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 1.2.2 - o remoto e a autoridade: version.md do GitHub = Releases do GitHub
+
+Correcao do dono, e ela apagou uma ambiguidade que eu tinha deixado em pe:
+
+> *"no github o Releases tem que estar na mesma versao do version.md, e meio
+> logico, esquece o local"*
+
+O `release.sh` estava lendo o `version.md` da **arvore local**. Passa a ler do
+**`origin/<branch padrao>`** e a taggear aquele commit, caindo para `HEAD` so
+quando o ref remoto nao resolve — que e o caso do CI, onde o `HEAD` **e** o
+commit pushado. Arquivo local divergente vira uma nota, nao uma Release
+diferente.
+
+### Por que isso nao era detalhe
+
+Medido no mesmo dia: o `sshvterm-desktop` tinha `1.3.19` local contra `1.2.80`
+no remoto (8 commits nao pushados), e o `shvia-web` tinha `2.110.154` local
+contra `2.110.161`. Publicar da arvore local taggearia **commit que o GitHub nao
+tem**. O guard anterior (recusar quando a arvore diverge do HEAD) tratava o
+sintoma; a regra do dono elimina a pergunta.
+
+### O que isso resolve de graca
+
+O fluxo de PR passa a funcionar sem ninguem lembrar de nada: uma branch em
+`1.3.25` **nao publica nada** enquanto e branch; no merge, o push do `version.md`
+para a branch padrao dispara o workflow e a Release vira `1.3.25`. O merge e o
+evento.
+
+### Tambem nesta versao
+
+- **`sshvterm-desktop`, o unico repo da frota com pipeline amarrado em tag.** As
+  17 Releases dele eram de junho, tituladas `ShvTerm v0.5.41`, com **178
+  instaladores e 10.184 downloads**. Os titulos foram para o padrao (so o
+  numero); **nada foi apagado** e os binarios estao intactos. O `v` da tag ali
+  **faz trabalho**: o `main.yml` dispara em `tags: ['v*']` — e por isso o
+  proximo passo e o gatilho aceitar as duas formas, nao trocar de forma.
+- **O `release.sh` deixou de duplicar Release.** Uma versao conta como publicada
+  sob **qualquer um dos dois nomes**: criar uma `0.5.41` pura ao lado da
+  `v0.5.41` que ja tem binario nao consertaria nome nenhum — duplicaria a versao
+  e a copia sairia **sem os instaladores**. No `sshvterm-desktop` isso muda o
+  backfill de 227 para **210 criadas e 17 puladas**.
+
 ## 1.2.1 - o censo completo derruba o numero que a 1.2.0 publicou
 
 A `1.2.0` afirmou *"54 repositorios, zero Releases publicadas, e tres tags entre

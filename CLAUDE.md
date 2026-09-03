@@ -139,6 +139,11 @@ workflow does it on every push that touches `version.md`; `tools/release.sh` is
 the same logic for running it by hand. Both skip what already exists, so neither
 can double-publish ([ADR-011](docs/decisions.md)).
 
+**The `version.md` on GitHub equals the Releases on GitHub.** Your local checkout
+does not enter the calculation — it can be behind, ahead or mid-work, and none of
+that is published. A PR publishes nothing; the moment it merges, the Release
+becomes that version.
+
 Full rules, including why `version.md` and not an environment variable:
 [docs/versioning.md](docs/versioning.md).
 
