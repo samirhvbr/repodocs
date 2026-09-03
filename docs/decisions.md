@@ -505,3 +505,11 @@ schedule, not renamed on the strength of a convention.
 
 This ADR is what lets the branch-resolution fallbacks in `tools/release.sh` be
 deleted later. Until every repository is on `master`, they stay.
+
+**A branch decision carries a workflow change with it.** `release.yml` originally
+listed `branches: [master, main]`, which is not the same as "the default branch":
+`blue3-intranet-ntheme` works on `dev`, so it **never fired there** — zero runs,
+`version.md` at `0.1.3` with the Release stuck on `0.1.1`. The workflow now has
+no branch filter and the job checks `github.ref_name` against the repository's
+actual default branch. Whoever moves a repository to a non-standard branch
+checks that its `release.yml` is the current one.

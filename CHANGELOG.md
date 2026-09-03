@@ -8,6 +8,33 @@ whoever does the work and whoever commits it.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 1.4.1 - the release workflow fires on the default branch, whatever it is named
+
+Caught by the final sweep of the rollout: 50 of 51 repos had `version.md` equal
+to the `Latest` Release. The one that did not was `blue3-intranet-ntheme`, at
+`0.1.3` with the Release stuck on `0.1.1`.
+
+**Cause.** `release.yml` listed `branches: [master, main]`. That reads like "the
+default branch" and is not: this repo works on `dev`, by written decision
+recorded in its own `version.md`. The workflow had **zero runs** since being
+installed — it was never going to fire.
+
+**Fix.** The branch filter is gone. The job checks `github.ref_name` against
+`github.event.repository.default_branch` instead, which is the same authority the
+whole rule already rests on. Verified: the push landed on `dev`, the workflow ran
+in 16s, and the Release appeared.
+
+The two versions it had missed (`0.1.2`, `0.1.3`) were backfilled, and the badge
+reconciliation moved `Latest` to `0.1.4` on its own — the self-healing behaviour
+added in `1.2.3` doing its job unprompted.
+
+**The other 50 repositories keep the older trigger for now.** It is functionally
+correct for all of them (every one is on `master` or `main`), so a 50-commit
+sweep to change a line that changes no behaviour was not worth the churn. What
+this costs is written into [ADR-015](docs/decisions.md): moving a repository to a
+non-standard branch is a written decision, and checking that its `release.yml` is
+the current one is part of that decision.
+
 ## 1.4.0 - the default branch is `master`, never `main`
 
 Census of the 51 fleet repositories, 03/09/2026: **43 on `master`, 7 on `main`,
