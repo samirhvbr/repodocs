@@ -27,13 +27,17 @@ if [ ! -f "$version_file" ]; then
   exit 0
 fi
 
-local_version="$(tr -d '[:space:]' < "$version_file")"
+# The version is the FIRST semver in the file, whatever shape the file has:
+# a bare "1.0.0" and a markdown document both satisfy the rule (ADR-012). This
+# is the same reading tools/release.sh does, deliberately — two implementations
+# of one rule is how a rule ends up with two versions, one of them wrong.
+local_version="$(grep -oE '[0-9]+\.[0-9]+\.[0-9]+' "$version_file" | head -n 1)"
 
-if ! printf '%s' "$local_version" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+if [ -z "$local_version" ]; then
   echo "" >&2
-  echo "pre-push: REJECTED — $version_file is not a bare X.Y.Z string." >&2
-  echo "  read: '$local_version'" >&2
-  echo "  It must contain the version and nothing else. See docs/versioning.md." >&2
+  echo "pre-push: REJECTED — no X.Y.Z version found in $version_file." >&2
+  echo "  The file must contain a semver; the first one in it is the version." >&2
+  echo "  See docs/versioning.md." >&2
   echo "" >&2
   exit 1
 fi
@@ -54,7 +58,7 @@ if ! git rev-parse --verify --quiet "$ref" >/dev/null; then
   exit 0
 fi
 
-remote_version="$(git show "$ref:$version_file" 2>/dev/null | tr -d '[:space:]')"
+remote_version="$(git show "$ref:$version_file" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -n 1)"
 
 if [ -z "$remote_version" ]; then
   echo "pre-push: WARNING — no $version_file on $ref; version check skipped." >&2

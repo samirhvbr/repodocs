@@ -1,12 +1,41 @@
 # Changelog
 
-Entries in the commit-message format (`versão - comentário em português`, see
-[docs/versioning.md](docs/versioning.md)), newest first. **Each `##` heading is
+Entries in the commit-message format (`version - short description in English`,
+see [docs/versioning.md](docs/versioning.md)), newest first. **Each `##` heading is
 literally the commit subject** — this file is the handoff artefact between
 whoever does the work and whoever commits it.
 
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
+
+## 1.4.2 - the pre-push hook reads the first semver, like release.sh already did
+
+`tools/git-hooks/pre-push` rejected any `version.md` that was not a bare `X.Y.Z`
+string, and said so citing `docs/versioning.md` — the document that says the
+opposite. [ADR-012](docs/decisions.md) replaced the bare-string requirement with
+the first-semver rule precisely because a third of the fleet was measured to use
+the markdown shape, and `tools/release.sh` has implemented that rule since it was
+written (`first_semver()`, line 65). Two files, one rule, two readings; the hook
+had the wrong one.
+
+**What it would have cost.** The hook is not active anywhere yet — no clone in
+the fleet has `core.hooksPath` set — so this was latent, not live. Measured on
+the fleet today: `shvia-workspace` (`**Versão atual:** \`0.27.17\``) and
+`skill-dashproject` (`0.5.4`) both fail the old check and pass the new one, and
+so does every BLUE3-ISP repository. Enabling the hooks as documented would have
+refused every push from those repos, with an error message rendered unreadable
+by `tr -d '[:space:]'` collapsing the whole markdown file into one string.
+
+Fixed in the root hook **and** in `templates/skeleton/tools/git-hooks/pre-push`,
+which is the copy every new repository inherits — the same defect was being
+minted forward. Both the local read and the `origin/<default>` read now use
+`grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -n 1`, byte-for-byte the reading
+`release.sh` does, so the duplicate-and-monotonicity checks keep working on both
+file shapes.
+
+Also corrected here, under the "stale in the same pass" rule: this file's own
+preamble still described the commit format as *"versão - comentário em
+português"*, which [ADR-014](docs/decisions.md) superseded on 03/09/2026.
 
 ## 1.4.1 - the release workflow fires on the default branch, whatever it is named
 
