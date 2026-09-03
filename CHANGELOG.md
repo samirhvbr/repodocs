@@ -8,6 +8,62 @@ whoever does the work and whoever commits it.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 1.2.1 - o censo completo derruba o numero que a 1.2.0 publicou
+
+A `1.2.0` afirmou *"54 repositorios, zero Releases publicadas, e tres tags entre
+todos eles"*. **Errado.** Aquele numero saiu de uma varredura parcial — a
+caminhada local em `~/x` mais a org BLUE3-ISP — e **perdeu o SSHVTERM-DESKTOP
+inteiro**.
+
+### O numero real, do censo dos 52 repos com `version.md`
+
+| | |
+|---|---|
+| Sem nenhuma Release publicada | **50 de 52** |
+| Sem nenhuma tag de versao | **47 de 52** |
+| Versoes distintas na frota | **~2.764** |
+| EOP + SHVIA-WEB | **1.591 delas — 55% do total** |
+
+E cinco repos **ja fazem isso**, todos com prefixo `v`: `SSHVTERM-DESKTOP` (22
+tags e **17 Releases publicadas**, tituladas `ShvTerm v0.5.41`),
+`brasileirao-a-2026` (17 tags), `blue3-wcup-2026` (3), `blue3-f1` (1), e o
+`docsys_blue3` (19 tags, 18 Releases), que e do Rodrigo e esta fora desta frota.
+
+### A consequencia que agora esta escrita
+
+Mostrado o numero, o dono confirmou a decisao: **tag pura em todos, inclusive
+nesses cinco**. A consequencia e real e fica dita de frente no
+[ADR-011](docs/decisions.md): o SSHVTERM-DESKTOP vai ter `v0.5.41` com a Release
+*"ShvTerm v0.5.41"* **convivendo** com uma `0.5.41` nova — a mesma versao
+alcancavel por dois nomes. As tags velhas **nao sao apagadas**: apagar orfanaria
+17 Releases que ja existem e que alguem pode ter linkado.
+
+### Um defeito que o censo pegou no `release.sh`
+
+O `--current` taggeava o HEAD com a versao lida da **arvore de trabalho**. Oito
+repos da frota estao agora com o `version.md` bumpado e **nao commitado** — o
+SHVIA-WORKSPACE esta 14 versoes a frente do ultimo commit. Nesses, o `--current`
+teria criado uma tag apontando para um commit que nao contem aquela versao.
+
+Agora ele recusa e explica, e diz que o `--backfill` e seguro ali (ele le o
+historico, nao a arvore). Testado nos dois sentidos.
+
+### Outros dois achados do censo, ainda abertos
+
+- **SHVIA-WEB local esta 18 commits atras do origin** (local `2.110.154`, origin
+  `2.110.161`). Backfill a partir do checkout velho perderia 8 versoes.
+- **SHVIA-OLLAMA tem `version.md` nao rastreado pelo git** (`1.2.0`), enquanto a
+  ultima versao commitada e `1.1.1`.
+
+Ambos estao na fila em [.continue/README.md](.continue/README.md).
+
+### Por que isto virou entrada propria em vez de conserto silencioso
+
+O CHANGELOG nao e reescrito — e a regra da casa, e ela vale principalmente
+quando o que esta escrito e o **erro**. A `1.2.0` fica como esta; esta entrada
+diz o que estava errado e o ADR-011 ganhou o aviso apontando para ca. E a
+terceira vez seguida que medir contrariou o que este repositorio tinha escrito.
+
 ## 1.2.0 - toda versao vira tag e Release, e a regra do version.md sai do papel
 
 O quadro **Releases** do GitHub estava vazio em **todos os 54 repositorios** da

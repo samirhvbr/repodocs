@@ -264,19 +264,33 @@ lines against 259.
 
 **Status:** `ACCEPTED` · 02/09/2026
 
-**Context.** Measured across the fleet on 02/09/2026: **54 repositories, zero
-published Releases**, and three tags between all of them. Every repository
-versions its commits — `2.110.161 - …` — but GitHub never infers a version from
-a commit subject, so every repo page said *"No releases published"* and
-`git diff 2.110.160..2.110.161` failed because neither name existed as a ref.
+**Context.** Measured across the fleet on 02/09/2026, in a full census of 52
+repositories carrying a `version.md`:
 
-The distinct-version counts: SHVIA-WEB 756, EOP 827, BLUE3-INTRANET 150,
-SHVIA-DESKTOP 98, SSHVTERM-WEB 75.
+- **50 of 52 have zero published Releases.**
+- **47 of 52 have zero version tags.**
+- **~2,764 distinct version numbers** exist across the fleet's histories.
+  EOP (827) and SHVIA-WEB (764) alone are over half of them.
 
-Two repositories already carried the gap **in writing**, in their own
-`version.md`: `blue3-f1` — *"Ao publicar, taggear `v0.3.0`"* — and
-`brasileirao-a-2026` — *"⚠️ Sem tag `v0.16.0` no git. As tags param em
-`v0.15.0`."* This was known debt, not a new idea.
+Every repository versions its commits — `2.110.161 - …` — but GitHub never
+infers a version from a commit subject, so those pages say *"No releases
+published"* and `git diff 2.110.160..2.110.161` fails because neither name
+exists as a ref.
+
+**Five repositories already do this, and all five use a `v` prefix:**
+`SSHVTERM-DESKTOP` (22 tags, **17 published Releases**, titled `ShvTerm v0.5.41`),
+`brasileirao-a-2026` (17 tags), `blue3-wcup-2026` (3), `blue3-f1` (1), and the
+colleague-owned `docsys_blue3` (19 tags, 18 Releases — outside this fleet).
+
+> ⚠️ **A first pass of this ADR said "zero published Releases and three tags
+> between all of them".** That was written from a partial scan — the local
+> `~/x` walk plus the BLUE3-ISP org — and it missed `SSHVTERM-DESKTOP` entirely.
+> The real numbers are above. Corrected in `1.2.1`, from the full census.
+
+Two repositories carried the gap **in writing**, in their own `version.md`:
+`blue3-f1` — *"Ao publicar, taggear `v0.3.0`"* — and `brasileirao-a-2026` —
+*"⚠️ Sem tag `v0.16.0` no git. As tags param em `v0.15.0`."* Known debt, not a
+new idea.
 
 **Decision.** Every version in `version.md` gets a git tag **named exactly as
 the file holds it — no `v` prefix** — and a GitHub Release on that tag, titled
@@ -292,16 +306,24 @@ COMMITTER skill right after its own push succeeds. Both call the same
 **Consequences.** `git diff <old>..<new>` works across the whole history, and a
 bad deploy has a ref to roll back to.
 
-The `v`-less form **diverges from the three tags the fleet already has**
-(`v0.15.0`, and one in SHVIA-DESKTOP). Those are left alone as history; what was
-corrected instead are the two `version.md` files whose text instructed the `v`
-form — a document contradicting the artefact is the defect, not the old tag.
+The `v`-less form **diverges from the 43 `v*` tags the five repositories above
+already carry**, and the owner confirmed it after being shown that number: bare
+tags everywhere, including in those five. The accepted consequence is stated
+plainly, because it is real — `SSHVTERM-DESKTOP` will hold `v0.5.41` with its
+published Release *"ShvTerm v0.5.41"* **alongside** a new bare `0.5.41`: the same
+version reachable under two names. Old tags are not deleted, because deleting
+them would orphan 17 Releases that already exist and that people may have
+linked.
+
+What is corrected instead are the two `version.md` files whose text instructs
+the `v` form — a document contradicting the artefact is the defect, not the old
+tag.
 
 Neither owner ever decides a version: both copy a number the agent already
 wrote, which is what leaves COMMITTER's inviolable *"nunca bumpa versão"* rule
 (its own ADR-002) untouched.
 
-The backfill is roughly 2,000–3,000 Releases fleet-wide and is **hard to undo** —
+The backfill is roughly **2,764 Releases** fleet-wide and is **hard to undo** —
 deleting them costs the same volume of API calls again. The mitigation is a
 dry-run printed and read per repository before anything is published, plus a
 script that is idempotent and resumable. That was the accepted cost, not an

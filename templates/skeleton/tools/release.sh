@@ -148,6 +148,17 @@ printf 'repo:    %s\nbranch:  %s\nversion: %s (first semver in version.md)\nmode
   "$REPO" "$BRANCH" "$CURRENT" "$MODE" "$([ "$DRY" = 1 ] && echo '  [DRY RUN — nothing is created]')"
 
 if [ "$MODE" = "current" ]; then
+  # A version that is not committed must not be tagged: the tag would point at a
+  # commit that does not contain it. Measured need — 8 repos in this fleet carry
+  # an uncommitted version.md bump in the working tree right now (SHVIA-WORKSPACE
+  # is 14 versions ahead of its last commit).
+  HEAD_VERSION="$(git show HEAD:version.md 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -n 1)"
+  if [ "$HEAD_VERSION" != "$CURRENT" ]; then
+    printf 'release.sh: REFUSING — version.md says %s but HEAD has %s.\n' "$CURRENT" "${HEAD_VERSION:-nothing}" >&2
+    printf '  The bump is not committed yet. Commit it, then re-run.\n' >&2
+    printf '  (--backfill is safe here: it reads history, not the working tree.)\n' >&2
+    exit 1
+  fi
   publish "$CURRENT" "$(git rev-parse HEAD)" 1
 else
   # Oldest first, so the newest version is created last and ends up "Latest".
