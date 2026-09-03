@@ -8,6 +8,15 @@ whoever does the work and whoever commits it.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 1.2.4 - Regra de Releases no doc de agente: bump e Release sao um ato so
+
+Eco marcado da norma unica em samirhvbr/repodocs (docs/versioning.md). O
+`version.md` da branch padrao NO GITHUB e o que as Releases no GitHub mostram, e
+um commit que bumpa o `version.md` nao esta terminado ate aquela versao ter tag,
+Release e o badge `Latest`.
+
+Bloco delimitado por marcador: rodar de novo substitui, nao duplica.
+
 ## 1.2.3 - o bump e a Release sao um ato so, e o badge Latest obedece ao version.md
 
 Achado do dono, olhando o `sshvterm-desktop`: *"teve um bump para version.md
