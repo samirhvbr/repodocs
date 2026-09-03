@@ -159,6 +159,11 @@ Full rules, including why `version.md` and not an environment variable:
 
 ## Branch
 
+**`master`, never `main`.** The default branch of every repository in this fleet
+is `master` — a house convention so that every script, hook and runbook can say
+`origin/master` and be right ([ADR-015](docs/decisions.md)). A repo created as
+`main` gets renamed; a different branch is fine only as a **written** decision.
+
 Single branch, `master`. Direct push is allowed. **Force-push and deletion are
 dead for everyone, the owner included** — a rewritten history is an audit trail
 destroyed, and `.claude/settings.json` denies `--force`, `-f`, `reset --hard`

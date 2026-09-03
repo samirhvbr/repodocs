@@ -111,6 +111,23 @@ Code identifiers are English.
 
 ---
 
+## Branch
+
+**`master`, never `main`.** The default branch of every repository in this fleet
+is `master` — a house convention so that every script, hook and runbook can say
+`origin/master` and be right. A repo created as `main` gets renamed with GitHub's
+rename (it keeps open PRs and redirects old links); every existing clone then
+needs `git branch -m main master`, `git fetch origin`,
+`git branch -u origin/master master` and — the step people skip —
+`git remote set-head origin -a`.
+
+A different branch is fine **only as a written decision**, recorded in
+`docs/decisions.md`.
+
+Norm: [samirhvbr/repodocs `docs/conventions.md`](https://github.com/samirhvbr/repodocs/blob/master/docs/conventions.md).
+
+---
+
 ## Version and commits (mandatory)
 
 Format: `version - short description in English`. The version comes from

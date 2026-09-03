@@ -205,6 +205,50 @@ naming is the convention, and tooling depends on it.
 | `NOTICE` | GitHub, lawyers | **No extension.** Third-party attribution a license requires. **It must never contradict `LICENSE`** about the license or the copyright holder. |
 | `.gitignore` | git | Everything is versioned; **the only exception is a secret.** `.claude/` and `.continue/` are tracked on purpose. |
 
+### The default branch is `master`
+
+**Every repository in this fleet uses `master` as its default branch. Never
+`main`.**
+
+This is a house convention, not a technical claim — git works either way. The
+value is that it is *uniform*: every script, every runbook, every hook and every
+piece of automation can say `origin/master` and be right. The moment half the
+fleet says `main`, every one of those has to ask first, and the ones that forget
+to ask break quietly.
+
+That is not hypothetical here. `tools/release.sh` resolves the default branch at
+runtime **precisely because** the fleet is mixed today, and the fleet-wide sweeps
+that built this standard each needed a fallback chain for it. The convention is
+what lets that code get simpler later, not more clever.
+
+**A repository created as `main` gets renamed to `master`** — GitHub does the
+rename, keeps open pull requests, and leaves a redirect for old links:
+
+```bash
+gh api -X POST repos/<owner>/<repo>/branches/main/rename -f new_name=master
+```
+
+Then, in every existing clone:
+
+```bash
+git branch -m main master
+git fetch origin
+git branch -u origin/master master
+git remote set-head origin -a
+```
+
+That last line is not optional, and it is the one people skip. A stale
+`origin/HEAD` points at a branch that no longer exists, and tooling that trusts
+it fails in a way that reads like a permission problem. Measured on 03/09/2026:
+`samirhvbr/samirhvbr` had GitHub's default at `master`, only `master` on the
+remote, and a local `origin/HEAD` still pointing at `origin/main` — the fleet
+sweep derived the wrong branch from it and its push was refused.
+
+**A deliberate exception is fine when it is written down.** `blue3-intranet-ntheme`
+works on `dev`, and says so in its own `version.md`. That is a decision. A repo
+sitting on `main` because that is what GitHub defaulted to is not a decision — it
+is a default nobody chose.
+
 And these directories:
 
 | Path | Rule |

@@ -8,6 +8,55 @@ whoever does the work and whoever commits it.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 1.4.0 - the default branch is `master`, never `main`
+
+Census of the 51 fleet repositories, 03/09/2026: **43 on `master`, 7 on `main`,
+1 on `dev`**. The seven are not a decision — they are repositories created after
+GitHub changed its own default, inheriting whatever the button gave them.
+
+### Why uniformity is the point
+
+Git does not care. Every script, runbook, hook and workflow that wants "the
+default branch" does: it either hardcodes one and is wrong for part of the
+fleet, or resolves it at runtime and carries a fallback chain forever.
+`tools/release.sh` does the latter today **because** the fleet is mixed. This
+ADR is what lets those fallbacks be deleted later.
+
+### It already broke something, in this rollout
+
+`samirhvbr/samirhvbr` has GitHub's default at `master` and only `master` on the
+remote — but a **stale local `origin/HEAD` still pointing at `origin/main`**. The
+fleet sweep read it, derived `main`, pushed `HEAD:main` and was refused. The
+failure reads like a permissions problem and is actually a branch name.
+
+Fixed with `git remote set-head origin -a` — the step everyone skips when
+renaming a branch, and the one that causes this exact class of failure.
+
+### The rule
+
+`master` is the default branch of every repository here. A repo created as `main`
+is renamed with GitHub's own rename (it preserves open pull requests and
+redirects old links), and every existing clone is repointed — including
+`set-head`.
+
+A different branch is allowed **when it is a written decision**:
+`blue3-intranet-ntheme` works on `dev` and says so in its own `version.md`. A
+repo sitting on `main` because that is what the button did is not a decision.
+
+### Suggested, not swept
+
+Renaming a default branch is outward-facing: it touches clone instructions, CI
+configs that name the branch, and bookmarks to branch URLs. GitHub's rename
+covers PRs and redirects; it does not fix a collaborator's clone or a workflow
+file that hardcodes `main`. So the seven are **listed for the owner to
+schedule**, not renamed on the strength of a convention:
+
+`blue3-debian-custom-iso` · `blue3-ai-login` · `MIGRANDO-ZIMBRA-CARBONIO` ·
+`shvia-bench` · `shvia-rota` · `shvia-site` · `shvia-workspace`
+
+Written up in [ADR-015](docs/decisions.md), `docs/conventions.md` §7, the
+`CLAUDE.md`/`AGENTS.md` twins and the skeleton.
+
 ## 1.3.1 - Agent doc: Releases rule and the English-only language rule
 
 Marked echo of the single source at samirhvbr/repodocs. Two rules land here:
@@ -20,6 +69,7 @@ Marked echo of the single source at samirhvbr/repodocs. Two rules land here:
    product strings. History is not rewritten.
 
 Delimited by a marker, so re-running replaces instead of duplicating.
+
 
 ## 1.3.0 - everything is English (US), commit messages included
 

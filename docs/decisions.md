@@ -461,3 +461,47 @@ the norm's job and the author's.
 **The `.committer.yml` skill follows.** Its fallback prompt asked the model for
 a Portuguese message; leaving that would have made the automation contradict the
 norm on every commit it wrote.
+
+---
+
+## ADR-015 — the default branch is `master`, never `main`
+
+**Status:** `ACCEPTED` · 03/09/2026
+
+**Context.** Census of the 51 fleet repositories on 03/09/2026: **43 on
+`master`, 7 on `main`, 1 on `dev`**. The seven on `main` were not a decision —
+they are repositories created after GitHub changed its own default, inheriting
+whatever the button gave them.
+
+The cost is uniformity, not correctness: git does not care. But every script,
+runbook, hook and workflow that wants "the default branch" either hardcodes it
+and is wrong for part of the fleet, or resolves it at runtime and carries a
+fallback chain forever. `tools/release.sh` does the latter today, and it does so
+**because** the fleet is mixed.
+
+It already produced a real failure. `samirhvbr/samirhvbr` had GitHub's default at
+`master`, only `master` on the remote, and a **stale local `origin/HEAD` still
+pointing at `origin/main`**. The fleet sweep derived `main` from it, pushed
+`HEAD:main`, and was refused — a failure that reads like permissions and is
+actually a branch name.
+
+**Decision.** **`master` is the default branch of every repository in this
+fleet.** A repository created as `main` is renamed, using GitHub's rename (which
+preserves open pull requests and redirects old links), and every existing clone
+is repointed — including `git remote set-head origin -a`, the step people skip
+and the one that caused the failure above.
+
+A different branch is allowed **when it is a written decision**:
+`blue3-intranet-ntheme` works on `dev` and says so in its own `version.md`. A
+repository sitting on `main` because that is what the button did is not a
+decision.
+
+**Consequences.** Renaming a default branch is outward-facing: it changes clone
+instructions, any CI config that names the branch, and any bookmark to a branch
+URL. GitHub's rename covers PRs and redirects, but it does not fix collaborators'
+local clones or a workflow file that hardcodes `main`. So the rename is
+**suggested per repository, not swept** — the seven are listed for the owner to
+schedule, not renamed on the strength of a convention.
+
+This ADR is what lets the branch-resolution fallbacks in `tools/release.sh` be
+deleted later. Until every repository is on `master`, they stay.
