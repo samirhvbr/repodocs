@@ -10,7 +10,7 @@
 > where we stopped, **always first**) · [docs/conventions.md](docs/conventions.md)
 > (the norm this repository exists to hold) ·
 > [docs/versioning.md](docs/versioning.md) (how a version and a commit are
-> written) · [docs/decisions.md](docs/decisions.md) (ADRs 001–016 — do not
+> written) · [docs/decisions.md](docs/decisions.md) (ADRs 001–017 — do not
 > re-litigate a decided direction, link the ADR) ·
 > [docs/security.md](docs/security.md) (normative; wins any conflict).
 
@@ -146,6 +146,13 @@ the task*, not a follow-up for someone else. If you are about to write
   heading *is* the subject.
 - No Conventional Commits prefix (`feat:`, `fix:`, `chore:`) and no vague
   subject ("update", "ajuste", "wip", "changes", "several improvements").
+
+**The bump is the one clause a repository may override — in writing.** If this
+repository's own documentation says the version is stamped some other way, and says
+why, follow that. Otherwise the line above applies to you. An override nobody wrote
+down is not an exception. Nothing else in this block bends: the changelog entry, the
+subject, the language, one subject per commit, and committing before you report done
+all hold regardless.
 
 **One subject per commit.** The subject has to describe the whole commit
 honestly. The moment your description needs an "and" to be true, it is two

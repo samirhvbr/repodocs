@@ -9,6 +9,53 @@ at `git commit` time.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 1.6.0 - the bump clause gets a written escape hatch, because one repository already had one
+
+`1.5.0` stated the bump as unconditional — *"the version taken from `version.md`
+and bumped in the same commit"* — and `1.5.1` stamped that sentence into 147 agent
+files. In 49 repositories it was right. In one it was false on arrival.
+
+**SHVIA-WEB has not bumped in the commit since 29/08/2026, on purpose.** Its agent
+writes the changelog entry with a `## (versão no merge) - description` placeholder
+and the number is stamped at merge by `scripts/versao-no-merge.sh --apply`, read
+from the remote. The reason is measured, not stylistic: **four `version.md`
+collisions in a single day, between four parallel sessions.** A worktree isolates a
+directory, not a number, and that repository has twenty of them live — a shape
+nothing else in the fleet has.
+
+So the block sat in that file next to a rule saying the opposite. A session working
+there found two instructions governing the same act, could not tell which one won,
+and stopped to ask instead of picking one. That is the right outcome and also the
+whole diagnosis: **an instruction that needs a human to adjudicate it is not an
+instruction.**
+
+[ADR-017](docs/decisions.md) amends ADR-016. **The bump is the one clause a
+repository may override, and only in writing** — its own documentation has to state
+the alternative and state why. Everything else is unconditional: the changelog entry
+first, the `X.Y.Z - description` subject, English (US), no Conventional Commits
+prefixes, one subject per commit, nothing reported as finished before it is
+committed.
+
+The bump is singled out because it is the only clause whose correctness depends on
+the repository's *shape* rather than on the norm. Twenty parallel worktrees make
+in-commit bumping collide; one working tree does not. Every other clause is about
+how a change is described and when it is recorded, and none of that varies with how
+many worktrees a project has. "In writing" is the entire condition, the same
+construction [ADR-015](docs/decisions.md) already uses for the default branch: an
+undocumented override is not an exception, it is a repository quietly disagreeing
+with the norm, and the next session cannot tell those apart.
+
+**This is the first real exercise of the delimited-block design.** ADR-016 argued
+for it against per-repo prose on the grounds that a fleet-wide correction should be
+one pass rather than an archaeology. The correction arrived a day later, and the
+argument holds: one edit here, regenerated everywhere.
+
+The honest cost, recorded because it is a real one: a rule with an escape hatch is
+weaker than one without, and this hatch was cut the day after the rule. The
+alternative was worse — a block that is provably false in one repository teaches
+every reader that the block is approximately true, and an approximately-true
+instruction is one nobody stops at.
+
 ## 1.5.1 - the COMMIT-RULE pass over the fleet is done, and the ADR-007 twins with it
 
 `1.5.0` decided that the agent commits and shipped the `COMMIT-RULE` block, but

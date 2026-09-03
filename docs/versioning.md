@@ -102,6 +102,34 @@ is neither the old version nor the delivered one. Work in flight is
 indistinguishable from work abandoned, and the changelog entry describing the
 delivery names a version that was never committed.
 
+### The bump clause is the one a repository may override, in writing
+
+Everything else in this section is unconditional. **The bump — "the version comes
+from `version.md`, bumped in the same commit" — is not**, and it is the only
+clause that bends.
+
+A repository may stamp the version some other way **when its own documentation
+says so and says why.** The written reason is the whole condition: an override
+nobody wrote down is not an exception, it is a repository quietly disagreeing
+with the norm, which is the failure this file exists to prevent.
+
+The case that produced this clause is SHVIA-WEB. It stamps the version **at
+merge**, not in the branch: the agent writes the changelog entry with a
+`## (versão no merge) - description` placeholder, and whoever merges runs
+`scripts/versao-no-merge.sh --apply`, which reads the next number from the remote
+and fills it in. The reason is measured, not stylistic — **four `version.md`
+collisions in a single day, between four parallel sessions.** A worktree isolates
+a directory, not a number, and that repository has twenty of them live. No other
+repository in this fleet has that shape, which is exactly why this is an
+exception and not a change to the rule.
+
+**Nothing else bends.** The changelog entry still comes first and still carries
+the description, the subject is still `X.Y.Z - description`, the language is
+still English (US), Conventional Commits prefixes are still forbidden, one
+subject per commit still holds, and a delivery is still not delivered until it is
+committed. A repository with no written override bumps in the commit, like
+everyone else.
+
 ### One subject per commit
 
 **A commit's subject has to describe the whole commit honestly.** The moment the

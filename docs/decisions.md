@@ -518,7 +518,7 @@ checks that its `release.yml` is the current one.
 
 ## ADR-016 — the agent commits, and a delivery is not delivered until it is
 
-**Status:** `ACCEPTED` · 03/09/2026 · Extends
+**Status:** `ACCEPTED` · 03/09/2026 · **Amended by [ADR-017](#adr-017--the-bump-clause-may-be-overridden-by-a-repository-in-writing)** · Extends
 [ADR-003](#adr-003--commit-format-xyz---description) from *how* a commit is
 written to *who* writes it and *when*. The decision it reverses was never an ADR
 here — it lived in the COMMITTER skill's own log, which is part of why it was
@@ -586,3 +586,60 @@ The cost is that agents spend tokens on commit messages again, which is the
 expense COMMITTER was built to avoid. That trade was re-taken knowingly: the
 saving was real but it bought a history nobody could steer, and a delivery whose
 last step belonged to a cron job that ran up to 55 minutes later.
+
+---
+
+## ADR-017 — the bump clause may be overridden by a repository, in writing
+
+**Status:** `ACCEPTED` · 03/09/2026 · Amends
+[ADR-016](#adr-016--the-agent-commits-and-a-delivery-is-not-delivered-until-it-is)
+
+**Context.** ADR-016 shipped the `COMMIT-RULE` block into 147 agent files the day
+it was accepted. The block states the bump as unconditional — *"the version taken
+from `version.md` and bumped in the same commit"* — and the sweep that stamped it
+did not read each repository's own commit prose first.
+
+That was fine in 49 repositories and wrong in one. **SHVIA-WEB does not bump in
+the commit, on purpose, since 29/08/2026.** Its agent writes the changelog entry
+with a `## (versão no merge) - description` placeholder and the version is stamped
+at merge by `scripts/versao-no-merge.sh --apply`, which reads the next number from
+the remote. The reason is measured: **four `version.md` collisions in one day,
+between four parallel sessions.** A worktree isolates a directory, not a number,
+and SHVIA-WEB has twenty worktrees live — a shape no other repository here has.
+
+So the block landed in that file next to a rule saying the opposite, and stayed
+there for several hours. A session reading it found two instructions about the
+same act and no way to tell which governed. It stopped and asked rather than
+picking one, which is the correct outcome and also the proof of the defect: an
+instruction that needs a human to adjudicate it is not an instruction.
+
+**Decision.** **The bump is the one clause of `COMMIT-RULE` a repository may
+override, and only in writing.** The repository's own documentation must state
+the alternative and state why. Everything else in the block is unconditional: the
+changelog entry first, the `X.Y.Z - description` subject, English (US), no
+Conventional Commits prefixes, one subject per commit, and nothing reported as
+finished before it is committed.
+
+**Why the bump and nothing else.** Because the bump is the only clause whose
+correctness depends on the repository's *shape* rather than on the norm. Twenty
+parallel worktrees make in-commit bumping collide; one working tree does not.
+Every other clause is about how a change is described and when it is recorded,
+and none of that varies with how many worktrees a project has.
+
+**Why "in writing" is the whole condition.** An undocumented override is not an
+exception — it is a repository quietly disagreeing with the norm, and the next
+session cannot tell the two apart. This is the same construction
+[ADR-015](#adr-015--the-default-branch-is-master-never-main) uses for the default
+branch: `blue3-intranet-ntheme` works on `dev` and *says so*, which makes it a
+decision; a repository sitting on `main` because that is what the button did is
+not one.
+
+**Consequences.** The block is regenerated across the fleet — which is what the
+delimited-block design in ADR-016 was for, and its first real exercise. SHVIA-WEB
+records its override in its own `CLAUDE.md`, next to the mechanism.
+
+The honest cost is that a rule with an escape hatch is weaker than one without,
+and this one was written the same day as the rule it weakens. The alternative was
+worse: a block that is provably false in one repository teaches every reader that
+the block is approximately true, and an approximately-true instruction is one
+nobody stops at.
