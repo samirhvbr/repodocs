@@ -8,6 +8,19 @@ whoever does the work and whoever commits it.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 1.3.1 - Agent doc: Releases rule and the English-only language rule
+
+Marked echo of the single source at samirhvbr/repodocs. Two rules land here:
+
+1. The `version.md` of the default branch ON GITHUB is what the GitHub Releases
+   show, and a commit that bumps it is not finished until that version has a
+   tag, a Release and the `Latest` badge — same push, not "later".
+2. Everything in this repository is English (US): documents, commit messages,
+   pull requests, issues, code comments. The only carve-out is end-user-facing
+   product strings. History is not rewritten.
+
+Delimited by a marker, so re-running replaces instead of duplicating.
+
 ## 1.3.0 - everything is English (US), commit messages included
 
 The owner rejected the last language split, and the trigger was a commit this
