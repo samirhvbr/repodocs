@@ -129,6 +129,16 @@ in the first, repeat the number in the rest.
 *is* the commit subject.** Bodies are narrative — what changed, why, and what it
 measured — not bullet lists.
 
+**The version is the FIRST semver in `version.md`** — a bare string and a
+markdown document both satisfy that, and both exist in this fleet
+([ADR-012](docs/decisions.md)).
+
+**Every version gets a tag named exactly after it — no `v` prefix — and a
+published GitHub Release**, notes taken from its `CHANGELOG.md` section. The
+workflow does it on every push that touches `version.md`; `tools/release.sh` is
+the same logic for running it by hand. Both skip what already exists, so neither
+can double-publish ([ADR-011](docs/decisions.md)).
+
 Full rules, including why `version.md` and not an environment variable:
 [docs/versioning.md](docs/versioning.md).
 
@@ -151,6 +161,8 @@ and `clean -fd` regardless of what the allow-list says.
 - [ ] A finished item **left** `.continue/`.
 - [ ] A document made stale by this change was corrected in the same pass.
 - [ ] `version.md` bumped, in this commit.
+- [ ] The **tag and the GitHub Release** exist for this version. Normally the
+      workflow does it on push; `./tools/release.sh` if you need it now.
 - [ ] The twins still match: `diff <(tail -n +2 CLAUDE.md) <(tail -n +2 AGENTS.md)`.
 - [ ] If `templates/skeleton/` changed, the root file it mirrors changed too —
       or the divergence is deliberate and written down.

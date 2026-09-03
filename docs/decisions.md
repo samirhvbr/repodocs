@@ -37,14 +37,18 @@ the norm exist and **this one is the source.**
 
 ## ADR-002 — `version.md` is the sole authority on the version
 
-**Status:** `ACCEPTED` · 02/09/2026
+**Status:** `ACCEPTED` · 02/09/2026 · **Amended by
+[ADR-012](#adr-012--the-version-is-the-first-semver-in-versionmd) (02/09/2026)**
+— the authority stands; the claim that the file is "a bare `X.Y.Z` string and
+nothing else" was measured false for a third of the fleet and was corrected.
 
 **Context.** 63 repositories carry a `version.md`; one carries a `VERSION`. The
 file is git-tracked so the bump travels inside the commit, which an environment
 variable cannot do when `.env` is excluded from the deploy.
 
-**Decision.** `version.md` at the root, a bare `X.Y.Z` string, is the single
-authority. An environment variable may exist only as a fallback when the file is
+**Decision.** `version.md` at the root is the single authority.
+*(As originally written this ADR also required the file to be a bare `X.Y.Z`
+string. ADR-012 replaced that with the first-semver rule.)* An environment variable may exist only as a fallback when the file is
 absent, and no document may describe it as the authority.
 
 **Consequences.** Settles the live contradiction in `BLUE3-INTRANET`, where the
@@ -196,7 +200,9 @@ invests the reading.
 
 ## ADR-009 — no CI workflow in this repository
 
-**Status:** `ACCEPTED` · 02/09/2026
+**Status:** `ACCEPTED` · 02/09/2026 · **Narrowed by
+[ADR-013](#adr-013--a-release-workflow-is-not-a-ci-workflow) (02/09/2026)** —
+this bans a **build/test** workflow, not every workflow.
 
 **Context.** repodocs holds documentation, two shell hooks and a template
 skeleton. There is nothing to compile and no suite to run.
@@ -251,3 +257,112 @@ A translated pair is rejected for the same reason a copied norm is: two
 documents saying the same thing drift, and one of them becomes wrong in silence.
 BLUE3-INTRANET's `README.md`/`README_br.md` pair is the worked example, at 374
 lines against 259.
+
+---
+
+## ADR-011 — every version gets a tag named after it and a published Release
+
+**Status:** `ACCEPTED` · 02/09/2026
+
+**Context.** Measured across the fleet on 02/09/2026: **54 repositories, zero
+published Releases**, and three tags between all of them. Every repository
+versions its commits — `2.110.161 - …` — but GitHub never infers a version from
+a commit subject, so every repo page said *"No releases published"* and
+`git diff 2.110.160..2.110.161` failed because neither name existed as a ref.
+
+The distinct-version counts: SHVIA-WEB 756, EOP 827, BLUE3-INTRANET 150,
+SHVIA-DESKTOP 98, SSHVTERM-WEB 75.
+
+Two repositories already carried the gap **in writing**, in their own
+`version.md`: `blue3-f1` — *"Ao publicar, taggear `v0.3.0`"* — and
+`brasileirao-a-2026` — *"⚠️ Sem tag `v0.16.0` no git. As tags param em
+`v0.15.0`."* This was known debt, not a new idea.
+
+**Decision.** Every version in `version.md` gets a git tag **named exactly as
+the file holds it — no `v` prefix** — and a GitHub Release on that tag, titled
+with the same string, whose notes are the `CHANGELOG.md` section for that
+version. The whole history is backfilled, not just new versions.
+
+Two owners, both guarding on *"does this tag already exist?"*, so whichever runs
+first wins and the other is a no-op:
+`.github/workflows/release.yml` on every push that touches `version.md`, and the
+COMMITTER skill right after its own push succeeds. Both call the same
+`tools/release.sh`.
+
+**Consequences.** `git diff <old>..<new>` works across the whole history, and a
+bad deploy has a ref to roll back to.
+
+The `v`-less form **diverges from the three tags the fleet already has**
+(`v0.15.0`, and one in SHVIA-DESKTOP). Those are left alone as history; what was
+corrected instead are the two `version.md` files whose text instructed the `v`
+form — a document contradicting the artefact is the defect, not the old tag.
+
+Neither owner ever decides a version: both copy a number the agent already
+wrote, which is what leaves COMMITTER's inviolable *"nunca bumpa versão"* rule
+(its own ADR-002) untouched.
+
+The backfill is roughly 2,000–3,000 Releases fleet-wide and is **hard to undo** —
+deleting them costs the same volume of API calls again. The mitigation is a
+dry-run printed and read per repository before anything is published, plus a
+script that is idempotent and resumable. That was the accepted cost, not an
+oversight.
+
+---
+
+## ADR-012 — the version is the first semver in `version.md`
+
+**Status:** `ACCEPTED` · 02/09/2026 · Amends
+[ADR-002](#adr-002--versionmd-is-the-sole-authority-on-the-version)
+
+**Context.** ADR-002 stated that `version.md` is *"a bare `X.Y.Z` string and
+nothing else"*. Measured, that is true of EOP, SHVIA-WEB, repodocs,
+`blue3-site-front`, `online` and `blue3-ndrive-server` — and **false** for nine
+BLUE3-ISP repositories and for skill-COMMITTER itself, whose `version.md` is a
+full markdown document opening with `**Versão atual:** ` and a backticked
+number, followed by the versioning convention and an embedded changelog.
+`blue3-intranet-mobile` holds two lines: `2.1.9`, then `api_min: 0.1.0`.
+
+Those repositories already document the real rule — *"quem precisar exibir ou
+reportar a versão extrai o primeiro número semver (`X.Y.Z`) encontrado aqui"* —
+and `config/app.php` has implemented it all along with
+`preg_match('/\d+\.\d+\.\d+/')`.
+
+**Decision.** **The version is the first semver in `version.md`**, whatever the
+file's shape. Every reader — the app, the hooks, `tools/release.sh`, the
+workflow, the COMMITTER skill — uses that one rule. A new repository uses the
+bare form because it is the simplest thing satisfying it; an existing file is
+**not** reshaped, because the rule already reads it and rewriting it would change
+nothing.
+
+**Consequences.** The norm stops being false for a third of the fleet. This is
+the second time this repository has published a rule that the fleet contradicted
+— the first was the bilingual `LICENSE` costing the MIT badge (ADR-010). Both
+were caught by measuring rather than by re-reading, which is the argument for
+measuring before writing a norm, not after.
+
+---
+
+## ADR-013 — a release workflow is not a CI workflow
+
+**Status:** `ACCEPTED` · 02/09/2026 · Narrows
+[ADR-009](#adr-009--no-ci-workflow-in-this-repository)
+
+**Context.** ADR-009 said there is no workflow here, reasoning that nothing
+compiles and no suite runs, and that *"a red CI on a documentation repository
+teaches people to ignore CI"*. ADR-011 then required a workflow to publish
+Releases.
+
+**Decision.** ADR-009 bans a **build/test** workflow. A workflow that *publishes*
+is a different thing and is allowed. `.github/workflows/release.yml` exists here
+and in the skeleton.
+
+**Consequences.** The distinction holds because of what a failure means. A red
+test workflow on a docs repo is noise, and noise trains people to ignore the
+signal. The release workflow is silent in its normal case — the tag for the
+current version almost always already exists, so it exits clean — and when it
+does fail it means a Release is genuinely missing, which is worth a red mark.
+
+It also **never fails a push**: no `version.md`, no `tools/release.sh`, no
+parseable version — all exit 0 with a notice. A guard that blocks work when it
+cannot measure is a guard that gets switched off, which is the same reasoning
+already written into `pre-push`.

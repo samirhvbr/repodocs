@@ -50,11 +50,13 @@ skeleton/
 ├── version.md  (0.1.0)    SECURITY.md CHANGELOG.md
 ├── LICENSE                NOTICE      .gitignore
 ├── .github/               CODEOWNERS · dependabot.yml
+│                          workflows/release.yml
 ├── .claude/               settings.json · README.md
 ├── .continue/             README.md   (the queue's mandatory index)
 ├── docs/                  README.md · versioning.md · decisions.md
 │                          security.md · runbook.md
-└── tools/git-hooks/       commit-msg · pre-push
+├── tools/git-hooks/       commit-msg · pre-push
+└── tools/release.sh       tag + GitHub Release for version.md
 ```
 
 ## What is deliberately NOT in the skeleton

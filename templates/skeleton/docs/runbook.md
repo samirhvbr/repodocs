@@ -89,6 +89,9 @@ grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$' version.md && echo ok
 
 # settings.json parses
 python3 -m json.tool .claude/settings.json > /dev/null && echo ok
+
+# every version in history has a tag and a Release (prints what is missing)
+./tools/release.sh --backfill --dry-run
 ```
 
 If the `diff` on the twins reports anything other than the mirroring comment,

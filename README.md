@@ -15,7 +15,7 @@ source; everything else here either enforces it or is an example of it.
 
 The standard already existed. It just had to be inferred by opening sixteen
 repositories and noticing what they had in common: `LICENSE` without an
-extension in 41 of them against one `LICENSE.md`, a bare `version.md` in 63
+extension in 41 of them against one `LICENSE.md`, a lowercase `version.md` in 63
 against one `VERSION`, the same MIT text byte-identical in 14, the
 same `versão - comentário em português` commit rule written out separately in
 five.
@@ -39,7 +39,7 @@ opens another. It lives here now ([ADR-001](docs/decisions.md)).
 | File | What it is for | Who reads it |
 |---|---|---|
 | [README.md](README.md) | This file — what the repository is and how to use it | Humans, GitHub |
-| [version.md](version.md) | A bare `X.Y.Z` string, nothing else. **The single authority on the version** | The hooks, any deploy |
+| [version.md](version.md) | **The single authority on the version** — read as the first `X.Y.Z` in the file | The hooks, the release workflow, any deploy |
 | [CLAUDE.md](CLAUDE.md) | Agent instructions | Claude Code |
 | [AGENTS.md](AGENTS.md) | The same instructions, byte-identical below the H1 | Other agent tooling (`agents.md` standard) |
 | [SECURITY.md](SECURITY.md) | The reporting path. Thin, and points at the source | GitHub, whoever reports a vulnerability |
@@ -56,8 +56,8 @@ opens another. It lives here now ([ADR-001](docs/decisions.md)).
 | [.continue/](.continue/README.md) | **The queue.** What is still open, and whose call it is. Git-tracked on purpose |
 | [.claude/](.claude/README.md) | Model profile and permission posture. The deny-list always beats the allow-list |
 | [templates/](templates/README.md) | The skeleton a new repository copies, with its placeholder table |
-| [tools/git-hooks/](tools/git-hooks/) | `commit-msg` and `pre-push` — enabled once per clone |
-| [.github/](.github/) | `CODEOWNERS` and `dependabot.yml`. No workflow, on purpose ([ADR-009](docs/decisions.md)) |
+| [tools/](tools/) | `git-hooks/` (`commit-msg`, `pre-push` — enabled once per clone) and `release.sh` (tag + GitHub Release for `version.md`) |
+| [.github/](.github/) | `CODEOWNERS`, `dependabot.yml` and `workflows/release.yml`. No **build/test** workflow, on purpose ([ADR-009](docs/decisions.md), narrowed by [ADR-013](docs/decisions.md)) |
 
 ## Using it
 
@@ -80,8 +80,9 @@ git config core.hooksPath tools/git-hooks   # once per clone
 
 Then: write the `CHANGELOG.md` entry, bump `version.md` in the same commit, and
 commit with the entry's heading as the subject —
-`1.0.1 - comentário em português`. The rules, and the reasons behind them, are in
-[docs/versioning.md](docs/versioning.md).
+`1.0.1 - comentário em português`. On push, the release workflow tags that
+version and publishes its Release automatically. The rules, and the reasons
+behind them, are in [docs/versioning.md](docs/versioning.md).
 
 ## The three rules worth knowing before you touch anything
 

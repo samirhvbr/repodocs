@@ -9,12 +9,21 @@
 
 ## `version.md` is the authority
 
-The version lives in **`version.md` at the repository root**, as a bare `X.Y.Z`
-string and nothing else — no markdown, no `v` prefix, no metadata:
+The version lives in **`version.md` at the repository root**. The rule that
+matters is not the file's shape but how it is read:
+
+> **The version is the FIRST semver (`X.Y.Z`) in the file.**
+
+A bare string is the simplest thing satisfying it, and is what a new repository
+should use:
 
 ```
 0.1.0
 ```
+
+A markdown document whose first number is the version satisfies it equally — that
+is the shape several repositories in this fleet already use, and the reason the
+rule is written as "first semver" rather than "the whole file".
 
 It is git-tracked so the bump **travels inside the commit** and the deploy
 propagates it automatically. That is the whole reason it is a file and not an
@@ -88,6 +97,53 @@ the handoff artefact between an agent and whoever commits.
 Bodies are narrative, not bullet lists: the fleet's changelogs read as
 engineering post-mortems ("how it is proven", "where it came from", "measured",
 "what is left"), which is why a two-year-old entry is still worth reading.
+
+## Tags and Releases
+
+**Every version gets a git tag named after it, and a published GitHub Release
+on top of that tag.**
+
+GitHub never infers a version from a commit subject: without a tag, a repository
+full of `X.Y.Z - …` commits still shows *"No releases published"*, and
+`git diff <old>..<new>` fails because neither name exists as a ref. The tag is
+what pins a version number to the exact code it named — and what a bad deploy
+rolls back to.
+
+| Thing | Value |
+|---|---|
+| Tag | The version **exactly as `version.md` holds it — no `v` prefix** |
+| Release title | The same string |
+| Release notes | The `CHANGELOG.md` section for that version, falling back to the commit subjects that carried it, then to GitHub's generated notes |
+
+### Who creates it
+
+Two owners, both guarding on *"does this tag already exist?"*, so whichever runs
+first wins and the other is a no-op:
+
+- **`.github/workflows/release.yml`** — every push that touches `version.md`,
+  whoever made it.
+- **The COMMITTER skill** — right after its own push succeeds, where the marker
+  is active and `release: true`.
+
+Neither ever *decides* a version: both copy the number already in `version.md`.
+
+### `tools/release.sh`
+
+The one implementation both owners call — the workflow runs this script rather
+than reimplementing the rules.
+
+```bash
+./tools/release.sh --dry-run              # print the table, create nothing
+./tools/release.sh                        # tag + Release for the current version
+./tools/release.sh --backfill --dry-run   # the whole history, as a table
+./tools/release.sh --backfill             # the whole history, for real
+```
+
+Idempotent and resumable — anything already published is skipped. In
+`--backfill`, each version's tag points at the **last** commit that carried it:
+the finished state of that version, not its first commit.
+
+---
 
 ## The hooks
 

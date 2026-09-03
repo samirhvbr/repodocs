@@ -130,6 +130,14 @@ in the first, repeat the number in the rest.
 *is* the commit subject.** Bodies are narrative — what changed, why, and what it
 measured — not bullet lists.
 
+**The version is the FIRST semver in `version.md`** — a bare string and a
+markdown document both satisfy that.
+
+**Every version gets a tag named exactly after it — no `v` prefix — and a
+published GitHub Release.** `.github/workflows/release.yml` does it on every push
+that touches `version.md`, calling `tools/release.sh`; run that script by hand
+for a backfill. Both skip what already exists.
+
 Full rules: [docs/versioning.md](docs/versioning.md).
 
 ---
@@ -142,4 +150,6 @@ Full rules: [docs/versioning.md](docs/versioning.md).
 - [ ] A finished item **left** `.continue/`.
 - [ ] A document made stale by this change was corrected in the same pass.
 - [ ] `version.md` bumped, in this commit.
+- [ ] The **tag and the GitHub Release** exist for this version. Normally the
+      workflow does it on push; `./tools/release.sh` if you need it now.
 - [ ] The twins still match: `diff <(tail -n +2 CLAUDE.md) <(tail -n +2 AGENTS.md)`.

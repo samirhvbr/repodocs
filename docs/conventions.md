@@ -122,6 +122,10 @@ version:**
       commit body.
 - [ ] A finished item **left** `.continue/`.
 - [ ] A document made **stale by this delivery** was corrected in the same pass.
+- [ ] The **tag and the GitHub Release** for this version exist. A version with
+      no tag is a number in a commit message: `git diff` cannot reach it and a
+      bad deploy has nothing to roll back to
+      ([versioning.md](versioning.md#tags-and-releases)).
 
 That last one is what escapes most often. Real examples:
 
@@ -189,7 +193,7 @@ naming is the convention, and tooling depends on it.
 | File | Who reads it | Rule |
 |---|---|---|
 | `README.md` | humans, GitHub | What the project is and how to run it. English. |
-| `version.md` | the app, the hooks, the deploy | A **bare `X.Y.Z` string**, nothing else. The single authority on the version. See [versioning.md](versioning.md). |
+| `version.md` | the app, the hooks, the deploy, the release automation | The single authority on the version. **The version is the first semver (`X.Y.Z`) in the file** — a bare string and a markdown document both satisfy that, and both exist in this fleet. See [versioning.md](versioning.md). |
 | `CLAUDE.md` | Claude Code | Agent instructions. |
 | `AGENTS.md` | other agent tooling (agents.md standard) | **Byte-identical to `CLAUDE.md` below the H1.** Edit one, edit the other. |
 | `SECURITY.md` | GitHub, whoever reports a vulnerability | Thin, at the root because that path is what triggers GitHub's *"Report a vulnerability"*. Points at the normative source; does not duplicate it. |
@@ -207,6 +211,8 @@ And these directories:
 | `docs/` | The record (§1), with a curated `README.md` index. `docs/decisions.md` is the ADR log — the strongest convention in the fleet, present in every repo. |
 | `.github/` | `CODEOWNERS`, `dependabot.yml`, workflows. |
 | `tools/git-hooks/` | Hooks, enabled once per clone with `git config core.hooksPath tools/git-hooks`. |
+| `tools/release.sh` | Tags and publishes the Release for the version in `version.md`. Called by `.github/workflows/release.yml`, so the rules have one implementation. |
+| `.github/workflows/release.yml` | Publishes the Release on every push that touches `version.md`. |
 
 > A repository may **trim** this set with a reason — SHVIA-SITE is a static
 > marketing site and correctly has no `SECURITY.md` or `.continue/`. Trimming

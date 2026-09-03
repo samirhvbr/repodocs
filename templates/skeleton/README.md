@@ -22,7 +22,7 @@
 | [.continue/](.continue/README.md) | **The queue** — what is still open, and whose call it is |
 | [.claude/](.claude/README.md) | Model profile and permission posture for agents |
 | [CHANGELOG.md](CHANGELOG.md) | **The history** — newest first; each heading is a commit subject |
-| [version.md](version.md) | A bare `X.Y.Z` string. **The single authority on the version** |
+| [version.md](version.md) | **The single authority on the version** — read as the first `X.Y.Z` in the file. Every bump becomes a tag and a published Release |
 
 ## Contributing
 

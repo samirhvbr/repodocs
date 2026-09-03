@@ -8,6 +8,79 @@ whoever does the work and whoever commits it.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 1.2.0 - toda versao vira tag e Release, e a regra do version.md sai do papel
+
+O quadro **Releases** do GitHub estava vazio em **todos os 54 repositorios** da
+frota, e a causa nao era descuido: o GitHub nunca deduz versao de mensagem de
+commit. Um repo com mil commits `2.110.161 - ...` continua dizendo *"No releases
+published"*, e `git diff 2.110.160..2.110.161` falha porque **nenhum dos dois
+nomes existe como ref**.
+
+### O que foi medido antes de escrever qualquer regra
+
+| Repo | commits | versoes distintas | tags | Releases |
+|---|---|---|---|---|
+| SHVIA-WEB | 1085 | 756 | 0 | 0 |
+| EOP | 840 | 827 | 0 | 0 |
+| SHVIA-DESKTOP | 1035 | 98 | 1 | 0 |
+| BLUE3-INTRANET | 982 | 150 | 0 | 0 |
+| SSHVTERM-WEB | 135 | 75 | 0 | 0 |
+
+Tres tags em 54 repositorios, e zero Releases. Dois repos ja carregavam a divida
+**por escrito** no proprio `version.md`: o `blue3-f1` diz *"Ao publicar, taggear
+`v0.3.0`"* e o `brasileirao-a-2026` diz *"⚠️ Sem tag `v0.16.0` no git"*.
+
+### A regra que este repositorio publicou errada
+
+O `docs/versioning.md` e o ADR-002 afirmavam que o `version.md` e *"uma string
+`X.Y.Z` pura e nada mais"*. **Falso para um terco da frota.** Nove repos do
+BLUE3-ISP e o proprio skill-COMMITTER tem um `version.md` que e um documento
+markdown inteiro, abrindo com `**Versao atual:** \`0.17.1\``; o
+`blue3-intranet-mobile` tem duas linhas (`2.1.9` e `api_min: 0.1.0`).
+
+Esses repos ja documentavam a regra de verdade — *"extrai o primeiro numero
+semver encontrado aqui"* — e o `config/app.php` deles ja implementava com
+`preg_match('/\d+\.\d+\.\d+/')`. **A versao e o primeiro semver do arquivo**
+([ADR-012](docs/decisions.md)), e o ADR-002 fica emendado, nao apagado.
+
+E a segunda vez que uma norma daqui foi contrariada pela frota — a primeira foi o
+`LICENSE` bilingue custando o selo MIT (`1.0.1`). As duas apareceram medindo, nao
+relendo.
+
+### O que passou a existir
+
+- **`tools/release.sh`** — a implementacao unica: `--current`, `--backfill`,
+  `--dry-run`. Idempotente e retomavel por construcao (pula o que ja existe),
+  com throttle e parada limpa quando o orcamento de API baixa.
+- **`.github/workflows/release.yml`** — dispara a cada push que toca o
+  `version.md` e **chama o script**, em vez de reimplementar as regras: duas
+  copias de uma regra e como uma regra passa a ter duas versoes, uma errada.
+- **ADR-011** (tag e Release por versao), **ADR-012** (primeiro semver),
+  **ADR-013** (workflow de release nao e workflow de CI — o ADR-009 fica
+  estreitado para proibir so build/teste, com o motivo: CI vermelha em repo de
+  documentacao ensina a ignorar CI, e este workflow e silencioso no caso normal).
+
+### A tag nao leva `v`
+
+Decisao do dono. Diverge das tres tags que a frota ja tem (`v0.15.0` e uma na
+SHVIA-DESKTOP), que **ficam como historico**; o que sera corrigido sao os dois
+`version.md` cujo texto ainda manda usar `v` — documento contradizendo o artefato
+e o defeito, nao a tag velha.
+
+### Medido neste repo
+
+Backfill rodado: `1.0.0` → `b5bc824`, `1.0.1` → `e8131fe`, `1.1.0` → `654c999`,
+com as notas vindas da secao real do CHANGELOG (a extracao foi corrigida para
+parar so num heading do mesmo nivel ou acima — na primeira versao ela cortava a
+`1.0.0` no primeiro `###` e perdia 78 das 83 linhas). Re-execucao: zero criadas,
+tres puladas. E `git diff 1.0.1..1.1.0` finalmente responde — 16 arquivos.
+
+### O que falta
+
+O rollout nos outros 53 repositorios, com o backfill completo (~2.000-3.000
+Releases) sob dry-run lido repo a repo, e o passo equivalente no
+**skill-COMMITTER**. Esta na fila em [.continue/README.md](.continue/README.md).
+
 ## 1.1.0 - nada bilingue: o LICENSE passa a ser o MIT em ingles puro
 
 Resposta do dono a medicao da `1.0.1`: *"nao, nada bilingue, so ingles, license
