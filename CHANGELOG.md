@@ -8,6 +8,56 @@ whoever does the work and whoever commits it.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 1.2.3 - o bump e a Release sao um ato so, e o badge Latest obedece ao version.md
+
+Achado do dono, olhando o `sshvterm-desktop`: *"teve um bump para version.md
+para 1.2.81 mas o Releases esta em 1.2.80"*.
+
+### O que estava errado
+
+A Release `1.2.81` **existia** — o workflow rodou e criou. O que estava errado
+era so o **badge `Latest`**, parado na `1.2.80`. Varredura nos 51: tres repos
+com o mesmo sintoma, e nos tres a Release existia. O pior era o `shvia-web`,
+com `version.md` em `2.110.162` e badge em `2.16.38`.
+
+### A causa foi minha
+
+O backfill carimbava `--latest` na **ultima versao que aquela rodada conhecia**.
+No `sshvterm-desktop` ele comecou lendo `1.2.80`, um push moveu o arquivo para
+`1.2.81` no meio, e no fim ele empurrou o badge de volta para `1.2.80`. Correu
+contra o proprio workflow — e ganhou a corrida errada.
+
+### Duas correcoes no `release.sh`
+
+1. **`--latest` so vai para a versao que o `version.md` nomeia**, nunca para "a
+   ultima que esta rodada tocou".
+2. Toda execucao termina **relendo o `version.md` do remoto e movendo o badge**
+   se ele tiver derivado. Isso torna qualquer rodada auto-corretiva:
+
+       release.sh: badge Latest movido de 1.2.80 para 1.2.81 (version.md manda)
+
+Entao a pergunta *"este repo esta certo?"* virou um comando que tambem conserta:
+`./tools/release.sh`.
+
+### A regra que passou a estar escrita
+
+**O bump e a Release sao um ato so.** Um commit que bumpa o `version.md` nao
+esta terminado enquanto aquela versao nao tiver Release **e o badge**. Nao
+"depois", nao "quando alguem lembrar" — no mesmo push. Esta em
+`docs/versioning.md`, no gate de fechar versao do `docs/conventions.md`, nos
+gemeos e no skeleton.
+
+O badge nao e cosmetico: quem olha le como *"esta e a versao corrente"*, e um
+badge numa Release velha afirma algo falso sobre o projeto.
+
+### Um erro de operacao que vale registrar
+
+Eu editei o `release.sh` **com ele rodando** no backfill do `shvia-web`. O bash
+le o arquivo em pedacos, o deslocamento quebrou a sintaxe no meio da execucao
+(`syntax error near unexpected token` na linha 226) e a rodada morreu em
+`2.16.71` de 764. Retomada com uma **copia congelada** do script — o backfill e
+idempotente, entao ela continuou de onde parou, mas o certo era congelar antes.
+
 ## 1.2.2 - o remoto e a autoridade: version.md do GitHub = Releases do GitHub
 
 Correcao do dono, e ela apagou uma ambiguidade que eu tinha deixado em pe:

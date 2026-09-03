@@ -142,6 +142,11 @@ for a backfill. Both skip what already exists.
 does not enter the calculation. A PR publishes nothing; the moment it merges, the
 Release becomes that version.
 
+**The bump and the Release are one act.** A commit that bumps `version.md` is not
+finished until that version has a Release and the `Latest` badge is on it — same
+push, not "later". `./tools/release.sh` is idempotent and also repairs a drifted
+badge.
+
 Full rules: [docs/versioning.md](docs/versioning.md).
 
 ---

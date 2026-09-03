@@ -122,10 +122,13 @@ version:**
       commit body.
 - [ ] A finished item **left** `.continue/`.
 - [ ] A document made **stale by this delivery** was corrected in the same pass.
-- [ ] The **tag and the GitHub Release** for this version exist. A version with
-      no tag is a number in a commit message: `git diff` cannot reach it and a
-      bad deploy has nothing to roll back to
-      ([versioning.md](versioning.md#tags-and-releases)).
+- [ ] The **tag and the GitHub Release** for this version exist, **and the
+      `Latest` badge is on it**. The bump and the Release are one act, not two —
+      a version with no tag is a number in a commit message (`git diff` cannot
+      reach it, and a bad deploy has nothing to roll back to), and a badge on an
+      older release says something false about the project. One command checks
+      and fixes both: `./tools/release.sh`
+      ([versioning.md](versioning.md#the-bump-and-the-release-are-one-act)).
 
 That last one is what escapes most often. Real examples:
 

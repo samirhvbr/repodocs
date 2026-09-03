@@ -174,7 +174,12 @@ publish() {
   local nf; nf="$(mktemp)"
   local args=(release create "$ver" --repo "$REPO" --target "$sha" --title "$ver")
   if notes_for "$ver" "$sha" "$nf"; then args+=(--notes-file "$nf"); else args+=(--generate-notes); fi
-  [ "$is_last" = "1" ] && args+=(--latest)
+  # `--latest` belongs to the version that version.md names, NOT to the last one
+  # this run happens to touch. Measured the hard way: a backfill that started
+  # while version.md said 1.2.80 stamped `--latest` on 1.2.80 minutes after a
+  # push had moved the file to 1.2.81 — the Release for 1.2.81 existed, and the
+  # badge sat on the older one.
+  [ "$ver" = "$CURRENT" ] && args+=(--latest)
 
   # Creating a release is a "content-creating" request, which GitHub throttles
   # far more tightly than reads — a secondary limit that answers 403 with a
@@ -239,6 +244,27 @@ else
     publish "$ver" "$sha" "$([ "$i" = "$TOTAL" ] && echo 1 || echo 0)" || break
   done <<< "$MAP"
 fi
+
+# Reconcile the badge against the remote AS IT IS NOW, not as it was when this
+# run started. A push can land mid-run — that is not an edge case here, it is
+# what happened. This is also what makes the whole thing self-healing: any run,
+# any time, leaves the badge on the version version.md names.
+reconcile_latest() {
+  [ "$DRY" = "1" ] && return 0
+  git fetch --quiet origin 2>/dev/null
+  local now
+  now="$(git show "$REF:version.md" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -n 1)"
+  [ -n "$now" ] || return 0
+  local badge
+  badge="$(gh release view --repo "$REPO" --json tagName -q .tagName 2>/dev/null)"
+  [ "$badge" = "$now" ] && return 0
+  if gh release view "$now" --repo "$REPO" >/dev/null 2>&1; then
+    if gh release edit "$now" --repo "$REPO" --latest >/dev/null 2>&1; then
+      printf 'release.sh: badge Latest movido de %s para %s (version.md manda)\n' "${badge:-nenhum}" "$now" >&2
+    fi
+  fi
+}
+reconcile_latest
 
 if [ "$QUIET" = "1" ]; then
   printf '%-34s %-12s versions=%-5s todo=%-5s have=%s\n' "$REPO" "$CURRENT" "$((CREATED+SKIPPED))" "$CREATED" "$SKIPPED"

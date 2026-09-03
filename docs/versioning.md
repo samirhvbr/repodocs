@@ -156,6 +156,45 @@ Measured while writing this: `sshvterm-desktop` had `1.3.19` locally and
 `2.110.154` locally and `2.110.161` on the remote. In both, the Release that
 belongs on GitHub is the remote's number.
 
+### The bump and the Release are one act
+
+**A commit that bumps `version.md` is not finished until that version has a
+Release.** Not "later", not "when someone remembers" — the same push.
+
+That is what the workflow is for: it fires on any push touching `version.md`, so
+the bump *carries* the Release with it and nobody has to do a second thing. If
+you bump by hand and the workflow is unavailable, `./tools/release.sh` closes it
+in one command.
+
+**The `Latest` badge belongs to the version `version.md` names.** Not to the
+newest by date, not to the last one some run happened to create. This is not a
+detail: a viewer reads the badge as *"this is the current version"*, and a badge
+pointing at an older release says something false about the project.
+
+Measured on 02/09/2026, and it is the reason this section exists: a backfill
+started while `sshvterm-desktop` said `1.2.80`, a push moved the file to
+`1.2.81` mid-run, the Release for `1.2.81` was created correctly — and the
+backfill then stamped `Latest` on `1.2.80`, because it was still working from
+the version it had read at startup. `shvia-web` showed the same shape with
+`2.110.162` in the file and the badge on `2.16.38`.
+
+Two fixes came out of it, both in `tools/release.sh`:
+
+1. `--latest` is applied **only to the version `version.md` names**, never to
+   "the last one this run touched".
+2. Every run ends by **re-reading the remote's `version.md` and moving the badge
+   there** if it drifted. That makes any run, at any time, self-healing:
+
+   ```
+   release.sh: badge Latest movido de 1.2.80 para 1.2.81 (version.md manda)
+   ```
+
+So the check for "is this repo correct?" is one command that also fixes it:
+
+```bash
+./tools/release.sh          # idempotent; publishes what is missing, fixes the badge
+```
+
 ### The naming
 
 | Thing | Value | Example |

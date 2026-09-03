@@ -114,6 +114,12 @@ rolls back to.
 > from the remote default branch and tags that commit. A PR publishes nothing;
 > the moment it merges, the workflow fires and the Release becomes that version.
 
+**The bump and the Release are one act.** A commit that bumps `version.md` is
+not finished until that version has a Release **and the `Latest` badge is on
+it** — same push, not "later". The badge belongs to the version `version.md`
+names, never to "the newest by date". `./tools/release.sh` is idempotent and
+repairs a drifted badge on every run.
+
 | Thing | Value |
 |---|---|
 | Tag | The version **exactly as `version.md` holds it — no `v` prefix** |

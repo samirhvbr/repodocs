@@ -144,6 +144,12 @@ does not enter the calculation — it can be behind, ahead or mid-work, and none
 that is published. A PR publishes nothing; the moment it merges, the Release
 becomes that version.
 
+**The bump and the Release are one act.** A commit that bumps `version.md` is not
+finished until that version has a Release **and the `Latest` badge is on it** —
+same push, not "later". The workflow does it; `./tools/release.sh` closes it by
+hand and is idempotent, so running it is always safe and also repairs a drifted
+badge.
+
 Full rules, including why `version.md` and not an environment variable:
 [docs/versioning.md](docs/versioning.md).
 
