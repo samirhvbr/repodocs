@@ -8,6 +8,24 @@ whoever does the work and whoever commits it.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 1.4.3 - correcting the activation claim in 1.4.2: the hooks are live here
+
+The 1.4.2 entry said *"the hook is not active anywhere yet — no clone in the
+fleet has `core.hooksPath` set"*. That was written from a sample of six
+repositories and is false: the push that published 1.4.2 was itself checked by
+the hook, which printed `pre-push: version 1.4.1 -> 1.4.2 — ok`.
+
+Measured across all 92 clones under `~/x`: **exactly one has `core.hooksPath`
+set — `repodocs` itself.** Only two carry `tools/git-hooks` on disk at all
+(`repodocs` and `EOP`). So the defect was live in precisely the repository whose
+`version.md` is a bare string and therefore passed the broken check anyway, and
+latent in the 91 others.
+
+The finding and the fix in 1.4.2 stand unchanged; only the reach claim was
+wrong. Corrected in place there as well, because a measured number that is wrong
+is the failure mode this repository exists to prevent — history is not
+rewritten, so this entry records that the correction happened.
+
 ## 1.4.2 - the pre-push hook reads the first semver, like release.sh already did
 
 `tools/git-hooks/pre-push` rejected any `version.md` that was not a bare `X.Y.Z`
@@ -18,8 +36,7 @@ the markdown shape, and `tools/release.sh` has implemented that rule since it wa
 written (`first_semver()`, line 65). Two files, one rule, two readings; the hook
 had the wrong one.
 
-**What it would have cost.** The hook is not active anywhere yet — no clone in
-the fleet has `core.hooksPath` set — so this was latent, not live. Measured on
+**What it would have cost.** Measured on
 the fleet today: `shvia-workspace` (`**Versão atual:** \`0.27.17\``) and
 `skill-dashproject` (`0.5.4`) both fail the old check and pass the new one, and
 so does every BLUE3-ISP repository. Enabling the hooks as documented would have
