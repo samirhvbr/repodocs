@@ -81,10 +81,14 @@ pass instead of an archaeology.
 | Block | Source | Says |
 |---|---|---|
 | [`COMMIT-RULE.md`](echo-blocks/COMMIT-RULE.md) | [`../docs/versioning.md`](../docs/versioning.md#who-commits-and-when) | The agent commits; nothing is finished until it is committed; one subject per commit; a large delivery is split into blocks ([ADR-016](../docs/decisions.md)) |
+| [`RELEASES-RULE.md`](echo-blocks/RELEASES-RULE.md) | [`../docs/versioning.md`](../docs/versioning.md#tags-and-releases) | The `version.md` on GitHub is what the Releases show; the bump and the Release are one act, `Latest` badge included ([ADR-011](../docs/decisions.md)) |
+| [`LANGUAGE-RULE.md`](echo-blocks/LANGUAGE-RULE.md) | [`../docs/conventions.md`](../docs/conventions.md#8-language) | English (US) everywhere, one carve-out — **and in a repository that is not ours, the upstream's conventions win** ([ADR-014](../docs/decisions.md), [ADR-019](../docs/decisions.md)) |
 
-`RELEASES-RULE` is the same shape and is in 113 files across the fleet, but it
-predates this folder and has no source file here yet. It gets one when it is
-next regenerated.
+`RELEASES-RULE` got its source file here at `1.8.0`, having been in 113 files
+across the fleet without one since before this folder existed. It arrived split:
+the language rule had been living **inside** the Releases block, two subjects in
+one instrument, and `LANGUAGE-RULE` is the half that came out. A fleet pass
+replaces the one old block with the two new ones.
 
 **Editing a block is a fleet change, not a file change.** The block is the
 strongest instrument in this repository: it lands in every agent's context in

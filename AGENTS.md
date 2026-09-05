@@ -116,6 +116,13 @@ English MIT text, and a translated `README_br.md` pair is not the pattern.
 
 Code identifiers are English, and always were.
 
+**The rule stops at the fleet boundary.** In a repository we do **not** own,
+the upstream's conventions win — the language and the commit shape both. Check
+before you open a pull request or an issue there: a written instruction first,
+then the last ~20 merged PRs, then the issues, then the log. **When you cannot
+tell, English (US)** ([ADR-019](docs/decisions.md),
+[conventions.md §8](https://github.com/samirhvbr/repodocs/blob/master/docs/conventions.md#when-the-repository-is-not-ours-the-upstreams-conventions-win)).
+
 ---
 
 <!-- COMMIT-RULE:repodocs -->
@@ -160,6 +167,12 @@ why, follow that. Otherwise the line above applies to you. An override nobody wr
 down is not an exception. Nothing else in this block bends: the changelog entry, the
 subject, the language, one subject per commit, and committing before you report done
 all hold regardless.
+
+**All of this governs the repositories we own.** In a repository that is not
+ours, the host's commit convention governs instead — their subject line, in
+their language. `X.Y.Z` is meaningless where there is no `version.md` of ours,
+and there is no version there for us to bump. Our versioning rules govern our
+remotes, not every remote we can push to.
 
 **One subject per commit.** The subject has to describe the whole commit
 honestly. The moment your description needs an "and" to be true, it is two
@@ -285,7 +298,14 @@ A PR publishes nothing while it is a PR. The moment it merges, the push moves
 
 Tag and Release title are the **bare version — no `v` prefix**.
 
-## Language — English (US), everywhere in the repository
+<!-- /RELEASES-RULE -->
+
+<!-- LANGUAGE-RULE:repodocs -->
+
+## Language — English (US) at home, the upstream's when we are guests
+
+> Marked echo. The single source is **[samirhvbr/repodocs](https://github.com/samirhvbr/repodocs/blob/master/docs/conventions.md#8-language)**
+> — change it there, not here. This block is regenerated.
 
 **Everything that lives in this repository, or in GitHub's interface around it,
 is written in English (US)**: documents, **commit messages**, pull request titles
@@ -302,4 +322,25 @@ repository content.
 History is not rewritten: Portuguese messages already in the log stay as they
 are.
 
-<!-- /RELEASES-RULE -->
+**In a repository that is not ours, the upstream's conventions win — the
+language and the commit shape both.** Opening a pull request or an issue on a
+repository we do not own makes us guests, and a guest writes in the host's
+language. Our `X.Y.Z - description` is meaningless there anyway: they have no
+`version.md` of ours, and no version for us to bump.
+
+**Check before you write, and the first signal that answers wins:** a written
+instruction (`CONTRIBUTING.md`, a pull request or issue template, a contribution
+section in the README), then the last ~20 merged pull requests, then the issues,
+then the commit log. A written instruction beats observed practice — if they ask
+for English and their log is Portuguese, write English. Below that line the
+**clear majority** decides, and clear means clear.
+
+**When you cannot tell, write English (US).** A private repository, an empty
+history, no network, a refused `gh` call and a genuinely mixed log all land in
+the same place — the house rule. Unverifiable is not a licence to guess.
+
+**This is a scope boundary, not a second carve-out.** Nothing in *our*
+repositories changes because a foreign one is Portuguese, and code identifiers
+are English wherever you are.
+
+<!-- /LANGUAGE-RULE -->

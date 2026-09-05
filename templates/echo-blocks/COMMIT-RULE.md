@@ -41,6 +41,12 @@ down is not an exception. Nothing else in this block bends: the changelog entry,
 subject, the language, one subject per commit, and committing before you report done
 all hold regardless.
 
+**All of this governs the repositories we own.** In a repository that is not
+ours, the host's commit convention governs instead — their subject line, in
+their language. `X.Y.Z` is meaningless where there is no `version.md` of ours,
+and there is no version there for us to bump. Our versioning rules govern our
+remotes, not every remote we can push to.
+
 **One subject per commit.** The subject has to describe the whole commit
 honestly. The moment your description needs an "and" to be true, it is two
 commits.
