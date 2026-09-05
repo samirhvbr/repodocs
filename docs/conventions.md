@@ -303,12 +303,60 @@ drift, and BLUE3-INTRANET's pair proves it, at 374 lines against 259.
 Code identifiers — class, method, variable and column names — are English, and
 always were.
 
+### When the repository is not ours, the upstream's conventions win
+
+Everything above governs **our** repositories. Opening a pull request or an
+issue on a repository we do not own is a different act: there we are guests, and
+the host's conventions are the ones that hold — the language and the commit
+shape both.
+
+The English rule exists so that a collaborator who does not read Portuguese
+meets English first. Applied to someone else's repository it produces the
+opposite: the one contribution in their log that their own maintainers have to
+translate.
+
+**Check before you write. The first signal that answers, wins:**
+
+| # | Signal | How |
+|---|---|---|
+| 1 | A written instruction — `CONTRIBUTING.md`, a pull request or issue template, a contribution section in the README | `gh api repos/OWNER/REPO/contents/CONTRIBUTING.md --jq .content \| base64 -d` |
+| 2 | The last ~20 merged pull requests | `gh pr list --repo OWNER/REPO --state merged --limit 20 --json title,body` |
+| 3 | The last ~20 issues | `gh issue list --repo OWNER/REPO --state all --limit 20 --json title` |
+| 4 | The commit log | `gh api repos/OWNER/REPO/commits --jq '.[].commit.message'` |
+
+**A written instruction beats observed practice.** If `CONTRIBUTING.md` asks for
+English and the log is Portuguese, write English — they asked. Below that line
+the **clear majority** of what you read decides, and clear means clear: if you
+have to squint at the split, there is no majority.
+
+**When you cannot tell, write English (US).** A private repository, an empty
+history, no network, a refused `gh` call and a genuinely mixed log all land in
+the same place — the house rule. Unverifiable is not a licence to guess, and
+English is the safer wrong answer: it is the language the host is most likely to
+read even when it is not the one they write in.
+
+**Their commit convention travels with their language.** `X.Y.Z - description`
+is our shape and it is meaningless in a repository with no `version.md` of ours.
+There you write their subject line, in their language. Our versioning rules
+govern our remotes, not every remote we can push to
+([versioning.md](versioning.md#commit-message)).
+
+**What does not bend.** Code identifiers are English, wherever you are. And
+nothing in *our* repositories changes because a foreign one is Portuguese — this
+subsection is about the text we write **into someone else's repository**, and
+about nothing else. See [ADR-019](decisions.md).
+
 ---
 
 ## 9. Where this convention applies
 
-Every repository in the fleet. Each one carries a pointer here in its
-`.continue/README.md`.
+Every repository in the fleet, **and only those**. Each one carries a pointer
+here in its `.continue/README.md`.
+
+What we write **into** a repository outside the fleet — a pull request, an
+issue, a commit on a branch we push there — follows that repository's
+conventions instead, not these
+([§8](#when-the-repository-is-not-ours-the-upstreams-conventions-win)).
 
 **If you are reading this inside a repository that is not repodocs, this file is
 a copy or a link — the source is** `samirhvbr/repodocs/docs/conventions.md`.

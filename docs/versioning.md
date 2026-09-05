@@ -198,6 +198,13 @@ For example: `1.0.0 - initial documentation structure for the fleet standard`.
   `docs:`, `refactor:` — and vague messages: "ajuste", "update", "fix", "wip".
   The version, not a type prefix, is what makes this history searchable.
 
+**This shape governs our repositories.** In a repository we do not own,
+the host's commit convention governs instead — their subject line, in their
+language. `X.Y.Z - description` is meaningless where there is no `version.md` of
+ours, and there is no version there for us to bump
+([conventions.md §8](conventions.md#when-the-repository-is-not-ours-the-upstreams-conventions-win),
+[ADR-019](decisions.md)).
+
 **Several commits may share one version.** A single delivery can be split into
 commits by subject that carry the **same** version — group files by theme, bump
 `version.md` in **one** of them (the first), and let the others repeat the same

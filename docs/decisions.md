@@ -101,7 +101,8 @@ in the queue — one line and a pointer. See
 
 ## ADR-005 — documentation in English from 02/09/2026
 
-**Status:** `ACCEPTED` · 02/09/2026
+**Status:** `ACCEPTED` · 02/09/2026 · **Bounded to the fleet by**
+[ADR-019](#adr-019--in-a-repository-that-is-not-ours-the-upstreams-conventions-win)
 
 **Context.** The repositories are readable by collaborators and tooling that do
 not read Portuguese. The rule is the owner's personal preference for his own
@@ -417,7 +418,9 @@ already written into `pre-push`.
 
 **Status:** `ACCEPTED` · 03/09/2026 · Supersedes the language clause of
 [ADR-003](#adr-003--commit-format-xyz---description) and narrows
-[ADR-005](#adr-005--documentation-in-english-from-02092026) to a single carve-out
+[ADR-005](#adr-005--documentation-in-english-from-02092026) to a single carve-out ·
+**Bounded to the fleet by**
+[ADR-019](#adr-019--in-a-repository-that-is-not-ours-the-upstreams-conventions-win)
 
 **Context.** ADR-005 put documentation in English but kept commit messages in
 Portuguese, on the reasoning that the commit convention was a separate,
@@ -698,3 +701,69 @@ visible. That is accepted, and it is not new: it is the same trade as
 [ADR-016](#adr-016--the-agent-commits-and-a-delivery-is-not-delivered-until-it-is)
 took on committing, and the history is recoverable in a way an uncommitted
 working tree is not.
+
+---
+
+## ADR-019 — in a repository that is not ours, the upstream's conventions win
+
+**Status:** `ACCEPTED` · 05/09/2026 · Bounds
+[ADR-005](#adr-005--documentation-in-english-from-02092026) and
+[ADR-014](#adr-014--everything-in-a-repository-is-english-us-commit-messages-included)
+to the fleet — it amends neither of them inside it
+
+**Context.** ADR-014 put everything in a repository, and in GitHub's interface
+around it, in English (US): documents, commit messages, pull request titles and
+bodies, issues. It was written for the fleet — fifty private repositories with
+one owner — and it never had to say so, because nothing else was in view.
+
+The omission becomes a rule the first time an agent opens a pull request outside
+the fleet. Read literally, ADR-014 sends an English pull request into
+`tiago-razera`, which works entirely in Portuguese — commits, pull requests and
+issues alike.
+
+That is the wrong output for the right reason. The English rule exists so that a
+collaborator or a tool that does not read Portuguese meets English first
+(ADR-005). Applied to someone else's repository it produces the exact opposite:
+the one contribution in their log that the project's own maintainers have to
+translate. A norm that makes us a worse guest is a norm applied outside its
+scope.
+
+**Decision.** **The English (US) rule governs the repositories we own. In a
+repository we do not own, the host's conventions govern — the language and the
+commit shape both.**
+
+Before opening a pull request or an issue outside the fleet, check the
+upstream's language: a written instruction first (`CONTRIBUTING.md`, a template,
+a contribution section), then the last ~20 merged pull requests, then the
+issues, then the commit log. A written instruction beats observed practice;
+below it the clear majority decides. **When it cannot be determined, the house
+rule stands: English (US).** The procedure, with the commands, is
+[conventions.md §8](conventions.md#when-the-repository-is-not-ours-the-upstreams-conventions-win).
+
+The commit shape travels with the language, and it has to: `X.Y.Z - description`
+reads as noise in a repository that has no `version.md` of ours, and there is no
+version there for us to bump. Our versioning rules govern our remotes, not every
+remote we can push to.
+
+**This is a scope boundary, not a carve-out.** ADR-005's carve-out count is
+still one, and every document that says *"one carve-out, and only one"* stays
+true. The carve-outs are about **what kind of text** stays Portuguese inside our
+repositories; this is about **whose repository** the text is going into. Merging
+the two would make the English rule look negotiable at home, which it is not.
+
+**Consequences.** The rule now needs a reading step before an outward
+contribution, and that step needs `gh`: read-only `gh pr list`, `gh issue list`,
+`gh repo view` and `gh api repos/…` are granted in `.claude/settings.json` and
+in the skeleton's, with their reason written in place. `gh repo edit` and
+`gh repo delete` stay in `ask`.
+
+Nothing about the human gate changes: [ADR-018](#adr-018--the-human-gate-is-a-refused-push-never-the-commit)
+still names a refused push as the one place a person enters, and opening a pull
+request outside the fleet does not add a second gate.
+
+The rule reaches the fleet as the new `LANGUAGE-RULE` marked echo. Splitting it
+out is what finally gives `RELEASES-RULE` its own source file in
+`templates/echo-blocks/` — the language section had been living inside the
+Releases block, two subjects in one instrument. `COMMIT-RULE` is regenerated in
+the same pass: its *"every commit obeys the versioning rules, with no
+exception"* was written before this boundary existed and is false outside it.

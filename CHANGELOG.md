@@ -9,6 +9,45 @@ at `git commit` time.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 1.8.0 - the norm gains the guest clause: outside the fleet, the upstream's conventions win
+
+`1.3.0` put everything in English (US) — documents, commit messages, pull
+requests, issues — and ADR-014 quoted the instruction that produced it: *"todo
+commit em ingles, PR em ingles, issues em ingles, tudo ingles-US"*. That rule was
+written for the fleet, fifty private repositories with one owner, and it never
+had to say so because nothing else was in view.
+
+It says so now. Read literally, the rule sends an English pull request into
+`tiago-razera`, a repository that works entirely in Portuguese. That is the wrong
+output for the right reason: the English rule exists so a collaborator who does
+not read Portuguese meets English first, and applied to someone else's repository
+it produces the exact opposite — the one contribution in their log that their own
+maintainers have to translate. A norm that makes us a worse guest is a norm
+applied outside its scope.
+
+[ADR-019](docs/decisions.md) draws the boundary. **The English (US) rule governs
+the repositories we own; in a repository we do not own, the host's conventions
+govern — the language and the commit shape both.** `conventions.md` §8 gains the
+procedure: a written instruction first (`CONTRIBUTING.md`, a template, a
+contribution section), then the last ~20 merged pull requests, then the issues,
+then the log. A written instruction beats observed practice; below it the clear
+majority decides. **When it cannot be determined, the house rule stands: English
+(US)** — a private repository, an empty history, no network and a genuinely mixed
+log all land in the same place, because unverifiable is not a licence to guess.
+
+The commit shape travels with the language, and it has to: `X.Y.Z - description`
+reads as noise in a repository with no `version.md` of ours, and there is no
+version there for us to bump. Our versioning rules govern our remotes, not every
+remote we can push to.
+
+**It is a scope boundary, not a carve-out**, and that distinction is what keeps
+the rest of the norm intact. The carve-outs answer *what kind of text* stays
+Portuguese inside our repositories; this answers *whose repository* the text is
+going into. The count is still one, and every document that says "one carve-out,
+and only one" is still literally true — six files that would otherwise all have
+needed rewording. Merging the two ideas would have made the English rule look
+negotiable at home, which it is not.
+
 ## 1.7.0 - the human gate is a refused push, and the rule that said otherwise leaves the fleet
 
 `1.5.0` said the agent commits and pushes. It never said where a person is still
