@@ -9,6 +9,28 @@ at `git commit` time.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 1.8.2 - the settings comment rule names the one block that rejects it
+
+`.claude/settings.json` is plain JSON with no comment syntax, so the fleet
+documents its profile with `_comment_*` keys. The convention was never written
+down because it had never failed — and it had never failed because no repository
+in the fleet had a `hooks` block.
+
+SHVIA-DESKTOP became the first, with the `PostToolUse` check of the `impeccable`
+skill, and the comment placed inside `hooks` was dropped at every startup with
+`Unknown hook event "_comment" was ignored`. `hooks` is the only block whose keys
+are a closed enum of event names; everywhere else the schema declares
+`additionalProperties`, which is why the `_comment_profile` at the top level and
+the `_comment` inside `permissions` — both in the skeleton — have never warned.
+
+What made it survive is that nothing broke: the hook ran correctly the whole
+time, and only the stray key was discarded. The warning was the entire symptom.
+Fixed there in `d362855` by moving the string to a top-level `_comment_hooks`.
+
+Neither `settings.json` here needed a change — this repository and the skeleton
+both have no `hooks` block, so both were already correct. §7 gains the rule for
+the repository that adds one.
+
 ## 1.8.1 - the written-instruction probe reads the community profile, not a guessed path
 
 Running the `1.8.0` procedure against a real upstream found its first step wrong.

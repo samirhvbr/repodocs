@@ -271,6 +271,37 @@ And these directories:
 > without a `LICENSE` while its siblings all have the same one, which is an
 > oversight, not a decision.
 
+
+### A comment in `.claude/settings.json` has exactly two legal homes
+
+The file is plain JSON and has no comment syntax, so the fleet documents its
+profile with `_comment_*` keys. That works everywhere in the file except one
+block, and the exception is not the one you would guess.
+
+`hooks` is the only block whose keys are a **closed enum of event names**
+(`PreToolUse`, `PostToolUse`, `SessionStart`, and the rest). Claude Code
+validates them against that list, so a `_comment` written there is read as an
+event name, matches nothing, and is discarded at startup with a warning.
+Everywhere else the schema declares `additionalProperties`, which is exactly why
+the `_comment_profile` at the top level and the `_comment` inside `permissions`
+— both of them in the skeleton — have never warned.
+
+```
+Legal    "_comment_profile": "..."            at the top level
+         "permissions": { "_comment": "..." }
+Illegal  "hooks": { "_comment": "..." }       read as an event name, dropped
+```
+
+**The hook itself keeps working.** Only the stray key is discarded, never the
+block around it, and that is what makes this easy to leave in place for months:
+the startup warning is the only symptom, and nothing misbehaves.
+
+Measured 05/09/2026 in SHVIA-DESKTOP, the first repository in the fleet to carry
+a `hooks` block at all — the `PostToolUse` check of the `impeccable` skill. The
+comment moved to a top-level `_comment_hooks` in commit `d362855`; the hook had
+been running correctly the whole time. The skeleton has no `hooks` block, so it
+was never wrong — this is written down for the repository that adds one.
+
 ---
 
 ## 8. Language
