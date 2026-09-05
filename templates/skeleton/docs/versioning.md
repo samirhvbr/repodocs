@@ -89,7 +89,10 @@ version - short description in English
 
 For example: `0.1.0 - initial documentation structure`.
 
-- **English (US)**, like everything else in the repository.
+- **English (US)**, like everything else in the repository. In a repository we
+  do **not** own, the host's commit convention governs instead — their subject
+  line, in their language
+  ([conventions.md §8](https://github.com/samirhvbr/repodocs/blob/master/docs/conventions.md#when-the-repository-is-not-ours-the-upstreams-conventions-win)).
 - Descriptive enough to be found later with `git log --grep`. Explain the
   **why**, not only the what.
 - **Forbidden:** Conventional Commits prefixes — `feat:`, `fix:`, `chore:`,

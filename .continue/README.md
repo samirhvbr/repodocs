@@ -1,6 +1,6 @@
 # `.continue/` — the queue
 
-> **Status:** `ACTIVE` · Last reviewed 03/09/2026, repository at `1.5.1`
+> **Status:** `ACTIVE` · Last reviewed 05/09/2026, repository at `1.8.0`
 
 Work in progress: drafts, plans under discussion, notes on things still being
 built, briefings for picking the work back up later.
@@ -32,13 +32,14 @@ Nothing, in the sense of unfinished work **inside this repository**. Version
 `1.0.0` shipped the whole set the plan named — the root files, `docs/`,
 `.claude/`, the two hooks and `templates/skeleton/`.
 
-One item is genuinely open, and it is not work here:
+Two items are genuinely open, and neither is work here:
 
 | Item | State | Who unblocks it |
 |---|---|---|
+| **Stamp `LANGUAGE-RULE` and the split `RELEASES-RULE` across the fleet** — `1.8.0` split the language rule out of the Releases block and added the guest clause ([ADR-019](../docs/decisions.md)). Every repository's `CLAUDE.md` and `AGENTS.md` still carries the **old** single `RELEASES-RULE` block with the language section inside it; each needs that one block replaced by two, plus a `COMMIT-RULE` regeneration for the same boundary | **Pending — not started.** The blocks and their source files exist in [`../templates/echo-blocks/`](../templates/echo-blocks/); nothing outside this repository has been touched | **The owner**, to schedule. ~50 repositories + ~26 worktrees, each with its own bump and commit. Two traps the `1.5.1` sweep recorded: heading variants of the old block, and `_quarentena/2026-09-03/` is live clones — exclude it |
 | **Retrofit pass into the sibling repositories** — turn `BLUE3-INTRANET/docs/CONVENCAO-DOCUMENTACAO.md` into a pointer to [`../docs/conventions.md`](../docs/conventions.md), add the pointer to each repo's own `.continue/README.md`, **and replace the bilingual `LICENSE` with the English MIT text** ([ADR-010](../docs/decisions.md)) | **Pending — not started.** Decided in [ADR-001](../docs/decisions.md) and [ADR-010](../docs/decisions.md), deliberately out of scope: no other repository has been touched | **The owner**, to schedule. It edits ~16 repositories, each with its own version bump and commit |
 
-⚠️ **Consequences while that item is open:** two copies of the norm exist —
+⚠️ **Consequences while the retrofit item is open:** two copies of the norm exist —
 **this repository is the source**, and if the two disagree the copy in
 BLUE3-INTRANET is the stale one. And this repository's `LICENSE` is deliberately
 **no longer byte-identical to the fleet's**: it is the English MIT, the others
