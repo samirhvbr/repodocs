@@ -9,6 +9,25 @@ at `git commit` time.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 1.8.1 - the written-instruction probe reads the community profile, not a guessed path
+
+Running the `1.8.0` procedure against a real upstream found its first step wrong.
+It probed `repos/OWNER/REPO/contents/CONTRIBUTING.md`, which is one guess at one
+path: `cli/cli` keeps its `CONTRIBUTING.md` under `.github/`, so the probe
+returned a raw 404 blob and the check silently reported "no written instruction"
+for a repository that has one. A signal that fails closed in the wrong direction
+is worse than no signal, because the next step down — observed practice — then
+gets treated as authoritative.
+
+`gh api repos/OWNER/REPO/community/profile --jq '.files'` is one call and returns
+the contributing guide, the pull request template, the issue template and the
+readme with their real URLs, wherever they live. Verified against `cli/cli`
+(`.github/`) and `rails/rails` (root).
+
+The `LANGUAGE-RULE` block is untouched: it carries the ordering of the signals,
+not the commands, so it did not inherit the defect and does not need a fourth
+regeneration.
+
 ## 1.8.0 - the norm gains the guest clause: outside the fleet, the upstream's conventions win
 
 `1.3.0` put everything in English (US) — documents, commit messages, pull

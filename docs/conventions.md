@@ -319,7 +319,7 @@ translate.
 
 | # | Signal | How |
 |---|---|---|
-| 1 | A written instruction — `CONTRIBUTING.md`, a pull request or issue template, a contribution section in the README | `gh api repos/OWNER/REPO/contents/CONTRIBUTING.md --jq .content \| base64 -d` |
+| 1 | A written instruction — `CONTRIBUTING.md`, a pull request or issue template, a contribution section in the README | `gh api repos/OWNER/REPO/community/profile --jq '.files'` — one call, and it finds them whether they sit at the root or under `.github/` |
 | 2 | The last ~20 merged pull requests | `gh pr list --repo OWNER/REPO --state merged --limit 20 --json title,body` |
 | 3 | The last ~20 issues | `gh issue list --repo OWNER/REPO --state all --limit 20 --json title` |
 | 4 | The commit log | `gh api repos/OWNER/REPO/commits --jq '.[].commit.message'` |
