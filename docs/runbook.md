@@ -18,6 +18,15 @@ is the mistake that leaves a new repo without its permission posture.
 home ([ADR-001](decisions.md)); the skeleton's `docs/README.md` points back here
 instead of carrying a copy that will drift.
 
+The copy also brings
+[`docs/repodocs.md`](../templates/skeleton/docs/repodocs.md), which is the map of
+this relationship as read from inside the new repository: what arrived by copy,
+what arrives by stamp and gets regenerated, what is only ever linked, and what is
+lost when one of the files is missing. **It does not repeat this runbook** — it
+links back to it for every step below, and for the conformance checks in §7. For
+a repository that already has history, its adoption order and merge rules are the
+path this runbook's §1 `cp -r` deliberately is not.
+
 ## 2. Substitute the placeholders
 
 ```bash

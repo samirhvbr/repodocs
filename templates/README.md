@@ -60,7 +60,7 @@ skeleton/
 ├── .claude/               settings.json · README.md
 ├── .continue/             README.md   (the queue's mandatory index)
 ├── docs/                  README.md · versioning.md · decisions.md
-│                          security.md · runbook.md
+│                          security.md · runbook.md · repodocs.md
 ├── tools/git-hooks/       commit-msg · pre-push
 └── tools/release.sh       tag + GitHub Release for version.md
 ```
@@ -96,6 +96,20 @@ every repository. Treat it the way `docs/conventions.md` is treated.
 
 ---
 
+## What the skeleton says about this repository
+
+[`skeleton/docs/repodocs.md`](skeleton/docs/repodocs.md) is the page that travels
+*with* the standard and explains it from the other side: what came out of here by
+copy, what by stamp, what is only ever linked, the manifest of files with what is
+lost when one is missing, and the adoption order for a repository that already has
+history. It exists because a new repository knew the rules and not their shape —
+and because an echo block edited in place instead of regenerated is a rule only
+that repository follows, which the `1.5.1` sweep found in the fleet.
+
+It deliberately repeats none of the runbook. Where the procedure is needed it
+links [../docs/runbook.md](../docs/runbook.md), which stays the single source for
+the placeholder table, the per-repo decisions and the conformance checks.
+
 ## What is deliberately NOT in the skeleton
 
 **[`../docs/conventions.md`](../docs/conventions.md) — the norm itself.** The
@@ -113,9 +127,11 @@ opened another one ([ADR-001](../docs/decisions.md)).
 The skeleton files are twins of this repository's own root files. When one
 changes, check the other — or write down that the divergence is deliberate.
 
-There is one **intended** divergence today: this repository's `version.md` is
-`1.0.0` and the skeleton's is `0.1.0`, because a new project has not shipped
-anything yet.
+Two divergences are **intended** today. This repository's `version.md` is far
+ahead of the skeleton's `0.1.0`, because a new project has not shipped anything
+yet. And `skeleton/docs/repodocs.md` has no twin in [`../docs/`](../docs/) — this
+repository does not need a map of its relationship to itself, and a copy here
+would be a page describing the standard from inside the standard.
 
 The skeleton also ships defaults it expects to be changed, and says so in place:
 `.claude/settings.json` grants nothing for any stack, `docs/versioning.md`
