@@ -16,6 +16,7 @@ that lists everything stops being read.
 | [decisions.md](decisions.md) | **ADRs** â€” the chronological record of what was decided here and why, so it is not re-litigated. |
 | [security.md](security.md) | The normative security document. In a conflict with any other document, it wins. |
 | [runbook.md](runbook.md) | From a clean machine to a running environment; deploy; the pre-flight checklist before making the repository public. |
+| [repodocs.md](repodocs.md) | **What in this repository came from the fleet standard, and where each piece lives.** The map of the relationship: what travels out of repodocs by copy, what by stamp, and what is only ever linked; the manifest of files and what is lost when one is missing; how to bring an existing repository in; how a fleet rule reaches this one. |
 
 <!-- Add the project's own pages as they are written. The recurring ones across
      this fleet are architecture.md, glossary.md and a playbook. -->
@@ -27,6 +28,10 @@ history, filenames that carry state, the status vocabulary, the language rule â€
 lives once, in the fleet standard:
 [samirhvbr/repodocs `docs/conventions.md`](https://github.com/samirhvbr/repodocs/blob/master/docs/conventions.md).
 It is deliberately **not** copied here.
+
+[repodocs.md](repodocs.md) is the map of that relationship from this side: which
+files here came from the standard, which of them are mirrors that get
+regenerated, and which questions are answered upstream rather than here.
 
 ## Where a new document goes
 

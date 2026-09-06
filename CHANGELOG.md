@@ -9,6 +9,53 @@ at `git commit` time.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 1.8.3 - the skeleton carries its own map of what came from repodocs
+
+A repository created from the skeleton has always known the rules and never known
+their shape. `CLAUDE.md` told it where the norm lives; `docs/README.md` told it the
+norm is deliberately not copied. Neither said which of the thirty-odd files in the
+new repository arrived from the standard, which of them are mirrors that get
+overwritten on the next fleet pass, and which are now simply that repository's own
+files to edit. Every one of those questions had an answer, and every answer lived
+here, in a repository the new one only links to.
+
+That gap is not theoretical, and the queue records where it lands. The `1.5.1`
+sweep found heading variants of an echo block across the fleet — blocks that had
+been *edited* in place rather than regenerated, by someone with no way to know the
+difference. An echo block edited locally is worse than one left alone: the next
+regeneration overwrites the edit silently, and until it does, that repository is
+following a rule no other repository has.
+
+`templates/skeleton/docs/repodocs.md` is the answer, and it ships inside every new
+repository rather than staying here. It carries the mental map of the relationship
+— what travels out of repodocs **by copy** (the skeleton, once, and then it stops
+being repodocs' business), what travels **by stamp** (the three echo blocks,
+regenerated and never edited), and what **never travels** (`conventions.md`, linked
+only, because a rule copied into sixteen repositories is a rule with sixteen
+versions) — then the manifest of every file with what is actually lost when it is
+missing, an adoption order for a repository that already has history, and the table
+of which question is answered upstream rather than locally.
+
+**It repeats none of the bootstrap procedure**, and that restraint is the whole
+test of whether this repository believes its own first golden rule. The placeholder
+table, the per-repo decisions and the conformance checks stay in `docs/runbook.md`,
+which the new page links; a second copy of them would have been exactly the failure
+the standard exists to prevent. What the page owns is what had no owner before: the
+manifest, the three merge rules for a retrofit, and the regeneration rule.
+
+The `.claude/` row of the manifest names the trap this fleet has already paid for
+once — a `cp -r` without the trailing `/.` produces a repository that looks
+conforming and has no permission posture. The retrofit section makes the same kind
+of failure explicit for an existing repository: never overwrite a file the
+repository already had, keep an existing document that already answers the
+question, and do not restart the version at `0.1.0` on a repository already at
+`2.4.0`.
+
+One intended divergence is created here: the skeleton now has a `docs/` page with
+no twin in this repository's own `docs/`. It is correct that it has none — repodocs
+does not need a map of its relationship to itself — and `templates/README.md`
+records it so the next honesty check does not read it as drift.
+
 ## 1.8.2 - the settings comment rule names the one block that rejects it
 
 `.claude/settings.json` is plain JSON with no comment syntax, so the fleet

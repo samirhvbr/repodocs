@@ -16,6 +16,12 @@
 > **The fleet documentation norm is not in this repository.** It lives once, at
 > [samirhvbr/repodocs `docs/conventions.md`](https://github.com/samirhvbr/repodocs/blob/master/docs/conventions.md).
 > Read it there; do not copy it here.
+>
+> **[docs/repodocs.md](docs/repodocs.md) is the map of what came from that
+> standard** — which files here arrived from the skeleton, which blocks below
+> are mirrors that get regenerated rather than edited, and which questions are
+> answered upstream. Read it before adding, moving or deleting a documentation
+> file.
 
 ---
 
