@@ -195,7 +195,7 @@ git config core.hooksPath tools/git-hooks
 | Hook | What it checks | Why there |
 |---|---|---|
 | `commit-msg` | The subject matches `X.Y.Z - <comment>`, **and that `X.Y.Z` is the version the commit carries in `version.md`**; rejects Conventional Commits prefixes, vague and too-short comments; exempts a merge commit | It is the only moment the message exists and the commit does not |
-| `pre-push` | `version.md` against the remote default branch: rejects a duplicate, rejects a decrease | It is the only hook that sees the **remote** — and `commit-msg` provably does not run during a rebase, which is how duplicate versions get born |
+| `pre-push` | `version.md` against the remote default branch: rejects a duplicate, rejects a decrease — and **only when the push actually updates that branch**, so a deletion, a tag and a topic branch pass through | It is the only hook that sees the **remote** — and `commit-msg` provably does not run during a rebase, which is how duplicate versions get born |
 
 Two deliberate design choices, both load-bearing:
 

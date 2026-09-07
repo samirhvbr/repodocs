@@ -9,6 +9,36 @@ at `git commit` time.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 1.9.2 - pre-push refused a branch deletion, because it never read what it was given
+
+`git push origin --delete main` was rejected with *"version 1.9.x is already on
+master"*. There was no version in that push at all: a deletion publishes
+nothing, and the hook asked the version question anyway.
+
+The cause is that `pre-push` never read its stdin. Git hands the hook one line
+per ref — `<local ref> <local sha> <remote ref> <remote sha>` — and that line is
+the only thing that says whether a push is a version bump, a deletion, a tag or
+a topic branch. Ignoring it makes every push the same push, and the check that
+belongs to exactly one of them fires on all four.
+
+It now reads the refs and checks the version only when the push **updates the
+default branch** with a real commit — an all-zero local sha is a deletion,
+`refs/tags/*` is a tag, and any other branch is not what
+*"the `version.md` on GitHub"* refers to. With no stdin at all it falls through
+to the full check, so nothing that worked before stops working.
+
+**This shipped to 51 repositories two hours before it was found**, in the same
+pass that installed the hooks, and it was found the way this kind of thing gets
+found: by hitting it. `samirhvbr` needed a redundant `origin/main` deleted after
+its default branch was fast-forwarded, and the guard that exists to protect the
+version refused an operation that has no version. A guard that refuses what it
+was never about is a guard that gets bypassed — which is the argument this
+standard already makes about test suites in `pre-push`, arriving from the other
+direction.
+
+The fix reaches the fleet the way the hook did: `tools/fleet-hooks.sh`
+regenerates any copy carrying the provenance marker.
+
 ## 1.9.1 - release.sh asked git for the repository and git answered the upstream
 
 `tools/release.sh` resolved the repository with `gh repo view --json
