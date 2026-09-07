@@ -9,6 +9,33 @@ at `git commit` time.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 1.9.1 - release.sh asked git for the repository and git answered the upstream
+
+`tools/release.sh` resolved the repository with `gh repo view --json
+nameWithOwner` and no argument. With one remote that is right. With two it is
+whatever gh's own precedence picks, and in a fork carrying an `upstream` remote
+it picks the **upstream** — so the script that publishes a Release for our
+`version.md` addressed somebody else's repository.
+
+It was caught in `000/hermes-agent`, which has `origin` on `samirhvbr` and
+`upstream` on `NousResearch`. `release.sh` asked for
+`NousResearch/hermes-agent` and got `HTTP 404: Not Found`. **The 404 is luck,
+not a guard.** In a repository where we hold write access to the second remote —
+a fork inside an organisation we belong to, a mirror — the call succeeds, the
+Release lands somewhere it does not belong, and nothing in the output says so:
+the script would have printed `published` and been wrong.
+
+The fix reads `origin` explicitly and only falls back to gh's guess when
+`origin` yields nothing shaped like `owner/name`. `origin` is already the
+authority everywhere else in this standard — `pre-push` compares against
+`origin/<default>`, and `fleet-hooks.sh` decides whether a repository is ours by
+the owner on `origin`. This was the one place that asked a different question.
+
+One repository in the fleet has a second remote today, which is why this cost a
+404 and not an incident. It is fixed here and in the skeleton; the copies
+already distributed are listed in the queue, because a tool with a known defect
+sitting in fifty repositories is not something a changelog entry closes.
+
 ## 1.9.0 - a fleet script installs the hooks where the convention is already in force
 
 The hook that checks the version is worth what it enforces, and on 07/09/2026 it
