@@ -9,6 +9,52 @@ at `git commit` time.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 1.9.0 - the commit-msg hook checks the subject version against version.md
+
+The hook has been checking the *shape* of a commit subject since `1.0.0`:
+`X.Y.Z - comment`, no Conventional Commits prefix, no vague or three-character
+comment. A well-formed subject can still carry the wrong number, and nothing
+looked at the number itself — not `commit-msg`, which never read `version.md`,
+and not `pre-push`, which reads the file but never the subject. Between them
+they proved that a version exists and that a subject has a version in it, and
+never that the two are the same version.
+
+Two repositories were living in that gap on the day this was written, and both
+were found by a survey rather than by a person noticing:
+
+- **BLUE3-INTRANET** had four consecutive commits subject-stamped `1.8.13` while
+  `version.md` at `HEAD` still read `1.8.11`. The bump was sitting in the working
+  tree, uncommitted, so `1.8.12` never existed in the history at all. Every one
+  of those four subjects would pass the old hook.
+- **SSHVTERM-API** stamped `2.0.14 - …` — the version of SSHVTERM-DESKTOP, the
+  repository next to it. Its own `version.md` went `1.2.0 → 1.2.1` inside that
+  same commit, correctly, and the subject named neither number.
+
+Both are the failure the norm has always described (*"the version comes from
+`version.md`, bumped in the same commit"*) and neither was mechanically
+detectable, which is why the norm alone was not enough.
+
+`commit-msg` now reads `version.md` **from the index** and refuses a subject
+whose version is not the one the commit carries, naming both numbers. The index
+and not the working tree, because the index is what the commit will contain:
+that is what makes a bump staged in this commit pass, a later commit of the same
+block repeat its version and pass, and a bump left unstaged fail — the commit
+genuinely does not carry it. A missing `version.md`, or one with no semver,
+degrades to a warning, the same way `pre-push` degrades when it cannot reach the
+remote: a guard that blocks the work when it cannot measure is a guard that gets
+switched off.
+
+**A merge commit is now exempt**, and that is a new exemption rather than an
+oversight being fixed. Its subject is written by git, it carries no version of
+its own, and the old hook refused it — which is one reason the hook was enabled
+in three clones out of fifty-eight. A guard that fires on `git merge` is a guard
+that gets bypassed with `--no-verify`, and `--no-verify` switches off every
+guard at once.
+
+The error message loses the words *"in English"*. The hook never checked the
+language and cannot: what it enforces is the shape and the number. Where the
+language rule lives is now what it points at.
+
 ## 1.8.3 - the skeleton carries its own map of what came from repodocs
 
 A repository created from the skeleton has always known the rules and never known
