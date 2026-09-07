@@ -9,6 +9,53 @@ at `git commit` time.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 1.9.3 - the fleet script creates the changelog it has been assuming
+
+34 repositories of the fleet — two thirds of the ones the hooks reached — have
+no `CHANGELOG.md` at all. The rule that the entry's `## X.Y.Z - description`
+heading **is** the commit subject therefore held only where the file happened to
+exist, and the first fleet pass wrote its entry in 16 repositories and skipped
+it in 34, reporting them at the end and doing nothing about it.
+
+That report was the right output for a first pass and the wrong place to stop.
+The file is not optional in this standard: the entry written before the commit
+is what stops the subject from being invented at `git commit` time, and a
+repository without the file has no place to write it.
+
+`fleet-hooks.sh` now creates it with the standard header — in that repository's
+language — and this pass's entry as the first record. **Earlier versions are not
+back-filled**, and the header says so in place: they are in `git log`, and
+reconstructing them into entries now would produce a plausible history rather
+than a true one. The same reasoning SSHVTERM-API applied to its missing Releases
+an hour earlier.
+
+The classification also stops reading a *missing* `CHANGELOG.md` as an in-flight
+edit — a file that does not exist cannot be mid-edit, and the check that guards
+against folding someone's work in progress into a commit about hooks was
+answering a different question for the 34.
+
+## 1.9.3 - the skeleton's changelog header describes a model that was switched off in September
+
+Two sentences at the top of `templates/skeleton/CHANGELOG.md` were wrong, and
+they were being copied into every repository created from the skeleton.
+
+The format line asked for `versão - comentário em português`. That was true
+until 03/09/2026 and has been false since [ADR-014](docs/decisions.md): the
+commit message is repository content, and it is English (US) — with the one
+carve-out that is the Blue3 internal set, where the whole repository is
+Portuguese, and a repository there is not reading this line to find that out.
+
+The second sentence called the file *"the handoff artefact between whoever does
+the work and whoever commits it"*. That is a description of the COMMITTER model,
+which was switched off across the fleet on 03/09/2026
+([ADR-016](docs/decisions.md)). There is no handoff and no second party: the
+agent that writes the entry is the agent that commits it. Leaving the sentence
+in place told every new repository to expect a step that no longer exists.
+
+What replaces it is the reason the entry is written first, which is the part
+worth carrying: the sentence that lands in `git log` is one that was weighed,
+rather than improvised at `git commit` time.
+
 ## 1.9.2 - pre-push refused a branch deletion, because it never read what it was given
 
 `git push origin --delete main` was rejected with *"version 1.9.x is already on

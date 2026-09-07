@@ -1,9 +1,10 @@
 # Changelog
 
-Entries in the commit-message format (`versão - comentário em português`, see
-[docs/versioning.md](docs/versioning.md)), newest first. **Each `##` heading is
-literally the commit subject** — this file is the handoff artefact between
-whoever does the work and whoever commits it.
+Entries in the commit-message format (`version - short description in English`,
+see [docs/versioning.md](docs/versioning.md)), newest first. **Each `##` heading
+is literally the commit subject** — the entry is written *before* the commit, so
+the sentence that lands in `git log` is one that was weighed rather than
+improvised at `git commit` time.
 
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
