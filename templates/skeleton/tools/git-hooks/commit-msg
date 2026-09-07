@@ -17,9 +17,12 @@ if [ "${!HOOK_ESCAPE_VAR:-0}" = "1" ]; then
   exit 0
 fi
 
-# A merge commit's subject is written by git, not by a person, and it carries no
-# version of its own — the versions are in the commits being merged. Rejecting
-# it would teach --no-verify, which costs more than the merge subject is worth.
+# A subject git wrote is not a subject a person wrote, and it carries no version
+# of its own: a merge's versions are in the commits being merged, a revert's is
+# in the commit it undoes, and a fixup or squash line is consumed by the rebase
+# that lands it. Refusing them teaches --no-verify, which switches off every
+# guard at once. EOP's own commit-msg has carried this exemption list since
+# 04/09/2026; this is that list, not a new idea.
 git_dir="$(git rev-parse --git-dir)"
 if [ -f "$git_dir/MERGE_HEAD" ]; then
   echo "commit-msg: merge commit — subject not checked." >&2
@@ -29,6 +32,13 @@ fi
 msg_file="$1"
 # First non-comment, non-empty line = the subject.
 subject="$(grep -v '^#' "$msg_file" | grep -v '^[[:space:]]*$' | head -n 1 || true)"
+
+case "$subject" in
+  "Merge "*|"Revert "*|"fixup! "*|"squash! "*|"amend! "*)
+    echo "commit-msg: subject written by git — not checked." >&2
+    exit 0
+    ;;
+esac
 
 die() {
   echo "" >&2

@@ -9,6 +9,29 @@ at `git commit` time.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 1.9.0 - the hook exempts every subject git wrote, not only a merge
+
+The version check landed with one exemption — a merge, detected by `MERGE_HEAD`
+— and that was the exemption its author happened to think of. EOP had the
+answer already. Its `commit-msg` has been checking the same thing since
+04/09/2026, against `version.md`, reached independently and written in
+Portuguese in its own file, and it exempts by subject prefix: `Merge`, `Revert`,
+`fixup!`, `squash!`. That list is not longer for the sake of it. A revert's
+version is in the commit it undoes, a fixup line is consumed by the rebase that
+lands it, and neither is a sentence a person wrote.
+
+The list here is now EOP's, plus `amend!` and the `MERGE_HEAD` check that catches
+a merge whose subject was rewritten by hand. Taking the tested list rather than
+inventing a shorter one is the same rule this repository applies to its own
+documents: two implementations of one rule is how a rule ends up with two
+versions, one of them wrong.
+
+Worth recording for the fleet pass that follows: EOP is the one repository where
+the norm was **not** advisory, and it is also the only one whose hook this
+standard must not overwrite. The check it runs is stronger than this one — it
+goes through the same lint the PR title goes through — and it has a toolchain
+behind it.
+
 ## 1.9.0 - the Blue3 internal repositories are Portuguese, and the norm finally says so
 
 The English rule was never about English. It exists for a reader — the
