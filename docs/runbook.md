@@ -183,9 +183,12 @@ hook it installs** — a repository that would refuse its own installation says 
 instead of being forced.
 
 The escape variable a repository already declares is preserved; one that
-declares none gets `REPODOCS_NO_HOOK`. A repository with no `CHANGELOG.md` is
-listed at the end: the subject and the bump land, and no entry is invented into
-a file that does not exist.
+declares none gets `REPODOCS_NO_HOOK`. A repository with **no `CHANGELOG.md`
+gets one**, with the standard header and this entry as its first record — 34 of
+them had none, so the rule that the entry's heading *is* the subject held only
+where the file happened to exist. Earlier versions are **not** back-filled: they
+are in `git log`, and reconstructing them would produce a plausible history
+rather than a true one.
 
 **A refused push is where a person enters**, and the script stops at exactly
 that line: it reports the repository and the git output, and never forces

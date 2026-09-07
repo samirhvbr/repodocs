@@ -117,6 +117,45 @@ write_hook() {      # $1 = source, $2 = destination, $3 = escape var
   chmod +x "$2"
 }
 
+write_changelog_header() {   # $1 = file, $2 = remote url
+  if pt_repository "$2"; then
+    cat > "$1" <<'PTHEAD'
+# Changelog
+
+Entradas no formato da mensagem de commit (`versão - descrição curta em
+português`), mais recente no topo. **Cada cabeçalho `##` é literalmente o
+assunto do commit** — a entrada é escrita *antes* do commit, para que a frase
+que cai no `git log` seja uma frase pesada e não improvisada na hora.
+
+Corpos são narrativos: o que mudou, por quê e o que foi medido. Este arquivo
+não se reescreve.
+
+> **O registro começa aqui.** Este arquivo nasceu depois do repositório: as
+> versões anteriores estão no `git log` e não foram retroalimentadas, porque
+> reconstruí-las agora produziria uma história plausível, não uma verdadeira.
+
+PTHEAD
+  else
+    cat > "$1" <<'ENHEAD'
+# Changelog
+
+Entries in the commit-message format (`version - short description in English`),
+newest first. **Each `##` heading is literally the commit subject** — the entry
+is written *before* the commit, so the sentence that lands in `git log` is one
+that was weighed rather than improvised at `git commit` time.
+
+Bodies are narrative: what changed, why, and what was measured. This file is
+never rewritten.
+
+> **The record starts here.** This file was created after the repository was:
+> earlier versions are in `git log` and are deliberately not back-filled, because
+> reconstructing them now would produce a plausible history rather than a true
+> one.
+
+ENHEAD
+  fi
+}
+
 prepend_changelog() {  # $1 = file, $2 = entry file
   local tmp; tmp="$(mktemp)"
   awk -v entry="$2" '
@@ -189,6 +228,8 @@ while IFS= read -r gitdir; do
 
   dirty=""
   for f in version.md CHANGELOG.md tools/git-hooks/commit-msg tools/git-hooks/pre-push; do
+    # A file that does not exist yet cannot be mid-edit.
+    [ -e "$repo/$f" ] || continue
     if ! git -C "$repo" diff --quiet -- "$f" 2>/dev/null || ! git -C "$repo" diff --cached --quiet -- "$f" 2>/dev/null; then
       dirty="$dirty $f"
     fi
@@ -232,7 +273,7 @@ fi
 TRAILERS="Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_014qeYCqGQKLAdRPHEBpWbJC"
 
-declare -a FAILED=() NO_CHANGELOG=()
+declare -a FAILED=() CREATED_CHANGELOG=()
 
 for row in "${READY[@]}"; do
   repo="${row%%|*}"; remote="${row#*|}"
@@ -317,16 +358,18 @@ off every guard at once. In a fresh clone, enable them with
 ENENTRY
   fi
 
-  paths=(tools/git-hooks/commit-msg tools/git-hooks/pre-push version.md)
-  if [ -f "$repo/CHANGELOG.md" ]; then
-    prepend_changelog "$repo/CHANGELOG.md" "$entry"
-    paths+=(CHANGELOG.md)
-  else
-    # Some repositories keep their changelog inside version.md instead. The
-    # entry is not invented into a file that does not exist; the subject and
-    # the bump still land, and the report says which repositories these are.
-    NO_CHANGELOG+=("$name")
+  paths=(tools/git-hooks/commit-msg tools/git-hooks/pre-push version.md CHANGELOG.md)
+  if [ ! -f "$repo/CHANGELOG.md" ]; then
+    # 34 repositories of the fleet had no CHANGELOG.md at all, so the rule that
+    # the entry's heading *is* the commit subject held only where the file
+    # happened to exist. The file is created with the header and this entry as
+    # its first record. Earlier versions are NOT back-filled: they are in
+    # `git log`, and reconstructing them here would produce a plausible history
+    # rather than a true one.
+    write_changelog_header "$repo/CHANGELOG.md" "$remote"
+    CREATED_CHANGELOG+=("$name")
   fi
+  prepend_changelog "$repo/CHANGELOG.md" "$entry"
   rm -f "$entry"
 
   body="$(printf '%s\n\n%s\n' \
@@ -372,9 +415,9 @@ ENENTRY
 done
 
 echo
-if [ "${#NO_CHANGELOG[@]}" -gt 0 ]; then
-  echo "NO CHANGELOG.md — subject and bump landed, no entry written (${#NO_CHANGELOG[@]}):"
-  printf '  %s\n' "${NO_CHANGELOG[@]}"
+if [ "${#CREATED_CHANGELOG[@]}" -gt 0 ]; then
+  echo "CHANGELOG.md CREATED — the repository had none (${#CREATED_CHANGELOG[@]}):"
+  printf '  %s\n' "${CREATED_CHANGELOG[@]}"
   echo
 fi
 if [ "${#FAILED[@]}" -gt 0 ]; then
