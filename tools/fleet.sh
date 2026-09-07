@@ -1,45 +1,76 @@
 #!/usr/bin/env bash
-# fleet-hooks.sh — put the two git hooks into the repositories of the fleet, and
-# turn them on.
+# fleet.sh — the standard's one instrument for reaching the repositories that
+# already exist: install the hooks, stamp the echo blocks, report conformance.
 #
-# Why this exists: on 07/09/2026 the hooks were enabled in 3 clones out of 58.
-# Everywhere else the commit format was prose in a CLAUDE.md, which is what
-# prose becomes at the end of a long session — advisory. Two repositories were
-# measurably off the norm and neither had a mechanical guard that would have
-# said so.
+#   ./tools/fleet.sh hooks           dry run — classify, change nothing
+#   ./tools/fleet.sh hooks --apply   write the hooks and release.sh, enable,
+#                                    bump, commit, push
+#   ./tools/fleet.sh echo --apply    regenerate the four marked echo blocks in
+#                                    CLAUDE.md and AGENTS.md
+#   ./tools/fleet.sh check           read-only conformance report
 #
-# What it refuses to do is as important as what it does. It never overwrites a
-# hook a repository wrote for itself (EOP's is stronger than this one), never
-# touches a repository whose history follows another convention (our forks of
-# upstream projects), and never commits a file the working tree is already
-# mid-edit on.
+# Why one script with three modes and not three scripts: the hard part is not
+# writing a file, it is deciding **which repositories** may be written to — the
+# owner on `origin`, the language of the repository, the exclusions that are
+# written down, the working tree that is mid-edit. That classification is the
+# same for all three, and a second copy of it is the failure this standard
+# exists to prevent.
 #
-# Norm: docs/versioning.md · procedure: docs/runbook.md
+# What it refuses to do is as important as what it does. It never touches a
+# repository we do not own, never overwrites a file a repository wrote for
+# itself, never installs where the history follows another convention, never
+# commits a file the working tree is already mid-edit on, and never forces a
+# push.
+#
+# Norm: docs/versioning.md · docs/conventions.md · procedure: docs/runbook.md
 set -euo pipefail
 
 SELF_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPODOCS="$(dirname "$SELF_DIR")"
-SRC="$REPODOCS/templates/skeleton/tools/git-hooks"
+HOOK_SRC="$REPODOCS/templates/skeleton/tools/git-hooks"
+TOOL_SRC="$REPODOCS/templates/skeleton/tools"
+ECHO_SRC="$REPODOCS/templates/echo-blocks"
 
+# The blocks, in the order a repository that has none of them should receive.
+ECHO_BLOCKS="QUEUE-RULE RELEASES-RULE LANGUAGE-RULE COMMIT-RULE"
+
+MODE=""
 ROOT="${HOME}/x"
 APPLY=0
 PUSH=1
 FILTER=""
+RELEASES=0
 
 usage() {
   cat <<USAGE
-usage: tools/fleet-hooks.sh [--apply] [--no-push] [--root DIR] [--only SUBSTRING]
+usage: tools/fleet.sh <hooks|echo|check> [options]
 
-  (default)          dry run: classify every repository, change nothing
-  --apply            write the hooks, enable them, bump, commit and push
-  --no-push          commit but do not push (a refused push is a human's call)
+  hooks    install/regenerate tools/git-hooks/* and tools/release.sh, and turn
+           the hooks on with core.hooksPath
+  echo     regenerate the marked echo blocks in CLAUDE.md and AGENTS.md
+           ($ECHO_BLOCKS), choosing the -PT variant by the owner on origin
+  check    read-only conformance report; writes nothing, anywhere
+
+options:
+  --apply            actually write (hooks/echo only; without it, a dry run)
+  --no-push          commit but do not push — a refused push is a human's call
   --root DIR         where the fleet lives (default: \$HOME/x)
   --only SUBSTRING   restrict to repositories whose path contains SUBSTRING
+  --releases         check only: ask GitHub whether version.md has a Release
+                     (one API call per repository, so it is off by default)
 
-Each selected repository gets one commit: the two hooks, the version bump and
-the changelog entry, in the language that repository is written in.
+In hooks and echo, each selected repository gets ONE commit: the files, the
+version bump and the changelog entry, in the language that repository is
+written in. The commit goes through the hook it installs.
 USAGE
 }
+
+[ $# -gt 0 ] || { usage >&2; exit 2; }
+case "$1" in
+  hooks|echo|check) MODE="$1"; shift ;;
+  -h|--help) usage; exit 0 ;;
+  *) echo "fleet: unknown mode '$1'" >&2; usage >&2; exit 2 ;;
+esac
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -47,16 +78,16 @@ while [ $# -gt 0 ]; do
     --no-push) PUSH=0 ;;
     --root) ROOT="$2"; shift ;;
     --only) FILTER="$2"; shift ;;
+    --releases) RELEASES=1 ;;
     -h|--help) usage; exit 0 ;;
-    *) echo "unknown argument: $1" >&2; usage >&2; exit 2 ;;
+    *) echo "fleet: unknown argument: $1" >&2; usage >&2; exit 2 ;;
   esac
   shift
 done
 
-[ -f "$SRC/commit-msg" ] && [ -f "$SRC/pre-push" ] || {
-  echo "fleet-hooks: cannot find the hook sources at $SRC" >&2
-  exit 1
-}
+[ "$MODE" = check ] && APPLY=0
+
+# --------------------------------------------------------------- the rules ---
 
 # The owners whose repositories are ours. Anything else is a repository we are
 # guests in, where the host's conventions win (ADR-019) — including our own
@@ -89,8 +120,12 @@ owner_of() {        # $1 = remote url
   printf '%s' "$1" | sed -E 's#^(git@|https://|ssh://git@)##; s#^github\.com[:/]##; s#/.*$##'
 }
 
+slug_of() {         # $1 = remote url  ->  owner/name
+  printf '%s' "$1" | sed -E 's#^(git@|https://|ssh://git@)##; s#^github\.com[:/]##; s#\.git$##; s#/$##'
+}
+
 first_semver() {    # $1 = file
-  grep -oE '[0-9]+\.[0-9]+\.[0-9]+' "$1" | head -n 1 || true
+  grep -oE '[0-9]+\.[0-9]+\.[0-9]+' "$1" 2>/dev/null | head -n 1 || true
 }
 
 bump_z() {          # $1 = X.Y.Z
@@ -116,6 +151,63 @@ write_hook() {      # $1 = source, $2 = destination, $3 = escape var
   sed "s/^HOOK_ESCAPE_VAR=\"PROJECT_NO_HOOK\"/HOOK_ESCAPE_VAR=\"$3\"/" "$1" > "$2"
   chmod +x "$2"
 }
+
+# A file this standard generates carries a provenance marker. A copy without one
+# is the repository's own — EOP's commit-msg is the case this protects — and is
+# never overwritten. A copy generated here before the marker existed is
+# recognised by what only a generated copy has.
+generated_here() {  # $1 = path, $2 = marker
+  [ -f "$1" ] || return 0
+  grep -q "$2" "$1" && return 0
+  case "$2" in
+    'repodocs:hook')
+      grep -q '^HOOK_ESCAPE_VAR=' "$1" && grep -qE 'commit-msg: REJECTED|pre-push: REJECTED' "$1" && return 0 ;;
+    'repodocs:tool')
+      grep -q 'release.sh:' "$1" && return 0 ;;
+  esac
+  return 1
+}
+
+# ------------------------------------------------------------- echo blocks ---
+
+block_source() {    # $1 = block name, $2 = remote url
+  local pt="$ECHO_SRC/$1-PT.md"
+  if pt_repository "$2" && [ -f "$pt" ]; then printf '%s' "$pt"
+  else printf '%s' "$ECHO_SRC/$1.md"; fi
+}
+
+# Replace everything between the markers, or insert the block if the markers are
+# not there. Replacing between markers is what makes a heading edited in place
+# harmless: the whole block is rewritten, heading included.
+stamp_block() {     # $1 = file, $2 = block name, $3 = block source
+  local f="$1" name="$2" blk="$3" tmp
+  tmp="$(mktemp)"
+  if grep -q "<!-- $name:repodocs -->" "$f"; then
+    awk -v blk="$blk" -v name="$name" '
+      BEGIN { s = "<!-- " name ":repodocs -->"; e = "<!-- /" name " -->" }
+      $0 == s { skip = 1; while ((getline l < blk) > 0) print l; close(blk); next }
+      skip && $0 == e { skip = 0; next }
+      skip { next }
+      { print }
+    ' "$f" > "$tmp"
+  else
+    # Keep the blocks together: insert before the first one already present,
+    # and only fall back to the end of the file when there is none.
+    local anchor=""
+    local b
+    for b in $ECHO_BLOCKS; do
+      if grep -q "<!-- $b:repodocs -->" "$f"; then anchor="<!-- $b:repodocs -->"; break; fi
+    done
+    awk -v blk="$blk" -v anchor="$anchor" '
+      anchor != "" && $0 == anchor && !done { while ((getline l < blk) > 0) print l; close(blk); print ""; done = 1 }
+      { print }
+      END { if (!done) { print ""; while ((getline l < blk) > 0) print l } }
+    ' "$f" > "$tmp"
+  fi
+  mv "$tmp" "$f"
+}
+
+# ------------------------------------------------------------- changelog -----
 
 write_changelog_header() {   # $1 = file, $2 = remote url
   if pt_repository "$2"; then
@@ -167,21 +259,17 @@ prepend_changelog() {  # $1 = file, $2 = entry file
   mv "$tmp" "$1"
 }
 
-# ---------------------------------------------------------------- classify ---
+# --------------------------------------------------------------- discovery ---
 
-declare -a READY=() SKIPPED=()
+declare -a OURS=() SKIPPED=()
 
 while IFS= read -r gitdir; do
   repo="$(dirname "$gitdir")"
   [ -n "$FILTER" ] && case "$repo" in *"$FILTER"*) ;; *) continue ;; esac
-  [ "$(cd "$repo" && pwd)" = "$REPODOCS" ] && { SKIPPED+=("$repo|the source of the hooks — enabled here already"); continue; }
+  [ "$(cd "$repo" && pwd)" = "$REPODOCS" ] && { SKIPPED+=("$repo|the source — it is where these files come from"); continue; }
 
   remote="$(git -C "$repo" remote get-url origin 2>/dev/null || true)"
   [ -n "$remote" ] || { SKIPPED+=("$repo|no origin remote"); continue; }
-
-  if reason="$(excluded_reason "$remote")"; then
-    SKIPPED+=("$repo|$reason"); continue
-  fi
 
   owner="$(owner_of "$remote")"
   case " $FLEET_OWNERS " in
@@ -189,72 +277,175 @@ while IFS= read -r gitdir; do
     *) SKIPPED+=("$repo|not ours — owner is $owner, the host's conventions win"); continue ;;
   esac
 
-  [ -f "$repo/version.md" ] || { SKIPPED+=("$repo|no version.md — the hooks have nothing to measure"); continue; }
-  [ -n "$(first_semver "$repo/version.md")" ] || { SKIPPED+=("$repo|version.md holds no semver"); continue; }
-
   # Does this repository write our subjects *now*? A fork we own but that tracks
-  # an upstream does not, and installing the hook there would refuse every
-  # commit it is about to receive.
-  #
-  # The window is the last 5 non-merge subjects, and it is short on purpose. A
-  # twenty-commit window reaches back past 03/09/2026, when the format became
-  # universal, and reads a repository's own pre-rule history as evidence that it
-  # follows another convention — measured: six fleet repositories scored 8/20
-  # and would have been skipped. At five, the fleet scores 4/5 or 5/5 and the
-  # upstream forks score 0/5. The separation is not marginal.
+  # an upstream does not. The window is the last 5 non-merge subjects, and it is
+  # short on purpose: at twenty it reaches back past 03/09/2026, when the format
+  # became universal, and reads six fleet repositories' own pre-rule history as
+  # evidence against them.
   total="$(git -C "$repo" log --no-merges --format='%s' -5 2>/dev/null | grep -c . || true)"
   [ "${total:-0}" -gt 0 ] || { SKIPPED+=("$repo|no history to read"); continue; }
-  ours="$(git -C "$repo" log --no-merges --format='%s' -5 2>/dev/null | grep -cE '^[0-9]+\.[0-9]+\.[0-9]+ - ' || true)"
-  if [ "$((ours * 2))" -lt "$total" ]; then
-    SKIPPED+=("$repo|history follows another convention ($ours of the last $total subjects are ours)")
+  mine="$(git -C "$repo" log --no-merges --format='%s' -5 2>/dev/null | grep -cE '^[0-9]+\.[0-9]+\.[0-9]+ - ' || true)"
+  if [ "$((mine * 2))" -lt "$total" ]; then
+    SKIPPED+=("$repo|history follows another convention ($mine of the last $total subjects are ours)")
     continue
   fi
 
-  # A hook a repository wrote for itself is never overwritten. EOP's is the case
-  # this protects: it runs the same version check through its own lint, has a
-  # toolchain behind it and is stronger than this one.
-  #
-  # A hook that came from here before the provenance marker existed is *not*
-  # that case, and it must still be regenerated — it is recognised by the two
-  # things only a generated copy has: the `HOOK_ESCAPE_VAR` line and the
-  # rejection text that names this norm.
-  hook="$repo/tools/git-hooks/commit-msg"
-  if [ -f "$hook" ] \
-     && ! grep -q 'repodocs:hook' "$hook" \
-     && ! { grep -q '^HOOK_ESCAPE_VAR=' "$hook" && grep -q 'commit-msg: REJECTED' "$hook"; }; then
-    SKIPPED+=("$repo|has its own commit-msg — never overwritten")
-    continue
+  OURS+=("$repo|$remote")
+done < <(find "$ROOT" -maxdepth 4 -name .git -type d \
+           -not -path '*/node_modules/*' -not -path '*/_quarentena/*' \
+           2>/dev/null | sort)
+
+# ============================================================== check mode ===
+
+if [ "$MODE" = check ]; then
+  echo "fleet check: root $ROOT · $((${#OURS[@]})) repositories of ours"
+  echo
+  findings=0
+  declare -a ALL_FINDINGS=()
+  for row in "${OURS[@]}"; do
+    repo="${row%%|*}"; remote="${row#*|}"
+    name="${repo#"$ROOT"/}"
+    declare -a bad=() notes=()
+
+    [ "$(git -C "$repo" config core.hooksPath 2>/dev/null || true)" = "tools/git-hooks" ] \
+      || bad+=("hooks not enabled (core.hooksPath)")
+
+    for h in commit-msg pre-push; do
+      if [ ! -f "$repo/tools/git-hooks/$h" ]; then
+        bad+=("$h missing")
+      elif generated_here "$repo/tools/git-hooks/$h" 'repodocs:hook'; then
+        # Compare ignoring the one line each repository is allowed to rename.
+        if ! diff -q <(grep -v '^HOOK_ESCAPE_VAR=' "$repo/tools/git-hooks/$h") \
+                     <(grep -v '^HOOK_ESCAPE_VAR=' "$HOOK_SRC/$h") >/dev/null 2>&1; then
+          bad+=("$h differs from the standard")
+        fi
+      fi
+    done
+
+    if [ -f "$repo/tools/release.sh" ] && generated_here "$repo/tools/release.sh" 'repodocs:tool'; then
+      diff -q "$repo/tools/release.sh" "$TOOL_SRC/release.sh" >/dev/null 2>&1 \
+        || bad+=("release.sh differs from the standard")
+    elif [ ! -f "$repo/tools/release.sh" ] && [ ! -f "$repo/.github/workflows/release.yml" ]; then
+      bad+=("no way to publish a Release (no release.sh, no workflow)")
+    fi
+
+    for b in $ECHO_BLOCKS; do
+      grep -q "<!-- $b:repodocs -->" "$repo/CLAUDE.md" 2>/dev/null || bad+=("$b not stamped")
+    done
+
+    if [ -f "$repo/CLAUDE.md" ] && [ -f "$repo/AGENTS.md" ]; then
+      diff -q <(tail -n +2 "$repo/CLAUDE.md") <(tail -n +2 "$repo/AGENTS.md") >/dev/null 2>&1 \
+        || bad+=("CLAUDE.md and AGENTS.md differ below the H1 (ADR-007)")
+    else
+      bad+=("missing CLAUDE.md or AGENTS.md")
+    fi
+
+    # The rule is about the DEFAULT branch, not whatever is checked out: a
+    # topic branch in the working tree is normal work, and flagging it would
+    # teach whoever reads this report to skim past it.
+    defbr="$(git -C "$repo" symbolic-ref --quiet --short refs/remotes/origin/HEAD 2>/dev/null | sed 's#^origin/##' || true)"
+    [ -n "$defbr" ] || defbr="$(git -C "$repo" config --get remote.origin.HEAD 2>/dev/null || true)"
+    if [ -z "$defbr" ]; then
+      # This clone was never told which branch is the remote's default. That is
+      # a fact about the clone, not about the repository, so it is a note and
+      # not a finding — counting it would inflate a number meant to be acted on.
+      notes+=("default branch not known locally — git remote set-head origin -a")
+    elif [ "$defbr" != master ]; then
+      bad+=("default branch is '$defbr', not master (ADR-015)")
+    fi
+
+    if [ -d "$repo/.continue" ]; then
+      [ -f "$repo/.continue/README.md" ] || bad+=(".continue/ has no README.md (conventions §2)")
+      untracked="$(git -C "$repo" ls-files --others --exclude-standard -- .continue 2>/dev/null | wc -l)"
+      [ "${untracked:-0}" -eq 0 ] || bad+=("$untracked queue file(s) not in git — a deletion would not come back")
+    fi
+
+    if [ "$RELEASES" = 1 ] && [ -f "$repo/version.md" ]; then
+      v="$(first_semver "$repo/version.md")"
+      rel="$(gh release list --repo "$(slug_of "$remote")" --limit 1 2>/dev/null | awk '{print $1}')"
+      [ -n "$v" ] && [ "$v" != "${rel:-}" ] && bad+=("version.md is $v, latest Release is ${rel:-none}")
+    fi
+
+    if [ "${#bad[@]}" -eq 0 ]; then
+      printf '  ok    %s\n' "$name"
+    else
+      findings=$((findings + ${#bad[@]}))
+      ALL_FINDINGS+=("${bad[@]}")
+      printf '  ---   %s\n' "$name"
+      printf '        · %s\n' "${bad[@]}"
+    fi
+    [ "${#notes[@]}" -eq 0 ] || printf '        note: %s\n' "${notes[@]}"
+    unset bad notes
+  done
+  echo
+  if [ "$findings" -gt 0 ]; then
+    echo "BY KIND — what to fix once instead of ${#OURS[@]} times:"
+    printf '%s\n' "${ALL_FINDINGS[@]}" \
+      | sed -E "s/'[^']*'/'…'/g; s/[0-9]+ queue file/N queue file/; s/version\.md is .*/version.md does not match its latest Release/" \
+      | sort | uniq -c | sort -rn | sed 's/^/  /'
+    echo
   fi
+  echo "$findings finding(s) across ${#OURS[@]} repositories."
+  [ "$findings" -eq 0 ] || exit 1
+  exit 0
+fi
+
+# ================================================ hooks and echo: selection ===
+
+declare -a READY=()
+
+for row in "${OURS[@]}"; do
+  repo="${row%%|*}"; remote="${row#*|}"
+
+  if reason="$(excluded_reason "$remote")"; then
+    SKIPPED+=("$repo|$reason"); continue
+  fi
+
+  if [ ! -f "$repo/version.md" ] || [ -z "$(first_semver "$repo/version.md")" ]; then
+    SKIPPED+=("$repo|no version.md with a semver — nothing to bump"); continue
+  fi
+
+  branch="$(git -C "$repo" symbolic-ref --quiet --short HEAD 2>/dev/null || true)"
+  [ -n "$branch" ] || { SKIPPED+=("$repo|detached HEAD"); continue; }
+
+  case "$MODE" in
+    hooks)
+      # A hook a repository wrote for itself is never overwritten. EOP's is the
+      # case this protects: it runs the same version check through its own lint.
+      if ! generated_here "$repo/tools/git-hooks/commit-msg" 'repodocs:hook'; then
+        SKIPPED+=("$repo|has its own commit-msg — never overwritten"); continue
+      fi
+      touched="version.md CHANGELOG.md tools/git-hooks/commit-msg tools/git-hooks/pre-push tools/release.sh"
+      ;;
+    echo)
+      if [ ! -f "$repo/CLAUDE.md" ] || [ ! -f "$repo/AGENTS.md" ]; then
+        SKIPPED+=("$repo|no CLAUDE.md/AGENTS.md pair to stamp"); continue
+      fi
+      touched="version.md CHANGELOG.md CLAUDE.md AGENTS.md"
+      ;;
+  esac
 
   dirty=""
-  for f in version.md CHANGELOG.md tools/git-hooks/commit-msg tools/git-hooks/pre-push; do
-    # A file that does not exist yet cannot be mid-edit.
-    [ -e "$repo/$f" ] || continue
+  for f in $touched; do
+    [ -e "$repo/$f" ] || continue     # a file that does not exist cannot be mid-edit
     if ! git -C "$repo" diff --quiet -- "$f" 2>/dev/null || ! git -C "$repo" diff --cached --quiet -- "$f" 2>/dev/null; then
       dirty="$dirty $f"
     fi
   done
   [ -z "$dirty" ] || { SKIPPED+=("$repo|in-flight edits to:$dirty"); continue; }
 
-  branch="$(git -C "$repo" symbolic-ref --quiet --short HEAD 2>/dev/null || true)"
-  [ -n "$branch" ] || { SKIPPED+=("$repo|detached HEAD"); continue; }
-
   READY+=("$repo|$remote")
-done < <(find "$ROOT" -maxdepth 4 -name .git -type d \
-           -not -path '*/node_modules/*' -not -path '*/_quarentena/*' \
-           2>/dev/null | sort)
+done
 
 # ------------------------------------------------------------------ report ---
 
-echo "fleet-hooks: root $ROOT"
+echo "fleet $MODE: root $ROOT"
 echo
 echo "SELECTED (${#READY[@]}):"
 for row in "${READY[@]}"; do
   repo="${row%%|*}"; remote="${row#*|}"
   lang="EN"; pt_repository "$remote" && lang="PT"
-  action="install"
-  [ -f "$repo/tools/git-hooks/commit-msg" ] && action="regenerate"
-  printf '  %-8s %-12s %s\n' "$action" "$lang" "${repo#"$ROOT"/}"
+  printf '  %-4s %s\n' "$lang" "${repo#"$ROOT"/}"
 done
 echo
 echo "SKIPPED (${#SKIPPED[@]}):"
@@ -264,7 +455,7 @@ done
 echo
 
 if [ "$APPLY" -eq 0 ]; then
-  echo "Dry run. Nothing was written. Re-run with --apply to install."
+  echo "Dry run. Nothing was written. Re-run with --apply."
   exit 0
 fi
 
@@ -278,148 +469,176 @@ declare -a FAILED=() CREATED_CHANGELOG=() CHANGELOG_IN_VERSION=()
 for row in "${READY[@]}"; do
   repo="${row%%|*}"; remote="${row#*|}"
   name="${repo#"$ROOT"/}"
-  action="install"
-  [ -f "$repo/tools/git-hooks/commit-msg" ] && action="regenerate"
 
-  had_hooks=1
-  [ -d "$repo/tools/git-hooks" ] || had_hooks=0
   had_config="$(git -C "$repo" config core.hooksPath || true)"
+  declare -a paths=()
 
-  mkdir -p "$repo/tools/git-hooks"
-  ev="$(escape_var_of "$repo/tools/git-hooks/commit-msg")"
-  write_hook "$SRC/commit-msg" "$repo/tools/git-hooks/commit-msg" "$ev"
-  write_hook "$SRC/pre-push"   "$repo/tools/git-hooks/pre-push"   "$ev"
-  git -C "$repo" config core.hooksPath tools/git-hooks
+  if [ "$MODE" = hooks ]; then
+    had_hooks=1; [ -d "$repo/tools/git-hooks" ] || had_hooks=0
+    mkdir -p "$repo/tools/git-hooks"
+    ev="$(escape_var_of "$repo/tools/git-hooks/commit-msg")"
+    write_hook "$HOOK_SRC/commit-msg" "$repo/tools/git-hooks/commit-msg" "$ev"
+    write_hook "$HOOK_SRC/pre-push"   "$repo/tools/git-hooks/pre-push"   "$ev"
+    paths=(tools/git-hooks/commit-msg tools/git-hooks/pre-push)
 
-  # --porcelain and not `diff`, because on a first install the hooks are
+    if generated_here "$repo/tools/release.sh" 'repodocs:tool'; then
+      cp "$TOOL_SRC/release.sh" "$repo/tools/release.sh"
+      chmod +x "$repo/tools/release.sh"
+      paths+=(tools/release.sh)
+    fi
+    git -C "$repo" config core.hooksPath tools/git-hooks
+    action_desc="the git hooks"
+  else
+    for b in $ECHO_BLOCKS; do
+      src="$(block_source "$b" "$remote")"
+      stamp_block "$repo/CLAUDE.md" "$b" "$src"
+      stamp_block "$repo/AGENTS.md" "$b" "$src"
+    done
+    if ! diff -q <(tail -n +2 "$repo/CLAUDE.md") <(tail -n +2 "$repo/AGENTS.md") >/dev/null 2>&1; then
+      FAILED+=("$name|the twins came out different — not committed (ADR-007)")
+      echo "  ! $name — twins differ after stamping, rolling back"
+      git -C "$repo" checkout -- CLAUDE.md AGENTS.md 2>/dev/null || true
+      continue
+    fi
+    paths=(CLAUDE.md AGENTS.md)
+    action_desc="the echo blocks"
+  fi
+
+  # --porcelain and not `diff`, because on a first install the files are
   # untracked and `git diff` is blind to them.
-  if [ -z "$(git -C "$repo" status --porcelain -- tools/git-hooks)" ]; then
-    echo "  = $name — hooks already current, only the config was set"
+  if [ -z "$(git -C "$repo" status --porcelain -- "${paths[@]}")" ]; then
+    echo "  =    $name — already current${had_config:+}"
     continue
   fi
 
   old="$(first_semver "$repo/version.md")"
   new="$(bump_z "$old")"
-  # The first semver in the file is the version, whatever shape the file has.
   perl -0pi -e "s/\Q$old\E/$new/" "$repo/version.md" 2>/dev/null || \
     sed -i "0,/$old/s//$new/" "$repo/version.md"
+  paths+=(version.md)
 
   entry="$(mktemp)"
-  if pt_repository "$remote"; then
-    subject="$new - os hooks de git passam a rodar neste repositório"
-    [ "$action" = regenerate ] && subject="$new - os hooks de git são regenerados a partir do repodocs"
-    cat > "$entry" <<PTENTRY
+  if [ "$MODE" = hooks ]; then
+    if pt_repository "$remote"; then
+      subject="$new - os hooks de git são regenerados a partir do repodocs"
+      cat > "$entry" <<PTENTRY
 ## $subject
 
-Os dois hooks do padrão passam a rodar aqui: \`commit-msg\`, que confere a forma
-do assunto (\`X.Y.Z - descrição\`), recusa prefixo de Conventional Commits e
+Os dois hooks do padrão são reescritos a partir do repodocs, e o
+\`tools/release.sh\` junto quando ele veio de lá. \`commit-msg\` confere a forma do
+assunto (\`X.Y.Z - descrição\`), recusa prefixo de Conventional Commits e
 mensagem vaga, **e confere que o \`X.Y.Z\` do assunto é a versão que este commit
-carrega no \`version.md\`**; e \`pre-push\`, que compara o \`version.md\` local com o
-do branch padrão no remoto — versão repetida e versão que anda para trás.
+carrega no \`version.md\`**. \`pre-push\` compara o \`version.md\` local com o do
+branch padrão no remoto — versão repetida e versão que anda para trás — **só
+quando o push realmente atualiza aquele branch**, de modo que deleção de branch,
+tag e branch de tópico passam.
 
 O hook **não confere idioma** e não teria como: o que ele mede é a forma e o
-número. Este repositório é escrito em português por decisão registrada
-(ADR-020 do repodocs), e nada nos hooks muda por causa disso.
+número.
 
-Até agora a regra do commit vivia só como prosa no \`CLAUDE.md\`, e prosa é o que
-se esquece no fim de uma sessão longa. Em 07/09/2026 os hooks estavam ligados em
-3 clones de 58, e dois repositórios da frota estavam medidamente fora da norma
-sem que nada avisasse.
-
-Válvula de escape declarada nos dois: \`$ev=1\`. Ela existe para o hook continuar
-instalado — guarda sem escape declarado vira \`--no-verify\`, que desliga todas de
-uma vez. Num clone novo, ligue com \`git config core.hooksPath tools/git-hooks\`.
+Válvula de escape declarada nos dois: \`$ev=1\`. Num clone novo, ligue com
+\`git config core.hooksPath tools/git-hooks\`.
 PTENTRY
-  else
-    subject="$new - the git hooks arrive from repodocs and are enabled here"
-    [ "$action" = regenerate ] && subject="$new - the git hooks are regenerated from repodocs"
-    cat > "$entry" <<ENENTRY
+    else
+      subject="$new - the git hooks are regenerated from repodocs"
+      cat > "$entry" <<ENENTRY
 ## $subject
 
-Both hooks of the standard now run here: \`commit-msg\`, which checks the shape of
-the subject (\`X.Y.Z - description\`), refuses a Conventional Commits prefix and a
-vague message, **and checks that the subject's \`X.Y.Z\` is the version this commit
-carries in \`version.md\`**; and \`pre-push\`, which compares the local \`version.md\`
-against the remote default branch for a repeated version and for one that moves
-backwards.
+Both hooks of the standard are rewritten from repodocs, and \`tools/release.sh\`
+with them when it came from there. \`commit-msg\` checks the shape of the subject
+(\`X.Y.Z - description\`), refuses a Conventional Commits prefix and a vague
+message, **and checks that the subject's \`X.Y.Z\` is the version this commit
+carries in \`version.md\`**. \`pre-push\` compares the local \`version.md\` against
+the remote default branch for a repeated or a backwards version — **only when
+the push actually updates that branch**, so a branch deletion, a tag and a topic
+branch pass through.
 
 The hook does **not** check the language and could not: what it measures is the
 shape and the number.
 
-Until now the commit rule lived here only as prose in \`CLAUDE.md\`, and prose is
-what gets forgotten at the end of a long session. On 07/09/2026 the hooks were
-enabled in 3 clones out of 58, and two repositories of the fleet were measurably
-off the norm with nothing to say so.
-
-Escape hatch, declared in both: \`$ev=1\`. It exists so the hooks stay installed —
-a guard with no declared bypass gets bypassed with \`--no-verify\`, which switches
-off every guard at once. In a fresh clone, enable them with
+Escape hatch, declared in both: \`$ev=1\`. In a fresh clone, enable them with
 \`git config core.hooksPath tools/git-hooks\`.
 ENENTRY
+    fi
+  else
+    if pt_repository "$remote"; then
+      subject="$new - os blocos de eco são regenerados a partir do repodocs"
+      cat > "$entry" <<PTENTRY
+## $subject
+
+As quatro regras marcadas de \`CLAUDE.md\` e \`AGENTS.md\` são reescritas a partir
+da fonte única em [samirhvbr/repodocs](https://github.com/samirhvbr/repodocs):
+\`QUEUE-RULE\`, \`RELEASES-RULE\`, \`LANGUAGE-RULE\` e \`COMMIT-RULE\`. Bloco é
+substituído por inteiro entre os marcadores, cabeçalho incluído — é isso que faz
+uma edição local não sobreviver e não confundir a próxima leitura.
+
+O \`QUEUE-RULE\` é novo e chega pela primeira vez: a \`.continue/\` guarda trabalho
+que ainda não existe, e um documento só sai dela quando a coisa que ele descreve
+**existe**. Tamanho, idioma e desalinho não são condição de saída. **Nunca
+esvazie essa pasta como arrumação.**
+PTENTRY
+    else
+      subject="$new - the echo blocks are regenerated from repodocs"
+      cat > "$entry" <<ENENTRY
+## $subject
+
+The four marked rules in \`CLAUDE.md\` and \`AGENTS.md\` are rewritten from the
+single source at [samirhvbr/repodocs](https://github.com/samirhvbr/repodocs):
+\`QUEUE-RULE\`, \`RELEASES-RULE\`, \`LANGUAGE-RULE\` and \`COMMIT-RULE\`. A block is
+replaced whole between its markers, heading included — which is what stops a
+local edit from surviving a regeneration and confusing the next reader.
+
+\`QUEUE-RULE\` is new and arrives here for the first time: \`.continue/\` holds work
+that does not exist yet, and a document leaves it when — and only when — the
+thing it describes **exists**. Length, language and untidiness are not exit
+conditions. **Never empty that folder as tidying.**
+ENENTRY
+    fi
   fi
 
-  paths=(tools/git-hooks/commit-msg tools/git-hooks/pre-push version.md CHANGELOG.md)
-
-  # A repository whose changelog lives inside version.md already has one, in
-  # its own format. Creating CHANGELOG.md beside it would produce two
-  # changelogs that drift — the failure the norm names about a translated
-  # README pair, in a file that decides what a version means. 23 repositories
-  # of the fleet are in that shape; moving them is a retrofit with its own
-  # decisions, and it is in the queue rather than in this script.
   if [ ! -f "$repo/CHANGELOG.md" ] && grep -qiE '^#+.*changelog' "$repo/version.md" 2>/dev/null; then
+    # The changelog lives inside version.md, in that repository's own heading
+    # style. A second file beside it would be two changelogs that drift, in the
+    # one file that decides what a version means.
     CHANGELOG_IN_VERSION+=("$name")
-    paths=(tools/git-hooks/commit-msg tools/git-hooks/pre-push version.md)
-  elif [ ! -f "$repo/CHANGELOG.md" ]; then
-    # 34 repositories of the fleet had no CHANGELOG.md at all, so the rule that
-    # the entry's heading *is* the commit subject held only where the file
-    # happened to exist. The file is created with the header and this entry as
-    # its first record. Earlier versions are NOT back-filled: they are in
-    # `git log`, and reconstructing them here would produce a plausible history
-    # rather than a true one.
-    write_changelog_header "$repo/CHANGELOG.md" "$remote"
-    CREATED_CHANGELOG+=("$name")
+  else
+    if [ ! -f "$repo/CHANGELOG.md" ]; then
+      write_changelog_header "$repo/CHANGELOG.md" "$remote"
+      CREATED_CHANGELOG+=("$name")
+    fi
+    prepend_changelog "$repo/CHANGELOG.md" "$entry"
+    paths+=(CHANGELOG.md)
   fi
-  [ -f "$repo/CHANGELOG.md" ] && prepend_changelog "$repo/CHANGELOG.md" "$entry"
   rm -f "$entry"
 
-  body="$(printf '%s\n\n%s\n' \
-    "The hooks were enabled in 3 clones out of 58 on 07/09/2026, so the commit rule was prose everywhere else. commit-msg now also checks that the subject's version is the one version.md carries in this commit; pre-push still asks the remote about duplicates and about a version moving backwards. Neither checks the language." \
-    "Escape hatch declared in both: $ev=1. Enable in a fresh clone with git config core.hooksPath tools/git-hooks.")"
+  body="$(printf '%s\n' "Regenerated from the single source at samirhvbr/repodocs. Editing one of these files in place does not survive the next pass; change it there.")"
 
-  # A pathspec commit only reaches tracked files, and on a first install the
-  # hooks are not tracked yet — so they are staged first. Nothing else the
-  # repository has staged is touched: the pathspec is what gets committed.
   git -C "$repo" add -- "${paths[@]}"
 
-  # The commit that installs the hook goes THROUGH the hook it installs. If the
-  # subject or the bump is wrong, the repository refuses its own installation,
-  # which is the strongest test this script can run and costs nothing.
-  if ! git -C "$repo" commit -q \
-        -m "$subject" -m "$body" \
-        -m "$TRAILERS" \
-        -- "${paths[@]}"; then
+  # The commit goes THROUGH the hooks it installs. A repository that would
+  # refuse its own regeneration says so instead of being forced.
+  if ! git -C "$repo" commit -q -m "$subject" -m "$body" -m "$TRAILERS" -- "${paths[@]}"; then
     FAILED+=("$name|commit refused — the repository was left as it was found")
-    echo "  ! $name — commit refused, rolling back"
+    echo "  !    $name — commit refused, rolling back"
     git -C "$repo" reset -q -- "${paths[@]}" 2>/dev/null || true
     git -C "$repo" checkout -- version.md 2>/dev/null || true
     [ -f "$repo/CHANGELOG.md" ] && git -C "$repo" checkout -- CHANGELOG.md 2>/dev/null || true
-    if [ "$had_hooks" -eq 0 ]; then
+    if [ "$MODE" = hooks ] && [ "${had_hooks:-1}" -eq 0 ]; then
       rm -f "$repo/tools/git-hooks/commit-msg" "$repo/tools/git-hooks/pre-push"
       rmdir "$repo/tools/git-hooks" 2>/dev/null || true
       rmdir "$repo/tools" 2>/dev/null || true
     fi
-    if [ -z "$had_config" ]; then
-      git -C "$repo" config --unset core.hooksPath 2>/dev/null || true
-    fi
+    [ "$MODE" = echo ] && git -C "$repo" checkout -- CLAUDE.md AGENTS.md 2>/dev/null || true
+    [ -z "$had_config" ] && git -C "$repo" config --unset core.hooksPath 2>/dev/null || true
     continue
   fi
-  echo "  + $name — $subject"
+  echo "  +    $name — $subject"
 
   if [ "$PUSH" -eq 1 ]; then
     if ! out="$(git -C "$repo" push 2>&1)"; then
       FAILED+=("$name|push refused: $(printf '%s' "$out" | tail -n 1)")
-      echo "  ! $name — PUSH REFUSED"
-      printf '%s\n' "$out" | sed 's/^/      /'
+      echo "  !    $name — PUSH REFUSED"
+      printf '%s\n' "$out" | sed 's/^/         /'
     fi
   fi
 done

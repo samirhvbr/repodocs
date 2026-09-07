@@ -152,17 +152,28 @@ an edit was applied to one file and not the other — that is the known cost of
 
 ---
 
-## 8. Installing the hooks across the fleet
+## 8. Reaching the repositories that already exist
 
-The hooks travel with the skeleton, so a **new** repository gets them at
-§1 and enables them at §4. A repository that already existed when the standard
-did not gets them from [`../tools/fleet-hooks.sh`](../tools/fleet-hooks.sh):
+The hooks and the echo blocks travel with the skeleton, so a **new** repository
+gets them at §1 and enables them at §4. A repository that already existed when
+the standard did not gets them from [`../tools/fleet.sh`](../tools/fleet.sh),
+which has three modes and one classification:
 
 ```bash
-./tools/fleet-hooks.sh                  # dry run: classify everything, change nothing
-./tools/fleet-hooks.sh --apply          # write, enable, bump, commit and push
-./tools/fleet-hooks.sh --apply --no-push --only KIDS/KIDS-TD   # one repository, no push
+./tools/fleet.sh check                  # read-only: what is off, and by how much
+./tools/fleet.sh hooks                  # dry run: who would be written to, and why not
+./tools/fleet.sh hooks --apply          # hooks + release.sh, enabled, bumped, committed, pushed
+./tools/fleet.sh echo  --apply          # the four marked blocks in CLAUDE.md and AGENTS.md
+./tools/fleet.sh echo  --apply --no-push --only KIDS/KIDS-TD    # one repository, no push
 ```
+
+**`check` writes nothing, anywhere**, and is the one to run on a schedule. It
+reports per repository — hooks enabled and identical to the standard,
+`release.sh` identical, the four blocks stamped, the twins identical below the
+H1, the default branch, `.continue/README.md` present, queue files not in git,
+and with `--releases` whether `version.md` has its Release — then groups the
+findings by kind, because 258 findings across 54 repositories are a dozen things
+to fix once, not 258 things to fix separately.
 
 **Read the dry run before the apply.** It prints every repository with the
 decision and the reason, and the reasons are the whole point:
@@ -174,25 +185,28 @@ decision and the reason, and the reasons are the whole point:
 | `has its own commit-msg` | The repository wrote its own, and it is never overwritten. EOP is the case this protects |
 | `written bump override` | The version is stamped somewhere other than the commit, in writing ([versioning.md](versioning.md#the-bump-clause-is-the-one-a-repository-may-override-in-writing)) |
 | `in-flight edits to: …` | The working tree is mid-edit on a file this would commit. Finish that first |
-| `no version.md` | There is nothing for the hooks to measure |
+| `no version.md with a semver` | There is nothing to bump, so there is no commit to make |
 
-Each selected repository gets **one commit**: the two hooks, the version bump
-and the changelog entry, written in the language that repository is written in
+Each selected repository gets **one commit**: the files, the version bump and the
+changelog entry, written in the language that repository is written in
 ([conventions.md §8](conventions.md#8-language)). The commit goes **through the
-hook it installs** — a repository that would refuse its own installation says so
-instead of being forced.
+hooks it installs** — a repository that would refuse its own regeneration says so
+instead of being forced, and is rolled back to the state it was found in.
 
-The escape variable a repository already declares is preserved; one that
-declares none gets `REPODOCS_NO_HOOK`.
+`echo` replaces each block **whole, between its markers, heading included** — which
+is what makes a block edited in place harmless, and what lets the old two-subject
+`RELEASES-RULE` be replaced by the split pair. A block the repository does not
+have yet is inserted next to the ones it does. The `-PT` variant is chosen by the
+owner on `origin`, never by hand.
 
 The changelog has three cases, and the script tells them apart:
 
 | The repository has | What happens |
 |---|---|
-| `CHANGELOG.md` | The entry is prepended, as always |
-| No changelog anywhere (13 repositories) | `CHANGELOG.md` is **created**, with the standard header in that repository's language and this entry as its first record. Earlier versions are **not** back-filled — they are in `git log`, and reconstructing them would produce a plausible history rather than a true one |
-| A changelog **inside `version.md`** (23 repositories) | Nothing is written and no second file is created. Two changelogs drift, and this one decides what a version means. Moving them out is a retrofit with its own decisions and is in the queue |
+| `CHANGELOG.md` | The entry is prepended |
+| No changelog anywhere | `CHANGELOG.md` is **created**, header in that repository's language, this entry as the first record. Earlier versions are **not** back-filled |
+| A changelog **inside `version.md`** | Nothing is written and no second file is created. Two changelogs drift, and this one decides what a version means |
 
-**A refused push is where a person enters**, and the script stops at exactly
-that line: it reports the repository and the git output, and never forces
-anything ([ADR-018](decisions.md)).
+**A refused push is where a person enters**, and the script stops at exactly that
+line: it reports the repository and git's own output, and never forces anything
+([ADR-018](decisions.md)).

@@ -9,6 +9,56 @@ at `git commit` time.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 1.11.0 - `fleet-hooks.sh` becomes `fleet.sh`, with `echo` and `check` beside `hooks`
+
+Installing 51 hooks in one afternoon proved the distribution works and left two
+holes it could not fill. The first: the corrected rules reach nobody. Measured
+across 54 repositories on 07/09/2026 — **`QUEUE-RULE` stamped in 1**,
+**`LANGUAGE-RULE` in 1**, most still carrying the old single `RELEASES-RULE`
+with the language section inside it, and 35 that do not mention `.continue/`
+anywhere. `fleet-hooks.sh` distributed hooks; the echo blocks had no instrument
+at all, which is why the queue item for stamping them had been open since
+`1.8.0`. The second: nothing measures whether any of it is still true next
+month. 51 hooks installed today become 3 again by attrition, and the only reason
+anyone noticed the last drift was that a person went looking.
+
+**One script with three modes, not three scripts.** The hard part was never
+writing a file — it is deciding *which repositories may be written to*: the owner
+on `origin`, the language of the repository, the exclusions that are written
+down, the working tree that is mid-edit. That classification is identical for all
+three jobs, and a second copy of it is precisely the failure this repository
+exists to prevent. The rename cost nothing: the script was half a day old and
+named in three documents.
+
+- **`hooks`** — as before, and now `tools/release.sh` with them, wherever the
+  copy carries the `repodocs:tool` marker.
+- **`echo`** — the four blocks into `CLAUDE.md` and `AGENTS.md`, each replaced
+  **whole between its markers, heading included**. That is what makes a block
+  edited in place harmless and what lets the old two-subject `RELEASES-RULE` be
+  replaced by the split pair; a block a repository does not have yet is inserted
+  beside the ones it does. The `-PT` variant is chosen by the owner on `origin`,
+  never by hand. The twins are diffed after stamping and the commit is abandoned
+  if they came out different ([ADR-007](docs/decisions.md)).
+- **`check`** — read-only, and it says so in its own header: it writes nothing,
+  anywhere. Hooks enabled and identical to the standard, `release.sh` identical,
+  the four blocks stamped, the twins identical below the H1, the default branch,
+  `.continue/README.md` present, queue files not in git, and with `--releases`
+  whether `version.md` has its Release.
+
+**The first run found 258 findings across 54 repositories**, which is why the
+report groups them by kind: they are a dozen things to fix once, not 258 things
+to fix separately. Two of the twelve are new information rather than known
+backlog — **8 repositories whose default branch is not `master`**
+([ADR-015](docs/decisions.md)) and **17 with a `.continue/` and no `README.md`**
+in it (conventions §2).
+
+One check was wrong on its first run and is worth recording: it read the branch
+**checked out** rather than the remote's default, and reported a topic branch as
+an ADR-015 violation. A conformance report that flags normal work is a report
+that gets skimmed. It reads `refs/remotes/origin/HEAD` now, and when the clone
+was never told, it says so as a **note** rather than counting a finding — the
+number at the bottom is meant to be acted on.
+
 ## 1.11.0 - `release.sh` carries a provenance marker, so a pass can tell it from a repository's own
 
 The hooks have carried `# repodocs:hook` since `1.9.0`, and it is what lets a
