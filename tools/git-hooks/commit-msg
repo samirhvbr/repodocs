@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# repodocs:hook — generated from samirhvbr/repodocs and regenerated in place.
+# A copy without this line is the repository's own hook and is never overwritten.
 # commit-msg — the commit subject must be `X.Y.Z - description`, and the X.Y.Z
 # must be the version this commit actually carries in version.md.
 #

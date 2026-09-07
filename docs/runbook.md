@@ -86,11 +86,13 @@ Once per clone — including yours, and every collaborator's:
 git config core.hooksPath tools/git-hooks
 ```
 
-Confirm both directions before you rely on them:
+Confirm all three directions before you rely on them. The third is the one
+that catches a well-formed subject carrying the wrong number:
 
 ```bash
-git commit --allow-empty -m "feat: teste"                      # must be REJECTED
-git commit --allow-empty -m "0.1.0 - primeiro commit do repo"  # must be accepted
+git commit --allow-empty -m "feat: a test"              # REJECTED — prefix
+git commit --allow-empty -m "9.9.9 - a test subject"    # REJECTED — version.md says otherwise
+git commit --allow-empty -m "0.1.0 - the first commit"  # accepted, at version.md 0.1.0
 ```
 
 ## 5. First commit
@@ -101,7 +103,7 @@ the commit subject:
 
 ```bash
 git add -A
-git commit -m "0.1.0 - estrutura inicial de documentação"
+git commit -m "0.1.0 - initial documentation structure"
 git push
 ```
 
@@ -147,3 +149,44 @@ diff LICENSE /path/to/repodocs/LICENSE
 If the `diff` on the twins reports anything other than the mirroring comment,
 an edit was applied to one file and not the other — that is the known cost of
 [ADR-007](decisions.md#adr-007--claudemd-and-agentsmd-are-twin-files-identical-below-the-h1).
+
+---
+
+## 8. Installing the hooks across the fleet
+
+The hooks travel with the skeleton, so a **new** repository gets them at
+§1 and enables them at §4. A repository that already existed when the standard
+did not gets them from [`../tools/fleet-hooks.sh`](../tools/fleet-hooks.sh):
+
+```bash
+./tools/fleet-hooks.sh                  # dry run: classify everything, change nothing
+./tools/fleet-hooks.sh --apply          # write, enable, bump, commit and push
+./tools/fleet-hooks.sh --apply --no-push --only KIDS/KIDS-TD   # one repository, no push
+```
+
+**Read the dry run before the apply.** It prints every repository with the
+decision and the reason, and the reasons are the whole point:
+
+| Skipped because | What it means |
+|---|---|
+| `not ours — owner is X` | A repository we are guests in, including our own forks of upstream projects ([ADR-019](decisions.md)) |
+| `history follows another convention` | Fewer than half of the last five subjects are ours — a fork we own that still tracks its upstream. Installing the hook there would refuse every commit it is about to receive |
+| `has its own commit-msg` | The repository wrote its own, and it is never overwritten. EOP is the case this protects |
+| `written bump override` | The version is stamped somewhere other than the commit, in writing ([versioning.md](versioning.md#the-bump-clause-is-the-one-a-repository-may-override-in-writing)) |
+| `in-flight edits to: …` | The working tree is mid-edit on a file this would commit. Finish that first |
+| `no version.md` | There is nothing for the hooks to measure |
+
+Each selected repository gets **one commit**: the two hooks, the version bump
+and the changelog entry, written in the language that repository is written in
+([conventions.md §8](conventions.md#8-language)). The commit goes **through the
+hook it installs** — a repository that would refuse its own installation says so
+instead of being forced.
+
+The escape variable a repository already declares is preserved; one that
+declares none gets `REPODOCS_NO_HOOK`. A repository with no `CHANGELOG.md` is
+listed at the end: the subject and the bump land, and no entry is invented into
+a file that does not exist.
+
+**A refused push is where a person enters**, and the script stops at exactly
+that line: it reports the repository and the git output, and never forces
+anything ([ADR-018](decisions.md)).

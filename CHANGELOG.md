@@ -9,6 +9,55 @@ at `git commit` time.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 1.9.0 - a fleet script installs the hooks where the convention is already in force
+
+The hook that checks the version is worth what it enforces, and on 07/09/2026 it
+enforced nothing in 55 repositories out of 58. `core.hooksPath` was set in three
+clones — repodocs, `SSHVTERM-DESKTOP`, `ai-memory-web` — and four repositories
+carried `tools/git-hooks/` at all. Everywhere else the commit rule was a
+paragraph in a `CLAUDE.md`, which is what a paragraph becomes at the end of a
+long session: advisory.
+
+`tools/fleet-hooks.sh` walks the fleet, classifies every repository with a
+reason, and by default changes nothing. What it refuses to do is the part worth
+reviewing:
+
+- **It never touches a repository that is not ours.** The owner on the `origin`
+  remote decides — `samirhvbr` and `BLUE3-ISP`, nobody else. That excludes
+  `tiago-razera`'s repositories and the thirty-odd upstreams we have clones of,
+  where the host's conventions win ([ADR-019](docs/decisions.md)).
+- **It never overwrites a hook a repository wrote for itself.** EOP is the case
+  this protects: its `commit-msg` runs the same version check through its own
+  lint, has a toolchain behind it, and is stronger than this one. A hook
+  generated from here before the provenance marker existed is recognised by its
+  `HOOK_ESCAPE_VAR` line and regenerated anyway — `ai-memory-web` is that case,
+  and its renamed escape variable is preserved because that name is written into
+  its own documentation.
+- **It never installs into a repository that writes someone else's subjects.**
+  The window is the last five non-merge commits, and the width was measured, not
+  guessed: at twenty it reaches back past 03/09/2026 and reads six fleet
+  repositories' own pre-rule history as evidence against them (8/20 each). At
+  five, the fleet scores 4/5 or 5/5 and `strix` and `pve-manager` score 0/5.
+- **It never commits a file the working tree is mid-edit on.** `BLUE3-INTRANET`
+  is exactly that case today, with an uncommitted bump — the repository whose
+  defect motivated the check is the one the script declines to touch, and it
+  says so instead of quietly folding an in-flight change into a commit about
+  hooks.
+- **It stops at a refused push** and prints git's own output
+  ([ADR-018](docs/decisions.md)).
+
+Each selected repository gets one commit — the two hooks, the bump and the
+changelog entry, in that repository's language ([ADR-020](docs/decisions.md)) —
+and **that commit goes through the hook it installs**. A repository that would
+refuse its own installation says so and is rolled back to the state it was
+found in, rather than being forced.
+
+Two failure modes were found by the trial run on one repository, which is why
+the trial exists: a pathspec commit cannot reach an untracked file, and
+`git diff` is blind to one, so the first attempt reported "already current" and
+the second refused the pathspec. Both are fixed, and the rollback that returns a
+repository to its found state was written in the same pass.
+
 ## 1.9.0 - the hook exempts every subject git wrote, not only a merge
 
 The version check landed with one exemption — a merge, detected by `MERGE_HEAD`
