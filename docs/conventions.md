@@ -39,8 +39,28 @@ not travel with the checkout is context the next machine does not have.
 
 ### The trigger — when one becomes the other
 
-A document leaves `.continue/` for `docs/` **the moment it describes something
-that already exists**. Three ways that happens:
+**A document leaves `.continue/` when, and only when, the thing it describes
+exists.** Existence is the single exit condition. Length is not an exit
+condition. Neither is age, language, untidiness, the end of a session, or the
+arrival of an agent who would have written it differently.
+
+> `tela.md` says *"a black screen with a yellow ball in the middle"*. It leaves
+> the queue when there is a black screen with a yellow ball. Until then it stays,
+> at any length, in whatever shape it is in — because until then it is the only
+> place that thing exists.
+
+**"Produce", applied to a queue item, means making the thing exist.** Not
+editing the document, not translating it, not promoting it to `docs/`. The
+document is the specification; the deliverable is the thing. Producing it closes
+the item, and removing the document is the **last step of the commit that
+contains the work** — never a step of its own.
+
+**No agent empties this folder as tidying.** A queue item deleted without the
+work being done destroys the only artefact a project has before it has code, and
+it is worse than losing a file: what usually replaces it is a `docs/` page
+describing a screen nobody built, carrying the authority of the record.
+
+Three ways a document legitimately leaves:
 
 1. **The work shipped.** A brief, plan or spec whose content is now in the code.
    → goes to `docs/`, and the permanent record of *when* is `CHANGELOG.md`.
@@ -54,11 +74,18 @@ that already exists**. Three ways that happens:
 > costs **more** than an incomplete queue: it leads the next session to redo
 > work.
 
-### If an item needs half a page, it is in the wrong place
+### If an item needs half a page **to describe something that already exists**, it is in the wrong place
 
 Write it in `docs/` and leave **one line and a pointer** in the queue. Copying
 the detail into the queue creates a second source of truth, and the next session
 cannot tell which of the two to follow.
+
+**This rule is about a record that ended up in the queue, and about nothing
+else.** It has no opinion on the length of a specification of work not yet done:
+a 1,300-line brief describing something unbuilt is not in the wrong place, it is
+in the only place it can be. Read as a size limit it contradicts the trigger
+above, and the contradiction has a direction — the trigger wins, always. A long
+queue item is a project with a lot still to build.
 
 **When the queue and a repository document contradict each other: the document
 wins.**

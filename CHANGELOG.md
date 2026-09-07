@@ -9,6 +9,60 @@ at `git commit` time.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 1.10.0 - the queue empties by production, and by nothing else
+
+On 07/09/2026, in a new repository, the owner asked an agent to **produce**.
+`.continue/` held one document: a 1,338-line brief, in Portuguese, describing
+work that did not exist yet. The agent reasoned that producing here meant
+something specific — a draft in the queue, in Portuguese, 1,338 lines; the rules
+say an item needing half a page does not belong in `.continue/`, that a decision
+becomes an ADR in the same pass, and that everything is English — and converted
+the queue into the record. It emptied the folder.
+
+**Every step of that reasoning cites this norm correctly.** The agent did not
+ignore the rules. It followed three of them into a place none of them meant to
+go, and the reason it could is that §1 contained two triggers and never said
+which wins:
+
+| Sentence | Trigger |
+|---|---|
+| *"A document leaves `.continue/` for `docs/` the moment it describes something that already exists"* | Existence |
+| *"If an item needs half a page, it is in the wrong place. Write it in `docs/`"* | Size |
+
+For a short note about finished work they agree. For a long specification of
+unbuilt work they point in opposite directions — and the size one is the
+actionable half, because it names a destination. ADR-004 states it even more
+absolutely: *"detail never lives in the queue."*
+
+**The root cause is structural.** Every rule about the queue in this standard was
+written while looking at a queue that was **residue**. This repository's own
+`.continue/README.md` opens with *"Nothing, in the sense of unfinished work"* —
+repodocs shipped what it planned, so its queue holds leftovers and emptying it is
+tidying. In a new project the queue is the opposite: nothing is built, so the
+queue **is** the project, and the same rules delete it. The norm was generalised
+from the one case where the queue was worth the least.
+
+[ADR-021](docs/decisions.md) makes existence the **single** exit condition.
+Length, age, language, untidiness, a session ending and an agent who would have
+written it differently are not exit conditions and do not become one.
+**"Produce", applied to a queue item, means making the thing exist** — not
+editing the document, not translating it, not promoting it. The owner's own
+example is in the norm now: `tela.md` says *"a black screen with a yellow ball
+in the middle"*, and it leaves the queue when there is a black screen with a
+yellow ball. Removing the document is the last step of the commit that carries
+the work, never a step of its own.
+
+The half-a-page rule keeps its job and loses its reach: it is about a **record**
+that ended up in the queue, and has no opinion on the length of a specification
+of unbuilt work. A long queue item is a project with a lot still to build.
+
+**The lost file is the smaller half of the damage**, and the recoverable one —
+`.continue/` is git-tracked exactly so that `git checkout HEAD~1 -- .continue/`
+brings it back. The larger half is what replaces it: a `docs/` page describing a
+screen nobody built, indistinguishable from a page describing one that exists,
+carrying the authority of the record. That is what ADR-008's status labels exist
+to prevent, arriving through a door nobody had closed.
+
 ## 1.9.4 - creating the missing changelog would have created a second one in 23 repositories
 
 `1.9.3` taught `fleet-hooks.sh` to create `CHANGELOG.md` where a repository had

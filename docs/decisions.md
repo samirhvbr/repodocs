@@ -82,7 +82,13 @@ searchable across the fleet. Enforced mechanically by
 
 ## ADR-004 — `.continue/` is the queue, `docs/` is the record, `CHANGELOG.md` is the history
 
-**Status:** `ACCEPTED` · 02/09/2026 · Inherited from the 29/08/2026 convention
+**Status:** `ACCEPTED` · 02/09/2026 · Inherited from the 29/08/2026 convention ·
+**Amended by [ADR-021](#adr-021--the-queue-empties-by-production-and-by-nothing-else) (07/09/2026)**
+— the trigger stands and is now the *only* exit condition; *"detail never lives
+in the queue"* was measured to authorise deleting unbuilt work, and is bounded to
+detail about something that already exists · **and by
+[ADR-022](#adr-022--the-queue-is-written-in-the-language-it-is-thought-in)** —
+the queue is written in the author's language and becomes English on the way out
 
 **Context.** A folder named `.continue/` carries the implicit claim "this still
 needs doing". Finished documents left there produced confident wrong readings in
@@ -96,6 +102,13 @@ contents went. In a contradiction between queue and record, the record wins.
 **Consequences.** Both folders stay git-tracked on purpose. Detail never lives
 in the queue — one line and a pointer. See
 [conventions.md §1–§2](conventions.md#1-continue-is-the-queue--docs-is-what-has-been-produced).
+
+*(Read as written, that last sentence says a long specification of unbuilt work
+does not belong in the queue, which is the opposite of what the queue is for. An
+agent reached exactly that conclusion on 07/09/2026 and emptied a new project's
+queue. It is bounded by
+[ADR-021](#adr-021--the-queue-empties-by-production-and-by-nothing-else): it
+governs detail about something that **already exists**, and nothing else.)*
 
 ---
 
@@ -860,3 +873,135 @@ same category as the end-user strings of the first carve-out.
 
 The fleet stamping pass that was already queued now has two blocks to choose
 between, and the choice is mechanical: `git remote get-url origin` decides it.
+
+---
+
+## ADR-021 — the queue empties by production, and by nothing else
+
+**Status:** `ACCEPTED` · 07/09/2026 · **Amends
+[ADR-004](#adr-004--continue-is-the-queue-docs-is-the-record-changelogmd-is-the-history)**
+— the three tiers and the trigger stand; *"detail never lives in the queue"* was
+measured to authorise deleting unbuilt work and is bounded here
+
+**Context.** On 07/09/2026, in a new repository, the owner asked an agent to
+*produce*. The `.continue/` folder held one document: a 1,338-line brief, in
+Portuguese, describing work that did not exist yet. The agent reasoned:
+
+> *"Producing here means something specific: this is a draft in the queue, in
+> Portuguese, 1,338 lines. The repository's own rules say an item needing half a
+> page does not belong in `.continue/`, that a decision becomes an ADR in the
+> same pass, and that everything is English. I am going to convert the queue
+> into the record."*
+
+Then it emptied the queue.
+
+**Every step of that reasoning cites this norm correctly**, and that is the
+finding. The agent did not ignore the rules; it followed three of them into a
+place none of them meant to go. Two sentences of §1 were in direct
+contradiction and the document never said which wins:
+
+| Sentence | The trigger it names |
+|---|---|
+| *"A document leaves `.continue/` for `docs/` the moment it describes something that already exists"* | **Existence** |
+| *"If an item needs half a page, it is in the wrong place. Write it in `docs/`"* | **Size** |
+
+For a short note about finished work they agree. For a long specification of
+unbuilt work they point in opposite directions, and the second one is the
+actionable one — it names the destination.
+
+**The root cause is structural, not a slip of wording.** Every rule about the
+queue in this standard was written while looking at a queue that was **residue**.
+This repository's own `.continue/README.md` opens with *"Nothing, in the sense of
+unfinished work"*: repodocs shipped what it planned, so its queue holds leftovers
+and emptying it is tidying. In a **new** project the queue is the exact opposite
+— nothing is built, so the queue *is* the project, and the same rules applied
+there delete it. The norm was generalised from the one case where the queue was
+worth the least.
+
+**Decision.**
+
+1. **A document leaves `.continue/` when, and only when, the thing it describes
+   exists.** Existence is the single exit condition. Length, age, language,
+   untidiness, the end of a session and the arrival of an agent who would have
+   written it differently are **not** exit conditions and do not become one.
+2. **The half-a-page rule is bounded to what already exists.** It says: do not
+   keep a *record* in the queue. It has never had an opinion about the length of
+   a specification of unbuilt work — a long queue item is a project with a lot
+   still to build, and the queue is the only place that work exists.
+3. **"Produce", applied to a queue item, means making the thing exist** — not
+   editing the document, not translating it, not promoting it. The document is
+   the specification; the deliverable is the thing. Removing the document is the
+   **last step of the commit that carries the work**, never a step of its own.
+4. **No agent empties the queue as tidying**, and no agent moves an item out of
+   it on its own judgement that the item is badly written or in the wrong shape.
+
+**Consequences.** The lost file is the smaller half of the damage and the
+recoverable one — `.continue/` is git-tracked precisely so that
+`git checkout HEAD~1 -- .continue/` brings it back
+([ADR-004](#adr-004--continue-is-the-queue-docs-is-the-record-changelogmd-is-the-history)).
+The larger half is what replaces it: a `docs/` page describing a screen nobody
+built, indistinguishable from a page describing one that exists, carrying the
+authority of the record. That is the failure
+[ADR-008](#adr-008--every-prescriptive-document-declares-its-status)'s status
+labels exist for, arriving through a door nobody had closed.
+
+The version checklist's *"a finished item left `.continue/`"* now reads with
+"finished" defined: the thing exists. An item still described only in words has
+not finished, however finished the words are.
+
+---
+
+## ADR-022 — the queue is written in the language it is thought in
+
+**Status:** `ACCEPTED` · 07/09/2026 · Adds the **third** carve-out to
+[ADR-005](#adr-005--documentation-in-english-from-02092026) /
+[ADR-014](#adr-014--everything-in-a-repository-is-english-us-commit-messages-included),
+bounded by folder · Sits beside
+[ADR-020](#adr-020--the-blue3-internal-repositories-are-written-in-portuguese)
+(bounded by owner) and
+[ADR-019](#adr-019--in-a-repository-that-is-not-ours-the-upstreams-conventions-win)
+(bounded by whose repository it is)
+
+**Context.** The English rule was one of the three the agent in
+[ADR-021](#adr-021--the-queue-empties-by-production-and-by-nothing-else) cited
+before emptying the queue, and on that point it was not wrong either: a
+Portuguese brief in `.continue/` is repository content under ADR-014, and
+"everything new, and every edit to an existing document, comes out in English"
+made translating it look like the correct next move.
+
+The rule exists for a reader — the collaborator or the tool that does not read
+Portuguese and meets our text first. **A queue draft has no such reader yet.** It
+is the author thinking, before the thing exists, and it may never ship: the
+project can be dropped, or the design can change three times before a line is
+written. Translating that is a cost paid on behalf of a reader who may never
+have anything to read, and it is paid at the worst moment — while the idea is
+still being formed, in the language it is being formed in.
+
+**Decision.** **`.continue/` is written in the language its author thinks in**,
+which in this fleet is Portuguese. **When the work is produced and the document
+moves to `docs/`, it is rewritten in English (US) as part of that move.** The
+English rule governs the record; it does not govern the drafting.
+
+The boundary is the **folder**, and it is the whole of the boundary: `docs/`,
+`README.md`, `CHANGELOG.md`, commit messages, pull requests, issues, release
+notes and code comments are English (US) exactly as before — outside the Blue3
+internal set, which is Portuguese throughout under ADR-020. A repository is not
+Portuguese because its queue is.
+
+Nothing is rewritten merely because of this rule, in either direction: an
+English `.continue/README.md` that already exists stays English, the same way an
+old Portuguese document stays Portuguese under ADR-005.
+
+**Consequences.** ADR-005's carve-out count goes from two to three, and the
+documents that state it are corrected in this pass. The three are different in
+kind, which is why they stay three rows rather than becoming a list:
+
+| Carve-out | Bounded by | Scope |
+|---|---|---|
+| End-user-facing strings | **What kind of text** | Those strings, in any repository |
+| The Blue3 internal set ([ADR-020](#adr-020--the-blue3-internal-repositories-are-written-in-portuguese)) | **Owner on GitHub** | All of the text, in a named set of repositories |
+| `.continue/` drafts | **Folder, and lifecycle** | Text that has not been produced yet, anywhere in the fleet |
+
+The third is the only one that is **temporary by construction**: every document
+it covers is meant to leave, and it becomes English on the way out. A carve-out
+whose contents all eventually cross into the rule is not a hole in the rule.

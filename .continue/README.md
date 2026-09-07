@@ -17,10 +17,16 @@ here; a second copy would be a second source of truth.
 - **Nothing here is source of truth.** The moment a document describes something
   that already exists, it moves to [`../docs/`](../docs/) and the permanent
   record of *when* is [`../CHANGELOG.md`](../CHANGELOG.md).
-- **A finished item leaves.** It is deleted here, not ticked off — the permanent
-  record of completion is the changelog. A queue holding an already-done item
-  costs more than an incomplete queue: it makes the next session redo work.
-- **If an item needs half a page, it is in the wrong place.** Write it in
+- **A finished item leaves — and *finished* means the thing exists.** It is
+  deleted here, not ticked off; the permanent record of completion is the
+  changelog. A queue holding an already-done item costs more than an incomplete
+  queue: it makes the next session redo work.
+- **Nothing leaves for any other reason.** Not length, not language, not a
+  session ending, not an agent who would have written it differently. **To
+  produce an item is to make the thing exist**, and deleting the document is the
+  last step of the commit that carries the work — never a step of its own.
+- **If an item needs half a page to describe something that already exists**, it
+  is in the wrong place. Write it in
   `../docs/` and leave one line and a pointer here.
 - **In a contradiction between this folder and a document in `../docs/`, the
   document wins.**

@@ -74,10 +74,16 @@ rename it to `<ENV_PREFIX>_NO_HOOK`.
 ## Golden rules
 
 1. **`.continue/` is the queue · `docs/` is the record · `CHANGELOG.md` is the
-   history.** A document moves from queue to record the moment it describes
-   something that already exists. A finished item **leaves** the queue.
-2. **If a queue item needs half a page, it is in the wrong place.** Write it in
-   `docs/` and leave one line and a pointer.
+   history.** A document leaves the queue when — and **only** when — the thing
+   it describes **exists**. Length, language and untidiness are not exit
+   conditions. To *produce* a queue item is to make the thing exist, not to
+   edit, translate or promote the document; removing it is the last step of the
+   commit that carries the work. **Never empty this folder as tidying.**
+2. **If a queue item needs half a page to describe something that already
+   exists, it is in the wrong place.** Write it in `docs/` and leave one line
+   and a pointer. This says nothing about the length of a specification of work
+   not yet done: a 1,300-line brief about something unbuilt is in the only place
+   it can be.
 3. **In a contradiction between the queue and a document, the document wins.**
 4. **Every prescriptive document declares its status** on the first lines:
    `ACTIVE` · `HISTORICAL` · `PROPOSED` · `DEPRECATED` · `NOT ADOPTED`. One
@@ -285,7 +291,8 @@ Full rules: [docs/versioning.md](docs/versioning.md).
 - [ ] What changed is in `CHANGELOG.md`, with the **why**, not just the what.
 - [ ] A new or changed document is in `docs/` — not in the queue, not in the
       commit body.
-- [ ] A finished item **left** `.continue/`.
+- [ ] A finished item **left** `.continue/` — *finished* meaning the thing it
+      described now exists, not that the document reads well.
 - [ ] A document made stale by this change was corrected in the same pass.
 - [ ] `version.md` bumped, in this commit.
 - [ ] **The work is committed** — and split into one commit per subject if it
