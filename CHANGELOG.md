@@ -9,6 +9,25 @@ at `git commit` time.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 1.10.3 - the queue's own review header was five versions stale
+
+`.continue/README.md` opened with *"Last reviewed 05/09/2026, repository at
+`1.8.0`"* while the repository stood at `1.10.2` — through eleven versions, two
+new ADRs and three edits to that same file, including the ones that rewrote how
+the queue works.
+
+Golden rule 6 is *"a document made stale by a change is fixed in the same
+pass"*, and rule 5 exists because a document that ages in silence is worse than
+a missing one: it has the authority of being written down. The file that says so
+was the one drifting, and the drift was in the line a reader uses to decide
+whether to trust the rest of it.
+
+There is no mechanism behind that header — it is a date somebody types. Every
+other freshness claim in this fleet has one: `version.md` has two git hooks, the
+Releases have a workflow and an idempotent script, the twins have a `diff` in
+the checklist. A conformance check that reads it, alongside the other things
+that rot quietly, is what the queue's next item is for.
+
 ## 1.10.3 - the sentence that emptied the queue survived in `docs/README.md`
 
 ADR-021 corrected the rule in five places and there were six. `conventions.md`

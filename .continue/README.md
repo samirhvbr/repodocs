@@ -1,6 +1,6 @@
 # `.continue/` — the queue
 
-> **Status:** `ACTIVE` · Last reviewed 05/09/2026, repository at `1.8.0`
+> **Status:** `ACTIVE` · Last reviewed 07/09/2026, repository at `1.10.3`
 
 Work in progress: drafts, plans under discussion, notes on things still being
 built, briefings for picking the work back up later.
