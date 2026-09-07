@@ -9,6 +9,33 @@ at `git commit` time.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 1.11.0 - pre-push says which queue files are not in git
+
+The queue's whole recovery story — *"it is git-tracked on purpose, so
+`git checkout HEAD~1 -- .continue/` brings it back"* — assumes the file is in
+git. Checked against the repository where the queue was emptied: it was not.
+`git log --all --diff-filter=D -- .continue/` in `notes` returns **nothing**. No
+file was ever deleted from that folder in any commit, because the drafts had
+never been committed. They entered git at `0.2.1`, the restore. The 1,338-line
+brief survived because the owner had a copy elsewhere.
+
+That is worth stating plainly, because it also settles what a hook can and cannot
+do here. A `pre-commit` guard refusing a commit that deletes from `.continue/`
+was proposed and would not have fired: there was no deletion to see, and the
+commit that emptied the queue touched `CLAUDE.md`, `README.md` and `NOTICE`, so
+any "did this commit do real work" escape clause would have passed it too. It
+would also refuse the normal close of an item in **this** repository, where
+producing a queue item usually produces a document. Too weak where it was aimed,
+too strong everywhere else, and in between it asks a script to decide whether a
+thing was built — which is the question the norm exists to put to a reader.
+
+What is mechanical is the gap the incident actually exposed. `pre-push` now warns
+when `.continue/` holds files git does not track, naming them, at the moment work
+is published to the default branch. **A warning and never a refusal** — an
+untracked draft is a normal state of work in progress, and a guard that fires on
+normal work is a guard that gets bypassed, which is the same argument this
+standard already makes about test suites in `pre-push`.
+
 ## 1.10.3 - the queue's own review header was five versions stale
 
 `.continue/README.md` opened with *"Last reviewed 05/09/2026, repository at

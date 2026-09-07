@@ -55,6 +55,27 @@ if [ -n "$refs_in" ]; then
   fi
 fi
 
+# The queue's whole recovery story — "it is git-tracked on purpose, so
+# `git checkout HEAD~1 -- .continue/` brings it back" — assumes the file is in
+# git. In a new project it is not: the drafts sit untracked while the first
+# commits are about structure, and a queue emptied at that moment is gone. This
+# was measured on 07/09/2026 in a repository whose 1,338-line brief had never
+# been committed; it survived because the owner had a copy elsewhere.
+#
+# A warning and never a refusal: an untracked draft is a normal state of work in
+# progress, and a guard that fires on normal work is a guard that gets bypassed.
+if [ -d .continue ]; then
+  untracked_queue="$(git ls-files --others --exclude-standard -- .continue 2>/dev/null || true)"
+  if [ -n "$untracked_queue" ]; then
+    echo "" >&2
+    echo "pre-push: WARNING — these queue files are not in git:" >&2
+    printf '%s\n' "$untracked_queue" | sed 's/^/    /' >&2
+    echo "  Recovering a queue item depends on it being versioned. Deleting an" >&2
+    echo "  untracked one does not come back. Commit them, or know that." >&2
+    echo "" >&2
+  fi
+fi
+
 if [ ! -f "$version_file" ]; then
   echo "pre-push: WARNING — no $version_file at repo root; nothing to check." >&2
   exit 0
