@@ -9,6 +9,24 @@ at `git commit` time.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 1.11.0 - `release.sh` carries a provenance marker, so a pass can tell it from a repository's own
+
+The hooks have carried `# repodocs:hook` since `1.9.0`, and it is what lets a
+fleet pass regenerate a copy that came from here while never touching one a
+repository wrote for itself — EOP's `commit-msg` is the case that rule exists
+for. `tools/release.sh` had no such line, so a fleet pass had two options and
+both were wrong: overwrite whatever it finds, or leave the `1.9.1` fix
+undistributed in 51 repositories.
+
+`# repodocs:tool` closes that. A copy carrying it is regenerated; one without it
+is left alone and reported. A copy generated here before the marker existed is
+recognised by what only a generated copy has, the same way the hooks handle
+their own pre-marker copies.
+
+This is what makes the `release.sh` queue item close by the same command as the
+hooks rather than by a second pass: the fix that stopped it publishing a Release
+into a fork's upstream now travels.
+
 ## 1.11.0 - pre-push says which queue files are not in git
 
 The queue's whole recovery story — *"it is git-tracked on purpose, so
