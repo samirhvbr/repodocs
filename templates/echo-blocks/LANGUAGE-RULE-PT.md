@@ -30,6 +30,12 @@ da frota.
 O histórico não se reescreve: mensagem em inglês que já está no log fica como
 está.
 
+**A `.continue/` é fila, não registro.** Um documento só sai dela quando a coisa
+que ele descreve **existe** — tamanho, idioma e desalinho não são condição de
+saída. *Produzir* um item da fila é fazer a coisa existir, não editar, traduzir
+ou promover o documento; apagá-lo é o último passo do commit que carrega o
+trabalho. **Nunca esvazie essa pasta como arrumação.**
+
 **Num repositório que não é nosso, a convenção do upstream vence** — o idioma e
 o formato do commit. Abrir um pull request ou uma issue num repositório de
 terceiro faz de nós convidados, e convidado escreve na língua da casa. Nosso

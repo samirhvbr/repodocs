@@ -434,8 +434,9 @@ already written into `pre-push`.
 [ADR-005](#adr-005--documentation-in-english-from-02092026) to a single carve-out ·
 **Bounded to the fleet by**
 [ADR-019](#adr-019--in-a-repository-that-is-not-ours-the-upstreams-conventions-win) ·
-**Amended by [ADR-020](#adr-020--the-blue3-internal-repositories-are-written-in-portuguese) (07/09/2026)**
-— the rule stands; the carve-out count below is now two, not one
+**Amended by [ADR-020](#adr-020--the-blue3-internal-repositories-are-written-in-portuguese)
+and [ADR-022](#adr-022--the-queue-is-written-in-the-language-it-is-thought-in) (07/09/2026)**
+— the rule stands; the carve-out count below is now three, not one
 
 **Context.** ADR-005 put documentation in English but kept commit messages in
 Portuguese, on the reasoning that the commit convention was a separate,
@@ -460,9 +461,11 @@ issues, code comments, changelog entries, release notes.
 **Exactly one carve-out remains:** end-user-facing strings — UI text,
 transactional email, product copy. That is product i18n for a Brazilian
 audience, and a Brazilian user does not read the repository.
-*(A second carve-out was added on 07/09/2026 — the Blue3 internal repositories,
-which are Portuguese throughout. See
-[ADR-020](#adr-020--the-blue3-internal-repositories-are-written-in-portuguese).)*
+*(Two more carve-outs were added on 07/09/2026: the Blue3 internal repositories,
+Portuguese throughout — [ADR-020](#adr-020--the-blue3-internal-repositories-are-written-in-portuguese)
+— and `.continue/` drafts, which are written in the author's language and become
+English when the work is produced —
+[ADR-022](#adr-022--the-queue-is-written-in-the-language-it-is-thought-in).)*
 
 **Consequences.** Existing Portuguese commit messages stay as they are: history
 is not rewritten, and the fleet's `git log` will read bilingual across the

@@ -113,14 +113,19 @@ is touched again.
 **Everything in this repository is English (US)** — documents, commit
 messages, pull requests, issues, code comments, changelog entries.
 
-**Two carve-outs, and only two.** The first is end-user-facing strings — UI
+**Three carve-outs, and only three.** The first is end-user-facing strings — UI
 text, transactional email, product copy: product i18n for a Brazilian audience,
 not repository content. The second is the **Blue3 internal repositories**,
 Portuguese throughout — `BLUE3-ISP/*`, `samirhvbr/blue3-intranet` and
-`samirhvbr/blue3-ai-login`, and nothing else ([ADR-020](docs/decisions.md)).
-They differ in kind: the first is about what kind of text, in any repository;
-the second about which repository, for all of its text. **This repository is not
-in that set** — repodocs is English.
+`samirhvbr/blue3-ai-login`, and nothing else ([ADR-020](docs/decisions.md));
+**this repository is not in that set**. The third is **`.continue/`**: the queue
+is written in the language its author thinks in, and becomes English when the
+work is produced and the document moves to `docs/`
+([ADR-022](docs/decisions.md)).
+
+They differ in kind — what kind of text, which repository, and where in the
+lifecycle — and only the third is temporary by construction: everything it
+covers is meant to leave, and crosses into English as it does.
 
 Commit messages used to be a carve-out of their own and are not any more
 ([ADR-014](docs/decisions.md)). **Nothing is bilingual** — `LICENSE` is the plain
@@ -328,13 +333,20 @@ Commit format: `X.Y.Z - short description in English`. The version comes from
 `version.md` and is bumped in the same commit. Conventional Commits prefixes
 (`feat:`, `fix:`, `chore:`) and vague one-word messages are forbidden.
 
-**Two carve-outs, and only two.** The first is end-user-facing strings — UI
+**Three carve-outs, and only three.** The first is end-user-facing strings — UI
 text, transactional email, product copy: product i18n for a Brazilian audience,
 not repository content. The second is the **Blue3 internal repositories**
 (`BLUE3-ISP/*`, `samirhvbr/blue3-intranet`, `samirhvbr/blue3-ai-login`), which
 are Portuguese throughout — if you are reading this block inside one of them,
 this is the wrong block: they carry `LANGUAGE-RULE-PT`. A repository joins that
 set by a written decision, never by argument.
+
+**The third is `.continue/`.** The queue is written in the language its author
+thinks in, and becomes English (US) when the work is **produced** and the
+document moves to `docs/`. A Portuguese draft in the queue is not a violation to
+be fixed: it is unfinished work in the language it is being thought in, and
+translating it or moving it out before the thing exists destroys the only place
+that thing exists.
 
 History is not rewritten: Portuguese messages already in the log stay as they
 are.

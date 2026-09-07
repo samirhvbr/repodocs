@@ -9,6 +9,49 @@ at `git commit` time.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 1.10.0 - a draft in the queue is written in the language it is thought in
+
+The English rule was one of the three the agent cited before emptying a new
+project's queue, and on that point it was not wrong either. A Portuguese brief
+in `.continue/` is repository content under [ADR-014](docs/decisions.md), and
+*"everything new, and every edit to an existing document, comes out in English"*
+made translating it look like the correct next move — with the move that
+suggests itself being to `docs/`, which turns a plan into a claim that the work
+exists.
+
+[ADR-022](docs/decisions.md) removes that step. **`.continue/` is written in the
+language its author thinks in**, and becomes English (US) when the work is
+produced and the document moves to `docs/`. The English rule governs the record;
+it does not govern the drafting.
+
+The reason is the reader the rule exists for. A queue draft does not have one
+yet: it is the author working out what to build, before the thing exists, and it
+may never ship — the project can be dropped, or the design can change three
+times before a line is written. Translating it is a cost paid on behalf of a
+reader who may never have anything to read, and paid at the worst moment, while
+the idea is still being formed.
+
+**The boundary is the folder and nothing more.** `docs/`, `README.md`,
+`CHANGELOG.md`, commit messages, pull requests, issues, release notes and code
+comments are English exactly as before — a repository is not Portuguese because
+its queue is. And nothing is rewritten in either direction: an English
+`.continue/README.md` that already exists stays English, the same way an old
+Portuguese document stays Portuguese under ADR-005.
+
+The carve-out count goes from two to three, corrected in the same pass in
+`conventions.md` §8, both echo blocks, the twins here and the skeleton's. The
+three are kept as three rows because they are bounded differently — **what kind
+of text** (end-user strings), **which repository** (the Blue3 internal set), and
+**where in the lifecycle** (the queue). Only the third is temporary by
+construction: every document it covers is meant to leave, and crosses into
+English on the way out. A carve-out whose contents all eventually enter the rule
+is not a hole in the rule.
+
+`LANGUAGE-RULE-PT` gains the queue clause too, in Portuguese. A repository that
+is Portuguese throughout still needs to be told that emptying `.continue/` is
+not tidying — the two failures are independent, and that block is the only one
+some repositories read.
+
 ## 1.10.0 - the queue empties by production, and by nothing else
 
 On 07/09/2026, in a new repository, the owner asked an agent to **produce**.

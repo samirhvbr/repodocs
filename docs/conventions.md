@@ -342,17 +342,21 @@ Nothing gets rewritten just because of this rule. An old Portuguese document
 stays Portuguese until it is touched again — at which point the edit (or the
 whole file, when practical) comes out in English.
 
-**Two carve-outs, and only two:**
+**Three carve-outs, and only three:**
 
 | Stays Portuguese | Why |
 |---|---|
 | **End-user-facing strings** — UI text, transactional email, product copy | That is product i18n for a Brazilian audience, not repository content. A Brazilian user does not read the repo. |
 | **The Blue3 internal repositories** — everything in them ([below](#the-blue3-internal-repositories-are-written-in-portuguese)) | Nobody outside the company opens them, and most of what is written into them is operational reasoning where the precision of the sentence is the value ([ADR-020](decisions.md)) |
+| **`.continue/` drafts** — the queue, in any repository ([below](#the-queue-is-written-in-the-language-it-is-thought-in)) | It is the author thinking, before the thing exists. It becomes English on the way out, when the work is produced and the document moves to `docs/` ([ADR-022](decisions.md)) |
 
-They are different in kind, and the difference is the whole reason they are two
+They are different in kind, and the difference is the whole reason they are three
 rows rather than a list. The first is about **what kind of text** — those
 strings stay Portuguese in every repository of the fleet. The second is about
-**which repository** — all of the text, in a named set.
+**which repository** — all of the text, in a named set. The third is about
+**where in the lifecycle** the text is, and it is the only one that is temporary
+by construction: every document it covers is meant to leave, and crosses into
+English as it does.
 
 Commit messages **used to** be a carve-out of their own. They are not any more
 ([ADR-014](decisions.md)) — a commit message is repository content, read in
@@ -366,6 +370,34 @@ drift, and BLUE3-INTRANET's pair proves it, at 374 lines against 259.
 
 Code identifiers — class, method, variable and column names — are English, and
 always were.
+
+### The queue is written in the language it is thought in
+
+**`.continue/` is written in the language its author thinks in** — Portuguese,
+in this fleet. **When the work is produced and the document moves to `docs/`, it
+is rewritten in English (US) as part of that move.** The English rule governs the
+record; it does not govern the drafting.
+
+The rule exists for a reader who does not read Portuguese and meets our text
+first. A queue draft has no such reader yet: it is the author working out what
+to build, before the thing exists, and it may never ship — the project can be
+dropped, or the design can change three times before a line is written.
+Translating it is a cost paid on behalf of a reader who may never have anything
+to read, and paid at the worst moment, while the idea is still being formed.
+
+**The boundary is the folder, and that is the whole of it.** `docs/`,
+`README.md`, `CHANGELOG.md`, commit messages, pull requests, issues, release
+notes and code comments are English (US) exactly as before. **A repository is not
+Portuguese because its queue is.**
+
+Nothing is rewritten merely because of this rule, in either direction: an
+English `.continue/README.md` that already exists stays English, the same way an
+old Portuguese document stays Portuguese under [ADR-005](decisions.md).
+
+This carve-out and [ADR-021](decisions.md) answer the same failure from two
+sides. An agent that reads a Portuguese brief in the queue as a rule violation
+is one step from "fixing" it, and the fix that suggests itself is moving it to
+`docs/` — which turns a plan into a claim that the work exists.
 
 ### The Blue3 internal repositories are written in Portuguese
 
