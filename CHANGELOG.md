@@ -9,6 +9,41 @@ at `git commit` time.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 1.10.1 - the rule that failed was the one rule that had never been an echo block
+
+`1.10.0` fixed the norm. This measures how much of the fleet the fix would have
+reached, and the answer was: almost none of it.
+
+Of the 52 repositories the hooks reached, **2 carried any version of the queue
+rule** — `ai-memory-web` and `notes` — and **35 never mention `.continue/` in
+their `CLAUDE.md` at all**; 24 have no such folder. `COMMIT-RULE`,
+`RELEASES-RULE` and `LANGUAGE-RULE` are echo blocks and travel; the queue rule
+lived in the skeleton's `CLAUDE.md`, which is **copied once at creation and never
+regenerated**. So it reached repositories created from the skeleton, and stopped
+there.
+
+That is why the correction had to be more than a correction. `notes` — the
+repository where the queue was emptied — was created from the skeleton **that
+same morning**, hours before `1.10.0`. Without a block, the fixed sentence would
+have sat here while the repository that had already demonstrated the failure kept
+the text that produced it, and every repository created before today would keep
+nothing at all.
+
+`QUEUE-RULE` and `QUEUE-RULE-PT` are now blocks, stamped into this repository's
+twins and the skeleton's, and into `notes` by hand. They carry the whole rule and
+not a summary: the single exit condition, the definition of *produce*, the
+`tela.md` example in the owner's own words, the bound on the half-a-page rule,
+the language clause — and the sentence that is the actual instruction, **never
+empty this folder as tidying**.
+
+One clause is in the block and not in `1.10.0`'s prose, because the incident
+produced it: **if a plan has to be visible in `docs/` before it is built, it is
+`PROPOSED`, never `ACTIVE`.** The three pages that replaced `notes`' queue were
+all declared `ACTIVE` — an architecture, a product scope and a roadmap for an
+application with no code — which is [ADR-008](docs/decisions.md) being satisfied
+in letter and inverted in effect. The label existed; nothing said which one a
+plan gets.
+
 ## 1.10.0 - a draft in the queue is written in the language it is thought in
 
 The English rule was one of the three the agent cited before emptying a new

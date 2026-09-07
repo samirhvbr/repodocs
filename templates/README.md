@@ -82,11 +82,13 @@ pass instead of an archaeology.
 |---|---|---|
 | [`COMMIT-RULE.md`](echo-blocks/COMMIT-RULE.md) | [`../docs/versioning.md`](../docs/versioning.md#who-commits-and-when) | The agent commits; nothing is finished until it is committed; one subject per commit; a large delivery is split into blocks ([ADR-016](../docs/decisions.md)) |
 | [`RELEASES-RULE.md`](echo-blocks/RELEASES-RULE.md) | [`../docs/versioning.md`](../docs/versioning.md#tags-and-releases) | The `version.md` on GitHub is what the Releases show; the bump and the Release are one act, `Latest` badge included ([ADR-011](../docs/decisions.md)) |
+| [`QUEUE-RULE.md`](echo-blocks/QUEUE-RULE.md) · [`QUEUE-RULE-PT.md`](echo-blocks/QUEUE-RULE-PT.md) | [`../docs/conventions.md`](../docs/conventions.md#1-continue-is-the-queue--docs-is-what-has-been-produced) | `.continue/` empties **by production and by nothing else**; "produce" means making the thing exist; never empty it as tidying ([ADR-021](../docs/decisions.md), [ADR-022](../docs/decisions.md)) |
 | [`LANGUAGE-RULE.md`](echo-blocks/LANGUAGE-RULE.md) | [`../docs/conventions.md`](../docs/conventions.md#8-language) | English (US) everywhere, three carve-outs — **and in a repository that is not ours, the upstream's conventions win** ([ADR-014](../docs/decisions.md), [ADR-019](../docs/decisions.md)) |
 | [`LANGUAGE-RULE-PT.md`](echo-blocks/LANGUAGE-RULE-PT.md) | the same | The variant for the **Blue3 internal set** — `BLUE3-ISP/*`, `samirhvbr/blue3-intranet`, `samirhvbr/blue3-ai-login` — which is Portuguese throughout ([ADR-020](../docs/decisions.md)) |
 
-**`LANGUAGE-RULE` and `LANGUAGE-RULE-PT` share one marker name**, and that is
-deliberate: a repository carries exactly one of them, and a regeneration
+**Each rule with a `-PT` variant shares one marker name with it** —
+`LANGUAGE-RULE` / `LANGUAGE-RULE-PT`, `QUEUE-RULE` / `QUEUE-RULE-PT` — and that
+is deliberate: a repository carries exactly one of them, and a regeneration
 replaces whichever is there. Which one is not a judgement call —
 `git remote get-url origin` decides it. Stamping the English block into a Blue3
 internal repository puts a rule in that repository's `CLAUDE.md` contradicting
