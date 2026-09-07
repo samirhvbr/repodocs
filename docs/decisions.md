@@ -420,7 +420,9 @@ already written into `pre-push`.
 [ADR-003](#adr-003--commit-format-xyz---description) and narrows
 [ADR-005](#adr-005--documentation-in-english-from-02092026) to a single carve-out ·
 **Bounded to the fleet by**
-[ADR-019](#adr-019--in-a-repository-that-is-not-ours-the-upstreams-conventions-win)
+[ADR-019](#adr-019--in-a-repository-that-is-not-ours-the-upstreams-conventions-win) ·
+**Amended by [ADR-020](#adr-020--the-blue3-internal-repositories-are-written-in-portuguese) (07/09/2026)**
+— the rule stands; the carve-out count below is now two, not one
 
 **Context.** ADR-005 put documentation in English but kept commit messages in
 Portuguese, on the reasoning that the commit convention was a separate,
@@ -445,6 +447,9 @@ issues, code comments, changelog entries, release notes.
 **Exactly one carve-out remains:** end-user-facing strings — UI text,
 transactional email, product copy. That is product i18n for a Brazilian
 audience, and a Brazilian user does not read the repository.
+*(A second carve-out was added on 07/09/2026 — the Blue3 internal repositories,
+which are Portuguese throughout. See
+[ADR-020](#adr-020--the-blue3-internal-repositories-are-written-in-portuguese).)*
 
 **Consequences.** Existing Portuguese commit messages stay as they are: history
 is not rewritten, and the fleet's `git log` will read bilingual across the
@@ -767,3 +772,91 @@ out is what finally gives `RELEASES-RULE` its own source file in
 Releases block, two subjects in one instrument. `COMMIT-RULE` is regenerated in
 the same pass: its *"every commit obeys the versioning rules, with no
 exception"* was written before this boundary existed and is false outside it.
+
+---
+
+## ADR-020 — the Blue3 internal repositories are written in Portuguese
+
+**Status:** `ACCEPTED` · 07/09/2026 · Adds the **second** carve-out to
+[ADR-005](#adr-005--documentation-in-english-from-02092026) and
+[ADR-014](#adr-014--everything-in-a-repository-is-english-us-commit-messages-included),
+bounded by owner · Sits beside
+[ADR-019](#adr-019--in-a-repository-that-is-not-ours-the-upstreams-conventions-win),
+which bounds the same rule by whose repository it is
+
+**Context.** The English rule was never about English. It exists for a reader:
+the collaborator or the tool that does not read Portuguese and meets our text
+first (ADR-005). ADR-019 already drew one boundary at the place where that
+reader is someone else's problem — a repository we do not own, where writing
+English makes us the one contribution the maintainers have to translate.
+
+The Blue3 internal set is the other place the reader is absent, and for a
+stronger reason: nobody outside the company opens those repositories at all.
+They are internal systems — an intranet, an ISP's operational tooling — and much
+of what gets written into them is operational reasoning rather than
+documentation: an incident, a queue, a runbook, the sentence that explains why a
+migration was run at 02:00. There the precision of the sentence **is** the
+value, and it is written and read by the same Portuguese-speaking people.
+Translating it costs more than it returns.
+
+This was already true in practice and only the norm did not know it.
+BLUE3-INTRANET carried the exception inside its own `CLAUDE.md`, in an *Idioma*
+section placed deliberately outside the echo block so a regeneration would not
+overwrite it, and the owner's global preferences named it too. Nothing here
+recorded any of it. A fleet norm that says one thing while the fleet does
+another, and has no record of the difference, is the exact failure this
+repository exists to prevent — the same shape ADR-002 found between two
+documents disagreeing about one version number.
+
+**Decision.** **The Blue3 internal repositories are written in Portuguese** —
+documents, commit messages, pull request titles and bodies, issues, code
+comments, changelog entries, release notes. Everything ADR-014 put in English,
+in this named set, is Portuguese.
+
+**The boundary is the owner on GitHub, not the folder on disk and not the name:**
+
+| In | Out |
+|---|---|
+| Every repository under **`github.com/BLUE3-ISP`** | `samirhvbr/meuip` — named here because it sits in the same working folder and is not in the set |
+| **`samirhvbr/blue3-intranet`** | Every other repository of the fleet |
+| **`samirhvbr/blue3-ai-login`** | |
+
+A repository created in `BLUE3-ISP` after this date is in the set on creation;
+that is the point of drawing the line at the owner. Adding a repository outside
+`BLUE3-ISP` to the set takes a **new ADR** — the carve-out is a written boundary,
+not a test a repository applies to itself.
+
+**Only the language changes. Nothing else bends:** `X.Y.Z - description`, the
+changelog heading that *is* the subject, no Conventional Commits prefix, one
+subject per commit, the bump in the same commit, the agent commits and pushes.
+Code identifiers stay English, as they are everywhere. Nothing mechanical
+changes either: `commit-msg` never checked the language and cannot
+(ADR-014), which is why this carve-out costs no code.
+
+**B3DEV is not part of this, and naming it as an exception would have been
+wrong.** Those repositories belong to `tiago-razera`; we are guests there, and
+[ADR-019](#adr-019--in-a-repository-that-is-not-ours-the-upstreams-conventions-win)
+already answers them — the host writes Portuguese, so we write Portuguese. The
+owner's global preferences listed BLUE3-INTRANET and B3DEV side by side as one
+exception. They are two different rules that happen to agree, and collapsing
+them would have created a second, weaker route to an answer ADR-019 already
+gives correctly.
+
+**Consequences.** *"One carve-out, and only one"* is now false, and every
+document that says it is corrected in this pass:
+[conventions.md §8](conventions.md#8-language), the `LANGUAGE-RULE` echo block,
+and this repository's `CLAUDE.md`/`AGENTS.md`. **The two carve-outs are
+different in kind and the distinction is worth keeping:** the first is about
+*what kind of text* — end-user strings, in any repository of the fleet; the
+second is about *which repository* — all of the text, in a named set.
+
+The echo block cannot be one block any more. A `LANGUAGE-RULE` reading
+*"everything here is English (US)"* stamped into BLUE3-F1 contradicts this ADR
+in the repository it governs, and an agent that reads the first line and acts is
+behaving correctly. `templates/echo-blocks/LANGUAGE-RULE-PT.md` is the variant
+those repositories get, and it is **written in Portuguese**: it is not this
+repository's prose, it is the text of a Portuguese repository in transit, the
+same category as the end-user strings of the first carve-out.
+
+The fleet stamping pass that was already queued now has two blocks to choose
+between, and the choice is mechanical: `git remote get-url origin` decides it.

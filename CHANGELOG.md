@@ -9,6 +9,64 @@ at `git commit` time.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 1.9.0 - the Blue3 internal repositories are Portuguese, and the norm finally says so
+
+The English rule was never about English. It exists for a reader — the
+collaborator or the tool that does not read Portuguese and meets our text first
+— and [ADR-019](docs/decisions.md) already drew one boundary where that reader
+belongs to someone else: a repository we do not own. The Blue3 internal set is
+the other place the reader is absent, and for a blunter reason. Nobody outside
+the company opens those repositories. They are an intranet and an ISP's
+operational tooling, and much of what is written into them is operational
+reasoning rather than documentation: an incident, a queue, a runbook, the
+sentence explaining why a migration ran at 02:00. There the precision of the
+sentence *is* the value, and it is written and read by the same people.
+
+None of that is new. What is new is that this repository knows it. The exception
+was already being practised — BLUE3-INTRANET carried it inside its own
+`CLAUDE.md`, in an *Idioma* section placed deliberately outside the echo block so
+a regeneration would not overwrite it — and the norm here said the opposite,
+with no record of the difference. A fleet norm contradicted by the fleet, and
+unaware of it, is the same failure ADR-002 was written for.
+
+[ADR-020](docs/decisions.md) draws the boundary at **the owner on GitHub**, not
+the folder on disk and not the name: everything under `BLUE3-ISP`, plus
+`samirhvbr/blue3-intranet` and `samirhvbr/blue3-ai-login`. `samirhvbr/meuip` is
+named in the norm as *not* in the set, because it sits in the same working
+folder and the folder is exactly what the boundary is not. One line decides it:
+`git remote get-url origin`.
+
+**Only the language changes.** `X.Y.Z - description`, the changelog heading that
+is the subject, no Conventional Commits prefix, one subject per commit, the bump
+in the same commit, the agent commits and pushes — all unchanged, and code
+identifiers stay English. Nothing mechanical changes either: `commit-msg` never
+checked the language and cannot, so the carve-out costs no code.
+
+**B3DEV is deliberately not in the set**, and that is a correction rather than an
+omission. Those repositories belong to `tiago-razera` — we are guests, and
+ADR-019 already answers them: the host writes Portuguese, so we write
+Portuguese. The owner's global preferences had listed BLUE3-INTRANET and B3DEV
+side by side as one exception. They are two different rules that happen to agree,
+and collapsing them would have built a second, weaker route to an answer we
+already had.
+
+The cost is the count. *"One carve-out, and only one"* appears in four places and
+is now false in all of them; `conventions.md` §8, the `LANGUAGE-RULE` block, the
+skeleton's twins and this repository's own twins are corrected in this pass, and
+ADR-014 carries the amendment note in the house style. The two are kept as two
+rows rather than a list because they are different in kind: the first is about
+*what kind of text*, in any repository; the second about *which repository*, for
+all of its text.
+
+The echo block could not stay one block. A `LANGUAGE-RULE` reading *"everything
+here is English (US)"*, stamped into BLUE3-F1, contradicts the norm in the
+repository it governs — and an agent that reads the first line and acts on it is
+behaving correctly. `templates/echo-blocks/LANGUAGE-RULE-PT.md` is the variant
+those repositories get. It carries the same marker name, so a regeneration
+replaces whichever variant is present, and it is **written in Portuguese**:
+it is not this repository's prose but the text of a Portuguese repository in
+transit, the same category as the end-user strings of the first carve-out.
+
 ## 1.9.0 - the commit-msg hook checks the subject version against version.md
 
 The hook has been checking the *shape* of a commit subject since `1.0.0`:

@@ -106,11 +106,16 @@ is touched again.
 **Everything in this repository is English (US)** — documents, commit
 messages, pull requests, issues, code comments, changelog entries.
 
-**One carve-out, and only one:** end-user-facing strings — UI text,
-transactional email, product copy. That is product i18n for a Brazilian
-audience, not repository content.
+**Two carve-outs, and only two.** The first is end-user-facing strings — UI
+text, transactional email, product copy: product i18n for a Brazilian audience,
+not repository content. The second is the **Blue3 internal repositories**,
+Portuguese throughout — `BLUE3-ISP/*`, `samirhvbr/blue3-intranet` and
+`samirhvbr/blue3-ai-login`, and nothing else ([ADR-020](docs/decisions.md)).
+They differ in kind: the first is about what kind of text, in any repository;
+the second about which repository, for all of its text. **This repository is not
+in that set** — repodocs is English.
 
-Commit messages used to be a second carve-out and are not any more
+Commit messages used to be a carve-out of their own and are not any more
 ([ADR-014](docs/decisions.md)). **Nothing is bilingual** — `LICENSE` is the plain
 English MIT text, and a translated `README_br.md` pair is not the pattern.
 
@@ -315,9 +320,13 @@ Commit format: `X.Y.Z - short description in English`. The version comes from
 `version.md` and is bumped in the same commit. Conventional Commits prefixes
 (`feat:`, `fix:`, `chore:`) and vague one-word messages are forbidden.
 
-**Exactly one carve-out:** end-user-facing strings — UI text, transactional
-email, product copy. That is product i18n for a Brazilian audience, not
-repository content.
+**Two carve-outs, and only two.** The first is end-user-facing strings — UI
+text, transactional email, product copy: product i18n for a Brazilian audience,
+not repository content. The second is the **Blue3 internal repositories**
+(`BLUE3-ISP/*`, `samirhvbr/blue3-intranet`, `samirhvbr/blue3-ai-login`), which
+are Portuguese throughout — if you are reading this block inside one of them,
+this is the wrong block: they carry `LANGUAGE-RULE-PT`. A repository joins that
+set by a written decision, never by argument.
 
 History is not rewritten: Portuguese messages already in the log stay as they
 are.

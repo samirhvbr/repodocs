@@ -82,7 +82,16 @@ pass instead of an archaeology.
 |---|---|---|
 | [`COMMIT-RULE.md`](echo-blocks/COMMIT-RULE.md) | [`../docs/versioning.md`](../docs/versioning.md#who-commits-and-when) | The agent commits; nothing is finished until it is committed; one subject per commit; a large delivery is split into blocks ([ADR-016](../docs/decisions.md)) |
 | [`RELEASES-RULE.md`](echo-blocks/RELEASES-RULE.md) | [`../docs/versioning.md`](../docs/versioning.md#tags-and-releases) | The `version.md` on GitHub is what the Releases show; the bump and the Release are one act, `Latest` badge included ([ADR-011](../docs/decisions.md)) |
-| [`LANGUAGE-RULE.md`](echo-blocks/LANGUAGE-RULE.md) | [`../docs/conventions.md`](../docs/conventions.md#8-language) | English (US) everywhere, one carve-out — **and in a repository that is not ours, the upstream's conventions win** ([ADR-014](../docs/decisions.md), [ADR-019](../docs/decisions.md)) |
+| [`LANGUAGE-RULE.md`](echo-blocks/LANGUAGE-RULE.md) | [`../docs/conventions.md`](../docs/conventions.md#8-language) | English (US) everywhere, two carve-outs — **and in a repository that is not ours, the upstream's conventions win** ([ADR-014](../docs/decisions.md), [ADR-019](../docs/decisions.md)) |
+| [`LANGUAGE-RULE-PT.md`](echo-blocks/LANGUAGE-RULE-PT.md) | the same | The variant for the **Blue3 internal set** — `BLUE3-ISP/*`, `samirhvbr/blue3-intranet`, `samirhvbr/blue3-ai-login` — which is Portuguese throughout ([ADR-020](../docs/decisions.md)) |
+
+**`LANGUAGE-RULE` and `LANGUAGE-RULE-PT` share one marker name**, and that is
+deliberate: a repository carries exactly one of them, and a regeneration
+replaces whichever is there. Which one is not a judgement call —
+`git remote get-url origin` decides it. Stamping the English block into a Blue3
+internal repository puts a rule in that repository's `CLAUDE.md` contradicting
+the norm it points at, and an agent that reads the first line and obeys is
+behaving correctly.
 
 `RELEASES-RULE` got its source file here at `1.8.0`, having been in 113 files
 across the fleet without one since before this folder existed. It arrived split:

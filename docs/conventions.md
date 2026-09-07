@@ -315,13 +315,19 @@ Nothing gets rewritten just because of this rule. An old Portuguese document
 stays Portuguese until it is touched again — at which point the edit (or the
 whole file, when practical) comes out in English.
 
-**One carve-out, and only one:**
+**Two carve-outs, and only two:**
 
 | Stays Portuguese | Why |
 |---|---|
 | **End-user-facing strings** — UI text, transactional email, product copy | That is product i18n for a Brazilian audience, not repository content. A Brazilian user does not read the repo. |
+| **The Blue3 internal repositories** — everything in them ([below](#the-blue3-internal-repositories-are-written-in-portuguese)) | Nobody outside the company opens them, and most of what is written into them is operational reasoning where the precision of the sentence is the value ([ADR-020](decisions.md)) |
 
-Commit messages **used to** be the second carve-out. They are not any more
+They are different in kind, and the difference is the whole reason they are two
+rows rather than a list. The first is about **what kind of text** — those
+strings stay Portuguese in every repository of the fleet. The second is about
+**which repository** — all of the text, in a named set.
+
+Commit messages **used to** be a carve-out of their own. They are not any more
 ([ADR-014](decisions.md)) — a commit message is repository content, read in
 `git log`, in blame, in a PR diff and in the Releases page, by exactly the
 audience the English rule exists for.
@@ -333,6 +339,53 @@ drift, and BLUE3-INTRANET's pair proves it, at 374 lines against 259.
 
 Code identifiers — class, method, variable and column names — are English, and
 always were.
+
+### The Blue3 internal repositories are written in Portuguese
+
+**Everything in them:** documents, commit messages, pull request titles and
+bodies, issues, code comments, changelog entries, release notes. This is the
+second carve-out, and it is bounded by **who owns the repository on GitHub** —
+not by the folder it sits in on disk, and not by its name:
+
+| In the set | Not in the set |
+|---|---|
+| Every repository under **`github.com/BLUE3-ISP`**, including any created there after 07/09/2026 | **`samirhvbr/meuip`** — named because it lives in the same working folder and is *not* in the set |
+| **`samirhvbr/blue3-intranet`** | Every other repository of the fleet |
+| **`samirhvbr/blue3-ai-login`** | |
+
+```bash
+git remote get-url origin    # this is what decides it, in one line
+```
+
+**Why they are exempt.** The English rule exists for a reader who does not read
+Portuguese and meets our text first. Nobody outside the company opens these
+repositories, and much of what is written into them is operational reasoning
+rather than documentation — an incident, a queue, a runbook, the sentence
+explaining why a migration ran at 02:00. There the precision of the sentence is
+the value, and it is written and read by the same people. Translating it costs
+more than it returns ([ADR-020](decisions.md)).
+
+**Only the language changes.** `X.Y.Z - description`, the changelog heading that
+*is* the subject, no Conventional Commits prefix, one subject per commit, the
+bump in the same commit, the agent commits and pushes — all unchanged. Code
+identifiers stay English here too. Nothing mechanical changes: `commit-msg`
+never checked the language and cannot.
+
+**A repository joins this set by an ADR, never by argument.** "Nobody foreign
+reads this one" is true of most of the fleet and is not a reason. The set is a
+written boundary; the rule stays a rule precisely because a repository cannot
+apply the test to itself.
+
+**These repositories get a different echo block.** A `LANGUAGE-RULE` reading
+*"everything here is English (US)"* stamped into one of them contradicts this
+section in the repository it governs, so they carry
+[`LANGUAGE-RULE-PT`](../templates/echo-blocks/LANGUAGE-RULE-PT.md) instead —
+the same rule, in the language of the repository it lands in.
+
+**B3DEV is not part of this**, and it is worth saying because the two are easy
+to confuse. Those repositories belong to `tiago-razera`: we are guests there and
+the subsection below already answers them. They are Portuguese for the host's
+reason, not for ours.
 
 ### When the repository is not ours, the upstream's conventions win
 
