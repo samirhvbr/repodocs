@@ -216,6 +216,13 @@ Recorded because each one produced a confident, wrong conclusion:
   A parent shell looks "clean" while the child has the variable.
 - **A Blade component does not emit its own name** into the HTML. Grepping the
   output for `<x-f1.tower>` returns zero even while the component renders.
+- **A one-line `grep` over a whole document does not read its status header.**
+  Auditing nine documents with one alternation pattern reported `ACTIVE` for
+  three that declare `PROPOSED` on line 3 — they also *contain* the word
+  `ACTIVE`, in the sentence explaining when a section becomes it. The finding
+  was written into a changelog entry before anyone opened the file. **Read the
+  header line, not the file** — `grep -m1 'Status:'` — and open the file before
+  a status becomes a claim about someone's work.
 
 ---
 

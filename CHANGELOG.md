@@ -9,6 +9,39 @@ at `git commit` time.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 1.10.2 - the `ACTIVE` pages in the incident report were declared `PROPOSED`
+
+The `1.10.1` entry closes by naming a second failure in `notes`: the three pages
+that replaced its queue *"were all declared `ACTIVE` — an architecture, a product
+scope and a roadmap for an application with no code"*. That is false, and it was
+false when it was written.
+
+`docs/product.md`, `docs/architecture.md` and `docs/roadmap.md` all declare
+**`PROPOSED`** on line 3, each under the sentence *"Nothing described here has
+been built yet"*, each pointing at the queue as the authority on intent while
+both documents exist, and each saying a section becomes `ACTIVE` when its code
+exists. The repository had already answered the question correctly, in its own
+words, before this one asked it.
+
+**How the wrong answer was produced**, because it is the reusable part: a single
+`grep -m1 -o` over each whole file with an alternation of every status token.
+The three pages contain the word `ACTIVE` — in the sentence explaining when a
+section becomes it — and the pattern reported that instead of the declared
+status. Nothing opened the files. The finding then travelled from a shell
+one-liner into a changelog entry, a commit message and a sentence spoken to the
+owner, without ever touching the document it described. It is recorded in
+[conventions.md §6](docs/conventions.md#6-measurement-traps-already-paid-for)
+with the others: read the header line, not the file, and open the file before a
+status becomes a claim about someone else's work.
+
+**The clause the mistake produced is kept**, because it is right independently of
+how it was arrived at: a plan that has to be visible in `docs/` before it is
+built is `PROPOSED`, never `ACTIVE`. `notes` is where it was already being
+practised, which is a better provenance than the one `1.10.1` gave it.
+
+History is not rewritten: the `1.10.1` entry stays as it was published, and this
+is the correction that travels with it.
+
 ## 1.10.1 - the rule that failed was the one rule that had never been an echo block
 
 `1.10.0` fixed the norm. This measures how much of the fleet the fix would have
