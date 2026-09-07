@@ -9,6 +9,33 @@ at `git commit` time.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 1.10.3 - the sentence that emptied the queue survived in `docs/README.md`
+
+ADR-021 corrected the rule in five places and there were six. `conventions.md`
+§1, the two golden rules of the twins, both queue `README.md`s and the new
+`QUEUE-RULE` block were all fixed on 07/09/2026. `docs/README.md` — root and
+skeleton — was not, and it carries the sentence in the form the agent quoted:
+
+> *"If a queue item needs half a page, it is in the wrong place: write it here
+> and leave one line and a pointer in the queue."*
+
+with a routing table whose queue row read **"something still to be done, in one
+line"**. Read together they say a specification longer than one line does not
+belong in the queue, which is the instruction that emptied `notes`. And this is
+the copy that would have kept saying it in **every repository created from the
+skeleton**, indefinitely, while the corrected sentence sat three files away.
+
+The miss is the ADR's own thesis arriving by post. A rule stated in six places
+is a rule with six chances to be stale, and the pass that corrects five of them
+leaves the sixth carrying the full authority of a document nobody suspects. It
+was found by an audit that went looking for the exact string, which is the only
+way this class of thing is ever found.
+
+The queue row now reads **"at any length, in whatever shape"**, the exit
+condition and the definition of *produce* are stated in place, and the
+half-a-page rule keeps its job with its reach bounded: it is about a record that
+ended up in the queue, and that is the whole of it.
+
 ## 1.10.2 - the `ACTIVE` pages in the incident report were declared `PROPOSED`
 
 The `1.10.1` entry closes by naming a second failure in `notes`: the three pages

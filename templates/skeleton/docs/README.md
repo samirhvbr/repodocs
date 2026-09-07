@@ -38,8 +38,17 @@ regenerated, and which questions are answered upstream rather than here.
 | It describes… | It goes to |
 |---|---|
 | something that already exists — a measurement, a contract, a runbook, an ADR | `docs/` |
-| something still to be done, in one line | `.continue/` + a pointer |
+| something still to be done — **at any length**, in whatever shape | `.continue/` |
 | something that happened, with its date and its why | `CHANGELOG.md` |
 
-If a queue item needs half a page, it is in the wrong place: write it here and
-leave one line and a pointer in the queue.
+**A document leaves `.continue/` when, and only when, the thing it describes
+exists.** Length is not an exit condition, and neither is language, age or
+untidiness. A 1,300-line brief about something unbuilt is in the only place it
+can be — it *is* the specification, and until the thing exists it is the only
+place the thing exists. To *produce* a queue item is to make the thing exist,
+not to edit, translate or promote the document. **Never empty that folder as
+tidying.**
+
+If a queue item needs half a page **to describe something that already exists**,
+that is a record that ended up in the queue: write it here and leave one line
+and a pointer. That is the whole reach of the rule.
