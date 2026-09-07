@@ -9,6 +9,33 @@ at `git commit` time.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 1.9.4 - creating the missing changelog would have created a second one in 23 repositories
+
+`1.9.3` taught `fleet-hooks.sh` to create `CHANGELOG.md` where a repository had
+none. The measurement behind it was wrong in a way the first pass could not see:
+of the 34 repositories without the file, **23 keep their changelog as a section
+inside `version.md`** — the markdown-shaped variant blessed by
+[ADR-012](docs/decisions.md), which several of them carry with a full history
+under a `## 3. Changelog` heading.
+
+Creating `CHANGELOG.md` beside that produces two changelogs in one repository,
+which is the failure this standard names about a translated `README` pair, in
+the one file that decides what a version means. It was not hypothetical: the
+`samirhvbr` regeneration ran before this was caught and created exactly that
+duplicate, which is reverted in that repository in the same pass.
+
+The three cases are now told apart. A repository with `CHANGELOG.md` gets the
+entry. A repository with **no changelog anywhere** — 13 of them — gets the file
+created. A repository whose changelog is inside `version.md` gets **neither**: no
+entry, no second file, and a line in the report saying so.
+
+Writing into the `version.md` section instead was considered and rejected. Those
+sections use a per-repo heading style (`### \`X.Y.Z\` — date — subject` in three
+different flavours), so a script writing `## X.Y.Z - description` into them would
+produce an entry that does not match the file it is in. Moving those 23 to the
+standard location is a migration with its own decisions, and it is in the queue
+where a migration belongs — not smuggled into a pass about hooks.
+
 ## 1.9.3 - the fleet script creates the changelog it has been assuming
 
 34 repositories of the fleet — two thirds of the ones the hooks reached — have

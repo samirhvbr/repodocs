@@ -273,7 +273,7 @@ fi
 TRAILERS="Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_014qeYCqGQKLAdRPHEBpWbJC"
 
-declare -a FAILED=() CREATED_CHANGELOG=()
+declare -a FAILED=() CREATED_CHANGELOG=() CHANGELOG_IN_VERSION=()
 
 for row in "${READY[@]}"; do
   repo="${row%%|*}"; remote="${row#*|}"
@@ -359,7 +359,17 @@ ENENTRY
   fi
 
   paths=(tools/git-hooks/commit-msg tools/git-hooks/pre-push version.md CHANGELOG.md)
-  if [ ! -f "$repo/CHANGELOG.md" ]; then
+
+  # A repository whose changelog lives inside version.md already has one, in
+  # its own format. Creating CHANGELOG.md beside it would produce two
+  # changelogs that drift — the failure the norm names about a translated
+  # README pair, in a file that decides what a version means. 23 repositories
+  # of the fleet are in that shape; moving them is a retrofit with its own
+  # decisions, and it is in the queue rather than in this script.
+  if [ ! -f "$repo/CHANGELOG.md" ] && grep -qiE '^#+.*changelog' "$repo/version.md" 2>/dev/null; then
+    CHANGELOG_IN_VERSION+=("$name")
+    paths=(tools/git-hooks/commit-msg tools/git-hooks/pre-push version.md)
+  elif [ ! -f "$repo/CHANGELOG.md" ]; then
     # 34 repositories of the fleet had no CHANGELOG.md at all, so the rule that
     # the entry's heading *is* the commit subject held only where the file
     # happened to exist. The file is created with the header and this entry as
@@ -369,7 +379,7 @@ ENENTRY
     write_changelog_header "$repo/CHANGELOG.md" "$remote"
     CREATED_CHANGELOG+=("$name")
   fi
-  prepend_changelog "$repo/CHANGELOG.md" "$entry"
+  [ -f "$repo/CHANGELOG.md" ] && prepend_changelog "$repo/CHANGELOG.md" "$entry"
   rm -f "$entry"
 
   body="$(printf '%s\n\n%s\n' \
@@ -418,6 +428,11 @@ echo
 if [ "${#CREATED_CHANGELOG[@]}" -gt 0 ]; then
   echo "CHANGELOG.md CREATED — the repository had none (${#CREATED_CHANGELOG[@]}):"
   printf '  %s\n' "${CREATED_CHANGELOG[@]}"
+  echo
+fi
+if [ "${#CHANGELOG_IN_VERSION[@]}" -gt 0 ]; then
+  echo "CHANGELOG LIVES INSIDE version.md — no entry written, no second file created (${#CHANGELOG_IN_VERSION[@]}):"
+  printf '  %s\n' "${CHANGELOG_IN_VERSION[@]}"
   echo
 fi
 if [ "${#FAILED[@]}" -gt 0 ]; then
