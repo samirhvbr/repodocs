@@ -201,6 +201,30 @@ blocking_ignored_files() {   # $1 = repo, $2... = paths the mode would write
   printf '%s' "$out"
 }
 
+
+# Where the first semver sits decides whether this file can be bumped by
+# substitution at all. A `version.md` that declares the version on its own line
+# — "**Versão atual:** `0.1.9`", or a bare "0.1.9" — is safe: replacing the first
+# occurrence moves the declaration. A file whose first semver is a **changelog
+# heading** is not: replacing it renames an entry that already happened instead
+# of adding a new one.
+#
+# 🔴 Measured 08/09/2026 in KIDS/KIDS-PAVIO. Eight consecutive sweeps — three of
+# them before this script existed — walked the same entry from `## 0.4.0 - três
+# níveis de dificuldade e refino visual` to `## 0.4.8 - …`, renumbering it each
+# time. That repository now has one changelog entry, describing work from 0.4.0,
+# labelled with the current version, and no record of the eight deliveries in
+# between. Nothing was lost from `git log`; the changelog was.
+version_bump_is_safe() {   # $1 = repo
+  local f="$1/version.md" line
+  [ -f "$f" ] || return 1
+  line="$(grep -m1 -nE '[0-9]+\.[0-9]+\.[0-9]+' "$f" | cut -d: -f2-)"
+  case "$line" in
+    '#'*) return 1 ;;      # the first semver is a heading: an entry, not a declaration
+  esac
+  return 0
+}
+
 # ------------------------------------------------------------- echo blocks ---
 
 block_source() {    # $1 = block name, $2 = remote url
@@ -391,6 +415,10 @@ if [ "$MODE" = check ]; then
       bad+=("default branch is '$defbr', not master (ADR-015)")
     fi
 
+    if [ -f "$repo/version.md" ] && ! version_bump_is_safe "$repo"; then
+      bad+=("version.md declares no current version — its first semver is a changelog heading, so a bump renumbers an entry instead of adding one")
+    fi
+
     ign="$(ignored_standard_files "$repo" CHANGELOG.md version.md CLAUDE.md AGENTS.md tools/git-hooks tools/release.sh .continue)"
     [ -z "$ign" ] || bad+=("ignores files the standard tracks:$ign (golden rule 8 — an exception needs an ADR)")
 
@@ -443,6 +471,11 @@ for row in "${OURS[@]}"; do
 
   if [ ! -f "$repo/version.md" ] || [ -z "$(first_semver "$repo/version.md")" ]; then
     SKIPPED+=("$repo|no version.md with a semver — nothing to bump"); continue
+  fi
+
+  if ! version_bump_is_safe "$repo"; then
+    SKIPPED+=("$repo|the first semver in version.md is a changelog heading — bumping it would renumber an entry that already happened, not add one")
+    continue
   fi
 
   branch="$(git -C "$repo" symbolic-ref --quiet --short HEAD 2>/dev/null || true)"

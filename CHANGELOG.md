@@ -9,6 +9,52 @@ at `git commit` time.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 1.12.1 - a bump that rewrites the first semver renumbers a changelog entry when that is what the first semver is
+
+The bump in `fleet.sh` replaces the first semver in `version.md`. That is the
+first-semver rule of [ADR-012](docs/decisions.md) applied to *writing*, and it is
+correct for both shapes the fleet actually has — a bare `0.1.9`, and a markdown
+file declaring `**Versão atual:** \`0.1.9\`` on line 3. Twenty-seven of the
+twenty-eight markdown files look like the second.
+
+The twenty-eighth is `KIDS/KIDS-PAVIO`, whose `version.md` **is** its changelog
+and declares no current version at all. Its first semver is the heading of the
+top entry:
+
+```markdown
+# Versões
+
+Formato: `X.Y.Z - descrição`. A mesma linha vira a mensagem do commit.
+
+## 0.4.8 - três níveis de dificuldade e refino visual
+```
+
+So every bump there has renamed an entry that already happened instead of adding
+one. **Eight consecutive sweeps did it** — `Releases automaticas` on 02/09, three
+`COMMIT-RULE` regenerations, `the human gate`, and both of this session's fleet
+passes — walking one entry from `## 0.4.0` to `## 0.4.8`, keeping the words
+*"três níveis de dificuldade e refino visual"* attached to whatever number was
+current. That repository now has a single changelog entry, describing work from
+`0.4.0`, labelled `0.4.8`, and no record whatsoever of the eight deliveries in
+between. `git log` has them; the changelog does not.
+
+**This is older than the tool that inherited it**, which is the part worth being
+precise about: three of the eight predate `fleet.sh` entirely. The pattern was a
+hand-written sweep doing exactly what the script later automated, and automating
+it made it faster rather than newer.
+
+`fleet.sh` now refuses. Before bumping it reads the line the first semver sits
+on, and a line starting with `#` is a heading — an entry, not a declaration. The
+repository is skipped with that sentence, and `check` reports it as a finding of
+its own: *"version.md declares no current version"*. Refusing is the right output
+because the fix is a decision about that repository's changelog, not something a
+fleet pass gets to make at fifty repositories a minute.
+
+The general shape, for the next file that looks unusual: **the first-semver rule
+says where to *read* the version. It does not say that position is safe to
+*write*.** Reading a number and writing over it are different acts, and this
+standard had one rule doing both jobs.
+
 ## 1.12.0 - an override moves when the version is decided, never whether every commit carries it
 
 [ADR-017](docs/decisions.md) let one repository stamp its version at merge instead
