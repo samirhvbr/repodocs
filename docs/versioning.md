@@ -56,6 +56,53 @@ health page), it reads `version.md`. An environment variable may exist as a
 still there and its own `CLAUDE.md` called it the source of truth. Two documents
 disagreeing about one number is how a wrong deploy gets signed off.
 
+## A fork we own versions itself
+
+**Fifteen repositories here are forks of somebody else's project.** They are ours
+— we own the remote, we push to it, we ship from it — and the `X.Y.Z` in them
+belongs to the upstream. Both things are true at once, and the file has to say
+so ([ADR-023](decisions.md)).
+
+```markdown
+# Versão — fork SHVIA do Strix
+
+**Versão atual:** `0.15.0`
+**Upstream:** `1.6.2` — usestrix/strix @ v1.6.2
+**String do pacote:** `1.6.2+shvia.0.15.0`  (derivada; é o que o `pip` mostra)
+```
+
+| Line | Whose | Who moves it |
+|---|---|---|
+| **Versão atual** | **Ours**, and the **first semver in the file** | Every delivery of ours, including a sync |
+| **Upstream** | Theirs | Whenever we sync, to whatever point we synced to |
+| **String do pacote** | Derived from both | Never edited by hand |
+
+**Our version is first because everything reads the first semver.** The hooks,
+`release.sh` and `fleet.sh` all take it (ADR-012), and pointing that at the
+upstream's number hands our tooling a value we cannot bump and that moves on
+somebody else's schedule — including backwards, when an upstream reverts. Both
+forks that versioned themselves before this rule had exactly that shape, and
+`release.sh` in one of them would have tagged `1.6.2`, a name that belongs to
+their release and not to ours.
+
+**Do not edit the upstream's own version field** — their `pyproject.toml`, their
+Debian changelog, their `package.json`. It conflicts on every sync, and it is
+what both existing forks correctly avoided from the start.
+
+**A sync is a delivery.** It changes what the fork is, so it bumps our version
+and its changelog entry names the upstream point we moved to, even when no line
+of our own code changed.
+
+Our commits carry our subjects; commits arriving from the upstream keep theirs
+and come in as merges, which `commit-msg` exempts. The tag and the Release carry
+**our** version, and a fork whose tags could collide with the upstream's
+namespace declares a prefix in writing.
+
+**None of this governs what we write *into* the upstream.** A pull request there
+follows their language and their commit shape
+([conventions.md §8](conventions.md#when-the-repository-is-not-ours-the-upstreams-conventions-win),
+[ADR-019](decisions.md)).
+
 ## Bump criteria
 
 Bump `version.md` **in the same commit as the change it describes.** Never in a

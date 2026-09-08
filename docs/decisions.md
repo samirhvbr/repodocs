@@ -1062,3 +1062,87 @@ kind, which is why they stay three rows rather than becoming a list:
 The third is the only one that is **temporary by construction**: every document
 it covers is meant to leave, and it becomes English on the way out. A carve-out
 whose contents all eventually cross into the rule is not a hole in the rule.
+
+---
+
+## ADR-023 — a fork we own has a version of its own, and records the upstream point it sits on
+
+**Status:** `ACCEPTED` · 08/09/2026 · Bounded by
+[ADR-019](#adr-019--in-a-repository-that-is-not-ours-the-upstreams-conventions-win)
+— this governs the repository **we own**, never what we write into the upstream ·
+Applies [ADR-012](#adr-012--the-version-is-the-first-semver-in-versionmd) to a
+file that has two versions in it
+
+**Context.** **Fifteen repositories of this fleet are forks of somebody else's
+project that we own and modify.** Two of them version themselves. Thirteen do
+not, and cannot answer the question that matters the moment a fork breaks: *which
+upstream point is this, and how far past it are we?*
+
+The two that do invented the same shape independently, which is evidence worth
+taking seriously:
+
+| Repository | `version.md` | Why that shape |
+|---|---|---|
+| `SHVIA/strix` | `1.6.2+shvia.15` | PEP 440 local version — `pip` shows it |
+| `pve-manager` | `9.2.10+blue3.1` | Debian package version — the `.deb` carries it |
+
+Both reasoned correctly about the same thing: **the `X.Y.Z` belongs to the
+upstream and we must not edit it**, because that field lives in their
+`pyproject.toml` or their changelog and editing it conflicts on every sync.
+
+And both land the defect in the same place. `1.6.2` and `9.2.10` are the **first
+semver** of those files, and the first semver is what every tool in this fleet
+reads (ADR-012): `pre-push`, `release.sh`, `fleet.sh`. So our tooling operates on
+a number **we do not control, cannot bump, and that moves on somebody else's
+schedule** — including backwards relative to us, when an upstream reverts or
+renumbers. `release.sh` in `strix` would tag `1.6.2`, a name that belongs to
+upstream's release, not to ours.
+
+**Decision.** **A fork we own has its own version, and the upstream point it sits
+on is recorded rather than inferred.**
+
+1. **Our version is a normal `X.Y.Z`, and it is the first semver in
+   `version.md`.** It starts at `0.1.0` when we start changing the fork — our
+   history begins where our changes begin, not at the upstream's number.
+2. **The upstream point is declared on its own line**, naming the project and the
+   ref: `**Upstream:** \`1.6.2\` — usestrix/strix @ v1.6.2`. A fork that cannot
+   say what it is a fork *of*, and *of when*, is a copy.
+3. **A package string is derived, when a package manager requires one**, from
+   those two — `<upstream>+<prefix>.<our version>` — and is declared as derived.
+   It is a **product identifier**, the same category as UI text under
+   [ADR-014](#adr-014--everything-in-a-repository-is-english-us-commit-messages-included)'s
+   carve-out: consumed by `pip` or `dpkg`, not by this standard. **It is never
+   the first semver in the file.**
+4. **A sync with the upstream is a delivery here.** It changes what the fork is,
+   so it bumps our version and its entry says which upstream point we moved to,
+   even when not a line of our own code changed.
+5. **Our commits carry our subjects** — `X.Y.Z - description`. Commits arriving
+   from the upstream keep theirs and come in as merges, which the hooks already
+   exempt.
+6. **Tag and Release carry our version.** Where that could collide with the
+   upstream's tag namespace, the fork declares a prefix in writing.
+7. **An `upstream` remote is mandatory.** It is the only mechanical record of
+   where the fork came from, and four of the fifteen have none.
+
+**Consequences.** A fork that adopts this **graduates by itself**. `fleet.sh`
+classifies a repository as upstream-shaped by reading whether its last five
+subjects are ours; once they are, the fork stops being skipped and receives the
+hooks and the echo blocks like any other repository. The heuristic is the
+adoption test, and there is no list to maintain.
+
+`check` now lists the forks in a section of their own and says what each is
+missing — until `1.13.0` it did not list them at all, because the same heuristic
+that skips them for writing was also skipping them for reading. Fifteen
+repositories we own were outside every measurement this standard makes.
+
+**The two that already version themselves change the least.** Each gains a
+declared version of its own above what it already has, and keeps its package
+string as the derived value it always was. **Neither `pyproject.toml` nor the
+Debian changelog is touched** — not editing the upstream's own version field is
+the thing both repositories got right from the start, and this rule does not ask
+them to stop.
+
+**What this does not do.** It does not make a fork follow our conventions
+*upstream*. A pull request sent to `usestrix/strix` obeys their language and
+their commit shape ([ADR-019](#adr-019--in-a-repository-that-is-not-ours-the-upstreams-conventions-win));
+this ADR is about the repository on our side of the remote.

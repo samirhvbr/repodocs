@@ -9,6 +9,57 @@ at `git commit` time.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 1.13.0 - a fork we own has a version of its own, and fifteen of them were outside every measurement
+
+Fifteen repositories of this fleet are forks of somebody else's project that we
+own and modify. **Two version themselves. Thirteen do not**, and cannot answer
+the question that matters the moment a fork breaks: which upstream point is
+this, and how far past it are we?
+
+The two that do invented the same shape independently, which is why this ADR
+follows them rather than replacing them:
+
+| Repository | `version.md` | Why that shape |
+|---|---|---|
+| `SHVIA/strix` | `1.6.2+shvia.15` | PEP 440 local version — `pip` shows it |
+| `pve-manager` | `9.2.10+blue3.1` | Debian package version — the `.deb` carries it |
+
+Both reasoned correctly about the hard part: **the `X.Y.Z` belongs to the
+upstream and must not be edited**, because that field lives in their
+`pyproject.toml` or their changelog, and editing it conflicts on every sync.
+
+And both put the defect in the same place. `1.6.2` and `9.2.10` are the **first
+semver** of those files, and the first semver is what everything here reads
+([ADR-012](docs/decisions.md)) — the hooks, `release.sh`, `fleet.sh`. Our tooling
+was reading a number **we do not control, cannot bump, and that moves on somebody
+else's schedule**, including backwards relative to us when an upstream reverts.
+`release.sh` in `strix` would have tagged `1.6.2`: a name that belongs to their
+release, not to ours.
+
+[ADR-023](docs/decisions.md) gives a fork its own `X.Y.Z` as the **first** semver,
+starting at `0.1.0` when our changes start; a declared **Upstream** line naming
+the project and the ref; and a package string **derived** from the two —
+`1.6.2+shvia.0.15.0` — which is a product identifier consumed by `pip` or `dpkg`,
+the same category as UI text, and never the first semver in the file. A sync is a
+delivery: it changes what the fork is, so it bumps and its entry names the point
+we moved to. An `upstream` remote becomes mandatory — four of the fifteen have
+none, which means nothing in them records where they came from.
+
+**The second half of this is that `check` could not see them at all.** The
+heuristic that decides whether to *write* to a repository — are the last five
+subjects ours? — was also deciding whether to *read* it. Fifteen repositories we
+own sat outside every measurement this standard makes, and the report said "54
+repositories" as though that were all of them. `check` now has a `FORKS WE OWN`
+section that names what each is missing, and the summary line counts both.
+
+**A fork graduates by itself.** Once it adopts our subjects the same heuristic
+stops classifying it as upstream-shaped, and it starts receiving the hooks and
+the echo blocks like any other repository. The test is the adoption, not a list
+somebody has to maintain.
+
+Nothing about what we write **into** an upstream changes: a pull request there
+follows their language and their commit shape ([ADR-019](docs/decisions.md)).
+
 ## 1.12.2 - a changelog is recognised by what it is, not by the word "changelog" in its title
 
 The pass decides whether a repository already has a changelog before it creates

@@ -318,7 +318,7 @@ prepend_changelog() {  # $1 = file, $2 = entry file
 
 # --------------------------------------------------------------- discovery ---
 
-declare -a OURS=() SKIPPED=()
+declare -a OURS=() FORKS=() SKIPPED=()
 
 while IFS= read -r gitdir; do
   repo="$(dirname "$gitdir")"
@@ -347,7 +347,13 @@ while IFS= read -r gitdir; do
   [ "${total:-0}" -gt 0 ] || { SKIPPED+=("$repo|no history to read"); continue; }
   mine="$(git -C "$repo" log --no-merges --format='%s' -5 2>/dev/null | grep -cE '^[0-9]+\.[0-9]+\.[0-9]+ - ' || true)"
   if [ "$((mine * 2))" -lt "$total" ]; then
-    SKIPPED+=("$repo|history follows another convention ($mine of the last $total subjects are ours)")
+    # Ours, and not writing our subjects: a fork of somebody else's project that
+    # we own and modify. It is not a repository to install hooks into — they
+    # would refuse every upstream commit it is about to receive — but it is very
+    # much a repository this standard has something to say about, and until
+    # 1.13.0 `check` did not even list it. Fourteen of them.
+    FORKS+=("$repo|$remote")
+    SKIPPED+=("$repo|a fork we own: $mine of the last $total subjects are ours, so the hooks would refuse what it receives")
     continue
   fi
 
@@ -445,6 +451,43 @@ if [ "$MODE" = check ]; then
     [ "${#notes[@]}" -eq 0 ] || printf '        note: %s\n' "${notes[@]}"
     unset bad notes
   done
+  if [ "${#FORKS[@]}" -gt 0 ]; then
+    echo
+    echo "FORKS WE OWN (${#FORKS[@]}) — our version, and which upstream point it sits on:"
+    for row in "${FORKS[@]}"; do
+      repo="${row%%|*}"; remote="${row#*|}"
+      name="${repo#"$ROOT"/}"
+      declare -a fbad=()
+      up="$(git -C "$repo" config --get remote.upstream.url 2>/dev/null || true)"
+
+      if [ ! -f "$repo/version.md" ]; then
+        fbad+=("no version.md — no version of our own at all")
+      else
+        v="$(first_semver "$repo/version.md")"
+        if [ -z "$v" ]; then
+          fbad+=("version.md carries no semver")
+        elif grep -qE "$(printf '%s' "$v" | sed 's/\./\\./g')\+" "$repo/version.md"; then
+          # "1.6.2+shvia.15": the first semver is the UPSTREAM's number, so every
+          # tool in this fleet reads a version we do not control and cannot bump.
+          fbad+=("the first semver is the upstream's ($v, in a local-version string) — our tools read a number we do not bump")
+        fi
+        grep -qiE '^[^#]*upstream' "$repo/version.md" 2>/dev/null \
+          || fbad+=("version.md does not say which upstream point this fork sits on")
+      fi
+      [ -n "$up" ] || fbad+=("no 'upstream' remote configured — nothing records where it came from")
+
+      if [ "${#fbad[@]}" -eq 0 ]; then
+        printf '  ok    %s\n' "$name"
+      else
+        findings=$((findings + ${#fbad[@]}))
+        ALL_FINDINGS+=("${fbad[@]}")
+        printf '  ---   %s\n' "$name"
+        printf '        · %s\n' "${fbad[@]}"
+      fi
+      unset fbad
+    done
+  fi
+
   echo
   if [ "$findings" -gt 0 ]; then
     echo "BY KIND — what to fix once instead of ${#OURS[@]} times:"
@@ -453,7 +496,7 @@ if [ "$MODE" = check ]; then
       | sort | uniq -c | sort -rn | sed 's/^/  /'
     echo
   fi
-  echo "$findings finding(s) across ${#OURS[@]} repositories."
+  echo "$findings finding(s) across ${#OURS[@]} repositories of ours and ${#FORKS[@]} forks we own."
   [ "$findings" -eq 0 ] || exit 1
   exit 0
 fi
