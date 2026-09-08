@@ -616,7 +616,10 @@ last step belonged to a cron job that ran up to 55 minutes later.
 ## ADR-017 — the bump clause may be overridden by a repository, in writing
 
 **Status:** `ACCEPTED` · 03/09/2026 · Amends
-[ADR-016](#adr-016--the-agent-commits-and-a-delivery-is-not-delivered-until-it-is)
+[ADR-016](#adr-016--the-agent-commits-and-a-delivery-is-not-delivered-until-it-is) ·
+**Extended 08/09/2026** — an override must reach **every commit of the delivery**,
+and a placeholder must never arrive on the default branch (see *An override that
+stamps late* below)
 
 **Context.** ADR-016 shipped the `COMMIT-RULE` block into 147 agent files the day
 it was accepted. The block states the bump as unconditional — *"the version taken
@@ -658,9 +661,60 @@ branch: `blue3-intranet-ntheme` works on `dev` and *says so*, which makes it a
 decision; a repository sitting on `main` because that is what the button did is
 not one.
 
+### An override that stamps late stamps every commit, or it is not an override
+
+*(Added 08/09/2026, from what the one override in the fleet actually did.)*
+
+An override moves **when** the version is decided. It does not move **whether**
+every commit carries it. Both halves have to be said, because the second one is
+what SHVIA-WEB's implementation lost:
+
+```bash
+TOPO="$(git log -1 --format=%s)"     # one commit
+case "$TOPO" in
+    '(versão no merge)'*) git commit -q --amend -m "$NOVA - $DESC" ;;
+esac
+```
+
+`git log -1` is `HEAD`. The stamp fixed one subject, and
+[ADR-016](#adr-016--the-agent-commits-and-a-delivery-is-not-delivered-until-it-is)
+makes several the normal case: **splitting a delivery into blocks is the
+default**, and the blocks share one version. Every block except the last went
+into `master` with the literal placeholder `(versão no merge)` in its subject —
+**26 of them by 08/09/2026**, the most recent from the previous day — and master
+is not rewritten, so they are permanent.
+
+**The interaction is the finding, and it is a fleet rule rather than one
+repository's bug.** ADR-016 says split by default; ADR-017 says the version may
+be stamped later; nothing said that the late stamp has to cover what the split
+produced. Two decisions, each correct, whose product nobody had written down.
+
+**So the clause gains a second half.** A repository that overrides the bump must
+also, in the same mechanism:
+
+1. **Stamp every commit of the delivery**, not the last one. The commits are
+   still on a branch and have never been published, so rewriting their subjects
+   is legitimate — and the mechanism must say that a branch already pushed needs
+   a `--force-with-lease` **on that branch**, never on the default one.
+2. **Refuse rather than guess.** If the branch cannot be swept — a merge commit
+   in the range, a conflict — the mechanism stops and hands the decision back.
+   Flattening someone's merge to fix a subject is not a trade this norm makes.
+3. **Guard the moment before the merge**, which is the last moment a placeholder
+   is reversible. SHVIA-WEB's 26 did not arrive because the script failed; they
+   arrived because it was not run. A guard that only lives inside the optional
+   step is not a guard, so the check also runs in CI on every pull request.
+
+**A placeholder in a subject on the default branch is a defect, always.** It is
+the one thing an override may not produce: the version exists precisely so that
+`git log` alone answers *what happened, when, why, and at which version*
+([versioning.md](versioning.md#commit-message)), and a subject reading
+*"(versão no merge)"* answers the last one with a promise.
+
 **Consequences.** The block is regenerated across the fleet — which is what the
 delimited-block design in ADR-016 was for, and its first real exercise. SHVIA-WEB
-records its override in its own `CLAUDE.md`, next to the mechanism.
+records its override in its own `CLAUDE.md`, next to the mechanism, and since
+`2.110.194` the mechanism sweeps the branch, refuses a merge commit, guards
+before the merge and repeats the guard in CI.
 
 The honest cost is that a rule with an escape hatch is weaker than one without,
 and this one was written the same day as the rule it weakens. The alternative was

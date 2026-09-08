@@ -41,6 +41,13 @@ down is not an exception. Nothing else in this block bends: the changelog entry,
 subject, the language, one subject per commit, and committing before you report done
 all hold regardless.
 
+**An override moves *when* the version is decided, never *whether* every commit
+carries it.** A delivery split into blocks — the default — must come out with the
+version on **every** subject, not on the last one. A placeholder left in a subject
+that reaches the default branch is a defect and is permanent, because the default
+branch is not rewritten. Measured: 26 of them in the one repository that stamps at
+merge, before its mechanism was fixed.
+
 **All of this governs the repositories we own.** In a repository that is not
 ours, the host's commit convention governs instead — their subject line, in
 their language. `X.Y.Z` is meaningless where there is no `version.md` of ours,

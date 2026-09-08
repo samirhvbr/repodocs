@@ -130,6 +130,31 @@ subject per commit still holds, and a delivery is still not delivered until it i
 committed. A repository with no written override bumps in the commit, like
 everyone else.
 
+**And the override must reach every commit of the delivery.** It moves *when* the
+version is decided, never *whether* every commit carries it. That second half was
+missing for nine days and cost 26 commits: SHVIA-WEB's stamp amended
+`git log -1` — one commit — while [ADR-016](decisions.md) makes several the
+normal case, so every block but the last landed on `master` with the literal
+placeholder in its subject, permanently, because `master` is not rewritten.
+
+A mechanism that stamps late therefore owes three things, and they are as
+normative as the clause itself:
+
+| It must | Because |
+|---|---|
+| Stamp **every** commit of the delivery, each keeping its own description | Splitting is the default, and the blocks share one version |
+| **Refuse** rather than guess — a merge commit in the range, a conflict — and hand the decision back | Flattening someone's merge to fix a subject is not a trade this norm makes |
+| **Guard before the merge, and again in CI** | The 26 did not arrive because the stamp failed; they arrived because it was not run |
+
+Rewriting those subjects is legitimate: the commits are on a branch and have
+never been published. A branch already pushed needs a `--force-with-lease` **on
+that branch** — never on the default one.
+
+**A placeholder in a subject on the default branch is a defect, always.** The
+version exists so `git log` alone answers *what happened, when, why, and at which
+version*, and a subject reading *"(versão no merge)"* answers the last one with a
+promise ([ADR-017](decisions.md)).
+
 ### Push is part of the delivery, and a refused push is where a human enters
 
 **Every delivery is committed *and* pushed.** Not committed now and pushed when

@@ -9,6 +9,63 @@ at `git commit` time.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 1.12.0 - an override moves when the version is decided, never whether every commit carries it
+
+[ADR-017](docs/decisions.md) let one repository stamp its version at merge instead
+of in the commit, for a measured reason: four `version.md` collisions in a single
+day between four parallel sessions. What it never said is that the late stamp has
+to reach **every** commit of the delivery. SHVIA-WEB's implementation did not:
+
+```bash
+TOPO="$(git log -1 --format=%s)"     # one commit
+case "$TOPO" in
+    '(versão no merge)'*) git commit -q --amend -m "$NOVA - $DESC" ;;
+esac
+```
+
+`git log -1` is `HEAD`. And [ADR-016](docs/decisions.md) makes several the normal
+case — **splitting a delivery into blocks is the default**, and the blocks share
+one version. Every block but the last went into `master` carrying the literal
+placeholder `(versão no merge)` in its subject. **Measured on 08/09/2026: 26 of
+them**, the most recent from the previous day, and `master` is not rewritten, so
+they are permanent. `dece273` and `88a7769` are a pair from the same Painel
+delivery; the siblings that became their own pull requests came out correctly
+stamped, which is what made the pattern legible at all.
+
+**Neither ADR was wrong, and that is the finding.** ADR-016 says split by
+default. ADR-017 says the version may be decided later. Nobody wrote down what
+their product requires, and the gap sat in the one place a fleet norm is hardest
+to see: inside the single repository that is allowed to be different.
+
+The guard that repository already had is worth naming, because it is why this
+went unseen for nine days. It counts markers in `CHANGELOG.md` and refuses
+anything but exactly one — correct, since a delivery has one entry. It measures
+the changelog. Nobody was counting subjects.
+
+**ADR-017 gains a second half**, and it is normative for any repository that ever
+takes the override: stamp every commit of the delivery, each keeping its own
+description; **refuse rather than guess** when the branch cannot be swept — a
+merge commit in the range would be flattened, and flattening someone's merge to
+fix a subject is not a trade this norm makes; and **guard before the merge, then
+again in CI**, because the 26 did not arrive from the stamp failing — they
+arrived from it not being run. Rewriting those subjects is legitimate: they are
+branch commits that have never been published. A branch already pushed needs a
+`--force-with-lease` **on that branch**, never on the default one.
+
+**A placeholder in a subject on the default branch is a defect, always.** The
+version exists so that `git log` alone answers *what happened, when, why, and at
+which version*; a subject reading *"(versão no merge)"* answers the last one with
+a promise.
+
+The rule reaches the fleet in the `COMMIT-RULE` block, which is where an agent
+meets the override clause, and in
+[versioning.md](docs/versioning.md#the-bump-clause-is-the-one-a-repository-may-override-in-writing).
+SHVIA-WEB is fixed at its own `2.110.194`: the stamp sweeps
+`merge-base..HEAD` through a `git rebase --exec`, refuses a branch with a merge
+commit, refuses to finish while any placeholder remains, and a new `assunto` job
+fails a pull request whose commits still carry one. Its 26 are recorded there and
+left alone — history is not rewritten.
+
 ## 1.11.1 - the pass survives a repository that fails, and says which one and why
 
 Both passes died in the middle. `echo` stopped at the 17th of 44, `hooks` at the
