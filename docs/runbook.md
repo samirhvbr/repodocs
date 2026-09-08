@@ -70,7 +70,10 @@ The skeleton ships defaults, not answers. Three things need a decision:
 - **`.claude/settings.json`** — the allow-list. The skeleton grants reading,
   writing and git, and nothing else. Build and test commands for your stack are
   a **grant, made by the owner, written into the file with its reason and how to
-  revert it.** Never applied silently.
+  revert it.** Never applied silently. The command goes on the *Tests run with*
+  line of `CLAUDE.md` **before** the permission exists; until the owner grants
+  it, the agent cannot run the suite and records that in the changelog entry
+  ([conventions.md §9](../docs/conventions.md#9-a-change-in-behavior-ships-with-the-test-that-fails-when-the-behavior-breaks), clause 5).
 - **`CLAUDE.md` / `AGENTS.md`** — the bump triggers. The `X`/`Y`/`Z` slots and
   the discipline are the convention; what counts as a `Z` is per-repo. A new
   screen or a new table is a `Z` in a Laravel app; a new runtime capability is

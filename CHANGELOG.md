@@ -9,6 +9,32 @@ at `git commit` time.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 1.14.0 - the closing checklist asks whether the tests ran, and the skeleton asks how they run
+
+A rule that lives only in `conventions.md` is a rule an agent meets after the
+delivery is already written. This is the half that arrives before it: one line in
+the checklist that closes a version, and one line in the skeleton that a new
+repository has to fill in.
+
+The checklist line sits next to the one about a document made stale in the same
+pass, and it asks the same shape of question — did the thing that keeps this
+honest travel with the change? It offers the exception in the same breath, so
+the honest answer is never silence: *or the changelog entry says why not and what
+was checked instead.*
+
+The skeleton gains **`Tests run with:`** directly under `Runs locally with:`,
+because a new repository was being asked how it runs and never how it is
+validated, and clause 4 needs a command anyone can repeat. `docs/repodocs.md` §7
+— the page that tells a new repository where each question is answered — gains
+the row for *"does this change need a test, and did it run?"*.
+
+The runbook says the part that is easy to get wrong in a repository whose
+permissions are deliberately narrow: **the command goes on the line before the
+permission exists.** Running a suite needs the command granted in
+`.claude/settings.json`, and that grant is the owner's act. Until it is made, the
+agent writes what it could not run and what it checked instead — the exception
+of clause 5, used as designed rather than as a way out.
+
 ## 1.14.0 - a change in behavior ships with the test that fails when the behavior breaks
 
 Nothing in this norm said that a feature is born with a test. The word *test*

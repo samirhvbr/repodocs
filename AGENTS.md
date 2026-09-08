@@ -284,6 +284,9 @@ and `clean -fd` regardless of what the allow-list says.
 - [ ] A finished item **left** `.continue/` — *finished* meaning the thing it
       described now exists, not that the document reads well.
 - [ ] A document made stale by this change was corrected in the same pass.
+- [ ] A change in behavior carries the test that fails when it breaks, and the
+      pertinent tests **ran** — or the changelog entry says why not and what was
+      checked instead ([conventions.md §9](docs/conventions.md#9-a-change-in-behavior-ships-with-the-test-that-fails-when-the-behavior-breaks)).
 - [ ] `version.md` bumped, in this commit.
 - [ ] **The work is committed** — and split into one commit per subject if it
       covered more than one. Nothing is reported as finished while it is

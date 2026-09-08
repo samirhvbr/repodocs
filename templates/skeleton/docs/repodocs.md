@@ -223,6 +223,7 @@ public.
 | What is the documentation norm? | [repodocs `docs/conventions.md`](https://github.com/samirhvbr/repodocs/blob/master/docs/conventions.md) — the single source for the whole fleet |
 | How is a version set and a commit written? | [`versioning.md`](versioning.md) here, and [repodocs `docs/versioning.md`](https://github.com/samirhvbr/repodocs/blob/master/docs/versioning.md) for the fleet's reasoning |
 | Was this already decided? | [`decisions.md`](decisions.md) here first, then [repodocs `docs/decisions.md`](https://github.com/samirhvbr/repodocs/blob/master/docs/decisions.md). Do not re-litigate a decided direction — link the ADR |
+| Does this change need a test, and did it run? | [repodocs `docs/conventions.md` §9](https://github.com/samirhvbr/repodocs/blob/master/docs/conventions.md#9-a-change-in-behavior-ships-with-the-test-that-fails-when-the-behavior-breaks) — the *Tests run with* line of `CLAUDE.md` says how |
 | Is this safe to do? | [`security.md`](security.md). Normative: in a conflict with any other document, it wins |
 | How do I bootstrap another repository? | [repodocs `docs/runbook.md`](https://github.com/samirhvbr/repodocs/blob/master/docs/runbook.md) |
 | What is still open here? | [`../.continue/README.md`](../.continue/README.md) — the queue, always read first |
