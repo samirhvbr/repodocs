@@ -9,6 +9,19 @@ at `git commit` time.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 1.14.0 - the ADR count in the docs index and the agent files stopped at 019 and 018
+
+`docs/README.md` announced *"ADRs 001–019"* and both agent files announced
+*"ADRs 001–018"*, while `decisions.md` runs to 024. The index of a record is
+part of the record: a reader who trusts either number stops looking five
+decisions early, and the five it hides are the language carve-outs, the queue
+rule, the fork rule and the one this version adds.
+
+Three numbers, one truth, and the two that were wrong were wrong by different
+amounts — which is what a count maintained by hand does. It is the same failure
+`1.10.3` recorded in the queue's own review header, in the file whose §4 says a
+document made stale by a change is fixed in the same pass.
+
 ## 1.14.0 - the closing checklist asks whether the tests ran, and the skeleton asks how they run
 
 A rule that lives only in `conventions.md` is a rule an agent meets after the

@@ -10,7 +10,7 @@
 > where we stopped, **always first**) · [docs/conventions.md](docs/conventions.md)
 > (the norm this repository exists to hold) ·
 > [docs/versioning.md](docs/versioning.md) (how a version and a commit are
-> written) · [docs/decisions.md](docs/decisions.md) (ADRs 001–018 — do not
+> written) · [docs/decisions.md](docs/decisions.md) (ADRs 001–024 — do not
 > re-litigate a decided direction, link the ADR) ·
 > [docs/security.md](docs/security.md) (normative; wins any conflict).
 
