@@ -718,7 +718,11 @@ apply_one() {
   write_entry "$entry" "$remote" "$new" "${ev:-}"
   subject="$SUBJECT"
 
-  if [ ! -f "$repo/CHANGELOG.md" ] && grep -qiE '^#+.*changelog' "$repo/version.md" 2>/dev/null; then
+  # A changelog is recognised by what it IS — version headings — and not by the
+  # word "changelog" in a title. KIDS/KIDS-PAVIO keeps its record in a
+  # `version.md` titled "# Versões", so the word test missed it and this pass
+  # created a second changelog beside the real one on 08/09/2026.
+  if [ ! -f "$repo/CHANGELOG.md" ] && grep -qE '^#+ +([0-9]+\.[0-9]+\.[0-9]+|.*[Cc]hangelog|.*[Vv]ers)' "$repo/version.md" 2>/dev/null; then
     # The changelog lives inside version.md, in that repository's own heading
     # style. A second file beside it would be two changelogs that drift, in the
     # one file that decides what a version means.

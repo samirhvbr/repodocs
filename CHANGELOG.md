@@ -9,6 +9,39 @@ at `git commit` time.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 1.12.2 - a changelog is recognised by what it is, not by the word "changelog" in its title
+
+The pass decides whether a repository already has a changelog before it creates
+one, and it decided by grepping `version.md` for the word *"changelog"*. That is
+a test of a title, not of a file. `KIDS/KIDS-PAVIO` keeps its whole record in a
+`version.md` headed **`# Versões`**, so the word was absent, the pass concluded
+there was no changelog anywhere, and it created a second one beside the real one.
+
+That is the same duplicate `1.9.4` was written to prevent — and it slipped
+through the fix, because `1.9.4` fixed the *decision* (do not create a second
+changelog) and left the *detection* naïve. A guard is only as good as the thing
+it measures.
+
+The test is now what a changelog is made of: a heading that is a version, or one
+whose words are *changelog* or *versões*. Checked against the fleet: the 13
+repositories with no changelog anywhere still read as empty, and the ones that
+keep theirs inside `version.md` are recognised, `KIDS-PAVIO` included.
+
+Two other defects in the same repository are what made this visible, and both are
+fixed upstream: the bump that renumbered an entry instead of adding one
+(`1.12.1`), and this. `KIDS/KIDS-PAVIO` is repaired at its own `0.4.9` — the top
+entry is back to the version it describes, the eight renumbered deliveries are
+reconstructed from their commit subjects and diffs and marked as reconstructed,
+the duplicate file is gone, and `version.md` now declares its version on a line
+of its own so the first semver is a declaration rather than an entry.
+
+**Its repair was refused once by the hook this standard installed**, which is
+worth recording. `git add version.md CHANGELOG.md` failed as a whole because
+`CHANGELOG.md` had already been removed by `git rm`, so nothing was staged, the
+index still held the old version, and `commit-msg` refused: *"subject says
+0.4.9, version.md says 0.4.8"*. The guard caught a real mistake in the act of
+repairing an older one.
+
 ## 1.12.1 - a bump that rewrites the first semver renumbers a changelog entry when that is what the first semver is
 
 The bump in `fleet.sh` replaces the first semver in `version.md`. That is the
