@@ -149,6 +149,9 @@ version:**
       commit body.
 - [ ] A finished item **left** `.continue/`.
 - [ ] A document made **stale by this delivery** was corrected in the same pass.
+- [ ] A change in behavior carries the test that fails when it breaks, and the
+      pertinent tests **ran** — or the changelog entry says why not and what was
+      checked instead ([§9](#9-a-change-in-behavior-ships-with-the-test-that-fails-when-the-behavior-breaks)).
 - [ ] **The work is committed** — by the agent that did it, as the last step of
       the task and before it is reported as finished, split into one commit per
       subject when the delivery covered more than one
@@ -498,7 +501,55 @@ about nothing else. See [ADR-019](decisions.md).
 
 ---
 
-## 9. Where this convention applies
+## 9. A change in behavior ships with the test that fails when the behavior breaks
+
+**A test exists for the next person who touches the code, not to prove the
+author right.** It protects an observable result, and it fails when that result
+stops holding — never because the code that produces it was rearranged.
+
+> A feature refuses to open a ticket with no category. The test asserts the
+> refusal. Tomorrow someone swaps the form component, rewrites the validation or
+> makes it faster: the test still passes, because a ticket with no category is
+> still refused. The day one gets through, it fails. That is the whole contract.
+
+Five clauses, all normative:
+
+1. **New behavior, and a change in behavior, ship with automated tests
+   proportional to the risk**, covering the behavior itself and the failure
+   scenarios that matter. Extending an existing test is often enough; a new
+   file per feature is not the measure, and a test written to satisfy a
+   checklist protects nothing.
+2. **A bug fix ships with the test that reproduces the defect** — red before the
+   fix, green after — whenever that is feasible. This is where the rule is most
+   checkable, and it is what keeps that bug from coming back.
+3. **A failing test is never edited to make it green.** First decide which of
+   two things happened: a regression, or an intentional change in the
+   requirement. Only the second justifies changing the expectation, and the
+   commit that changes the requirement is the commit that changes the test —
+   the same rule §4 applies to a document made stale by a change. This clause
+   is written for agents above all: turning red into green is the shortest path
+   to a delivery, and the one path that removes the tripwire.
+4. **The delivery includes running the pertinent tests, by a command anyone can
+   repeat.** A test written and never run has closed nothing. Each repository
+   says how its validation runs on the *Tests run with* line of its
+   `CLAUDE.md`; whoever delivers runs it before the commit that reports the work
+   done. This stays outside `pre-push` on purpose: the hook asks two questions
+   about one line of one file, and a hook that waits four minutes is a hook that
+   gets bypassed ([versioning.md](versioning.md#the-hooks)).
+5. **Exceptions are proportional and written down.** A wording change or a
+   spacing tweak needs no new test. When automation is the wrong tool for a
+   change, the changelog entry says why and what was checked instead — a
+   sentence, not a form. That keeps the rule from becoming bureaucracy on one
+   side and a silent waiver on the other.
+
+What this section is **not**: a testing methodology. Unit against integration,
+coverage figures, which framework — those are per-stack decisions and rot in a
+month. The rule says what has to be true when a delivery closes, and stops
+there. Decided in [ADR-024](decisions.md).
+
+---
+
+## 10. Where this convention applies
 
 Every repository in the fleet, **and only those**. Each one carries a pointer
 here in its `.continue/README.md`.

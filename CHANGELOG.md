@@ -9,6 +9,68 @@ at `git commit` time.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 1.14.0 - a change in behavior ships with the test that fails when the behavior breaks
+
+Nothing in this norm said that a feature is born with a test. The word *test*
+runs through the whole repository and never once means that: `pre-push` runs no
+suite and explains why, [ADR-009](docs/decisions.md) and ADR-013 keep a
+build-and-test workflow out of this repository, and `versioning.md` uses "test"
+for the question a commit subject has to survive. The skeleton's `CLAUDE.md`
+asked a new repository how it **runs** and never how it is **validated**.
+
+The hard part of writing the rule is the line between behavior and
+implementation, and everything else follows from getting it right. A feature
+refuses to open a ticket with no category; the test asserts the refusal.
+Tomorrow someone swaps the form component, rewrites the validation or makes it
+faster, and the test still passes — because a ticket with no category is still
+refused. The day one gets through, it fails. A test that instead breaks whenever
+the code moves is a tax on every refactor, and it gets deleted within a year by
+someone who is not wrong to delete it.
+
+[§9 of conventions.md](docs/conventions.md) carries five clauses, each
+normative. New and changed behavior ship with tests proportional to the risk,
+and extending an existing test is often enough. A bug fix ships with the test
+that reproduces the defect, red before and green after, whenever that is
+feasible. **A failing test is never edited to make it green** — first decide
+whether it is a regression or an intentional change of requirement, and only the
+second justifies moving the expectation; that clause is written for agents above
+all, because turning red into green is the shortest path to a delivery and the
+one path that removes the tripwire. The delivery includes actually **running**
+the pertinent tests, by a command anyone can repeat, which is why the skeleton
+now asks each repository to fill in a *Tests run with* line. And exceptions are
+proportional and written down in the changelog entry, in a sentence — which is
+what keeps the rule from becoming bureaucracy on one side and a silent waiver on
+the other.
+
+**It was adopted with no incident behind it, and that is deliberate.** Most
+decisions in `decisions.md` open with something measured: four `version.md`
+collisions in one day, 26 placeholder subjects on a master, eight renumbered
+changelog entries. This one opens with the reasoning. A concrete case would make
+the record stronger, and it is not a condition for deciding when the problem and
+the benefit can both be stated honestly.
+
+Two consequences land on this repository itself. `tools/fleet.sh` and
+`tools/release.sh` are under the rule from this version on, and the
+four-repository fixture that the `1.11.x` entries call *"how this script is
+tested"* is not in the repository at all — it lives in a scratch directory, and
+bringing it here is the first thing clause 4 asks. And
+[ADR-009](docs/decisions.md), which keeps CI out of a documentation repository,
+stays in force with its premise now dated: *"there is no suite to run"* becomes
+false the day `tools/` has one, and it is revisited **that day, explicitly**,
+never in silence.
+
+There is no mechanical guard, by the same reasoning as the queue rule: this puts
+a question to a reader, because the hook that could ask it would be the
+four-minute hook `pre-push` was designed not to be.
+
+**This delivery is documentation, so no automated test applies** — clause 5's
+exception, stated here as the clause requires. What was checked instead: both
+pairs of twins still match below the H1; `grep` confirmed that nothing links the
+`#9-where-this-convention-applies` anchor before renumbering it to §10, and that
+`#8-language` is stamped across the fleet and was therefore left alone; and the
+`commit-msg` hook verified the subject against `version.md` on each of the three
+commits.
+
 ## 1.13.0 - a fork we own has a version of its own, and fifteen of them were outside every measurement
 
 Fifteen repositories of this fleet are forks of somebody else's project that we

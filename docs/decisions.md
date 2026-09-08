@@ -1146,3 +1146,86 @@ them to stop.
 *upstream*. A pull request sent to `usestrix/strix` obeys their language and
 their commit shape ([ADR-019](#adr-019--in-a-repository-that-is-not-ours-the-upstreams-conventions-win));
 this ADR is about the repository on our side of the remote.
+
+---
+
+## ADR-024 — a change in behavior ships with the test that fails when the behavior breaks
+
+**Status:** `ACCEPTED` · 08/09/2026 · Extends
+[ADR-016](#adr-016--the-agent-commits-and-a-delivery-is-not-delivered-until-it-is)
+from *the commit closes the delivery* to *what has to be true before it does* ·
+Leaves [ADR-009](#adr-009--no-ci-workflow-in-this-repository) in force, with one
+premise now dated
+
+**Context.** Nothing in this norm said that a feature is born with a test. The
+word *test* appears throughout and never once means this: `pre-push` runs no
+suite, and says why; ADR-009 and
+[ADR-013](#adr-013--a-release-workflow-is-not-a-ci-workflow) keep a build-and-test
+workflow out of **this** repository; `versioning.md` uses "test" for the question
+a commit subject has to survive. The skeleton's `CLAUDE.md` asked a new
+repository how it **runs** and never how it is **validated**.
+
+Adopted **preventively, with no incident behind it**, and deliberately so. Most
+decisions here open with a measured failure — four `version.md` collisions in a
+day, 26 placeholders on a master, eight renumbered changelog entries. This one
+opens with the reasoning instead. A concrete case would make the record stronger
+and is not a condition for deciding, when the problem and the benefit can both be
+stated honestly.
+
+**What the rule has to get right is the line between behavior and
+implementation.** A test that breaks whenever the code moves is a tax on every
+refactor, and it is deleted within a year — by someone who is not wrong to delete
+it. A test that protects an observable result survives the component being
+swapped and the validation being rewritten, and fails only on the day the result
+stops holding. The first kind trains people to distrust the suite; the second is
+the only kind worth writing down as a rule.
+
+**Decision.** **A change in behavior ships with the test that fails when the
+behavior breaks.** Five clauses, written in full at
+[conventions.md §9](conventions.md#9-a-change-in-behavior-ships-with-the-test-that-fails-when-the-behavior-breaks)
+and summarised here:
+
+1. New behavior and changed behavior ship with automated tests proportional to
+   the risk — extending an existing test is often enough.
+2. A bug fix ships with the test that reproduces the defect, red before and green
+   after, whenever that is feasible.
+3. A failing test is never edited to make it green: first decide whether it is a
+   regression or an intentional change of requirement, and only the second
+   justifies moving the expectation.
+4. The delivery includes **running** the pertinent tests, by a command anyone can
+   repeat.
+5. Exceptions are proportional and written down, in the changelog entry, in a
+   sentence.
+
+It reaches the fleet as **one line in the "Before closing a version" checklist**
+and **one `Tests run with` line in the skeleton's `CLAUDE.md`**. The norm itself
+is linked and never copied ([ADR-001](#adr-001--repodocs-is-the-fleets-documentation-standard)).
+
+**Why not an echo block.** The four that exist reach **one repository out of 54**
+(measured 07/09/2026, and the stamping pass is still in the queue). A fifth adds
+stamping debt to a debt not yet paid. New repositories get the line from the
+skeleton; existing ones get it from the retrofit pass already queued.
+
+**Consequences.** `tools/fleet.sh` and `tools/release.sh` come under this rule
+from this version on: the next change in their behavior arrives with a test in
+the tree. The four-repository fixture that the `1.11.x` changelog calls *"how
+this script is tested"* is not in the repository — it lives in a scratch
+directory — and putting it here is the first thing clause 4 asks of this
+repository.
+
+**ADR-009 stays in force.** Its premise — *"there is no suite to run"* — becomes
+dated the day `tools/` has one, and it is revisited **that day, explicitly**:
+not now, and never in silence. A red test workflow on a documentation repository
+is still noise.
+
+**Running the tests needs the command granted in `.claude/settings.json`**, which
+is the owner's act (golden rule 8; [runbook §3](runbook.md)). Until it is
+granted, the agent cannot run them and says so in the changelog entry, as clause
+5's exception: the reason, and what was checked instead. That is the honest path;
+skipping in silence is not.
+
+**No mechanical guard.** Like the queue rule
+([ADR-021](#adr-021--the-queue-empties-by-production-and-by-nothing-else)), this
+puts a question to a reader — *did the pertinent tests run?* — because the hook
+that could ask it would be the four-minute hook `pre-push` was designed not to
+be.
