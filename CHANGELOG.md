@@ -9,6 +9,66 @@ at `git commit` time.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 1.11.1 - the pass survives a repository that fails, and says which one and why
+
+Both passes died in the middle. `echo` stopped at the 17th of 44, `hooks` at the
+33rd of 51, and each left a repository with a written tree and no commit —
+`GIT` with a stamped `CLAUDE.md`, a bumped `version.md` and a changelog entry
+that never became a commit; `SHVIA/.continue` the same, with `release.sh`. The
+27 repositories behind the first failure never got their turn.
+
+The cause was one line: `git add` returning non-zero under `set -euo pipefail`.
+A guard meant to stop the script on a programming mistake stopped it on a fact
+about one repository. Worse than the interruption is what it says about the
+tool: a pass over fifty repositories that treats the first refusal as fatal will
+always be a pass that ran halfway.
+
+**Each repository is now applied by `apply_one`**, called with `set -e`
+suspended and checking its own commands. A failure sets a message, rolls that
+repository back to the state it was found in, and the loop continues. The run
+ends with three lists — **applied**, **skipped with the reason**, **failed with
+the error** — and a non-zero exit **after** every repository has been attempted.
+
+**The refusal that killed both passes was correct**, and is now a named finding.
+`GIT` and `SHVIA/.continue` carry `CHANGELOG.md` and `tools/git-hooks` in their
+`.gitignore` — and `SHVIA/.continue`, which is named for the queue, ignores
+`.continue` as well. The divergence is the `.gitignore`, not the add: golden rule
+8 says everything is versioned and a new exception needs an ADR rather than a
+silent line. `check` reports *"ignores files the standard tracks"* with the list,
+and the apply modes skip the repository with the same sentence. **Never
+`git add -f`.** The gate is narrower than the finding, and the difference is
+measured rather than guessed: `git add` refuses an ignored path only when it is
+**untracked**, so a repository that has tracked its changelog since before
+someone added the line is not skipped for a problem it does not have.
+
+**A push refused by a remote that moved is replayed once, and never forced.**
+`EOP` refused: the remote had 36 commits this clone did not have. The retry
+happens only when the tree is clean and our own commit replays onto the fetched
+branch without conflict; then the push is tried again. A dirty tree, a
+conflicting replay or a second refusal leaves the commit local and untouched, and
+says so. No force, no `--force-with-lease`, no merge nobody verified — a refused
+push is a decision about someone else's work ([ADR-018](docs/decisions.md)). The
+fixture proves both directions: a remote that moved in a file the pass does not
+touch replays cleanly; one that moved `version.md` — `EOP`'s case, and the common
+one, because every delivery here bumps that file — conflicts, and the commit
+stays where it is.
+
+**Two details the rewrite got right only on the second try**, both found by a
+four-repository fixture built to fail in four different ways, which is now how
+this script is tested. `APPLIED` means committed *and* published: a commit
+stranded by a refused push was appearing in both lists, which reads as success.
+And `rollback_one` resets only the paths this pass wrote — the first version
+reset the whole index, which would have unstaged whatever the person working in
+that repository had already staged. That is somebody else's work, and none of
+this script's business.
+
+**One line of the classification changed for a reason worth recording.**
+`git remote get-url origin` applies any `url.<base>.insteadOf` rewrite before
+answering, and the question here is *which repository is this*, not *which
+transport git will use*. The script reads `remote.origin.url` from the config
+now, falling back to `get-url`. In this fleet the two agree everywhere today; the
+fix is for the day they do not.
+
 ## 1.11.0 - `fleet-hooks.sh` becomes `fleet.sh`, with `echo` and `check` beside `hooks`
 
 Installing 51 hooks in one afternoon proved the distribution works and left two

@@ -92,7 +92,9 @@ done
 # The owners whose repositories are ours. Anything else is a repository we are
 # guests in, where the host's conventions win (ADR-019) — including our own
 # forks of upstream projects, which keep the upstream's commit shape.
-FLEET_OWNERS="samirhvbr BLUE3-ISP"
+# Overridable only so the test fixture can stand up throwaway repositories with
+# a fake owner; in normal use it is these two.
+FLEET_OWNERS="${FLEET_OWNERS:-samirhvbr BLUE3-ISP}"
 
 # Repositories excluded by name, each for a written reason. This is the list
 # that keeps the script from being wrong in a way no heuristic can catch.
@@ -166,6 +168,37 @@ generated_here() {  # $1 = path, $2 = marker
       grep -q 'release.sh:' "$1" && return 0 ;;
   esac
   return 1
+}
+
+
+# A repository whose .gitignore covers a file the standard tracks cannot be
+# written to by a pass: `git add` refuses the path, and refusing it is right —
+# the divergence is the .gitignore, not the add. Golden rule 8 says everything
+# is versioned and a new exception needs an ADR, so this is a finding about that
+# repository and never something to force with `git add -f`.
+ignored_standard_files() {   # $1 = repo, $2... = paths — every ignored one
+  local repo="$1"; shift
+  local out="" f
+  for f in "$@"; do
+    git -C "$repo" check-ignore -q "$f" 2>/dev/null && out="$out $f"
+  done
+  printf '%s' "$out"
+}
+
+# The subset that actually breaks a pass. `git add` refuses an ignored path only
+# when it is **untracked**: a file already in the index goes in regardless of
+# what .gitignore says about it. Measured the hard way — a pass over fifty
+# repositories died on the first `CHANGELOG.md` it had just created in a
+# repository that ignores that name.
+blocking_ignored_files() {   # $1 = repo, $2... = paths the mode would write
+  local repo="$1"; shift
+  local out="" f
+  for f in "$@"; do
+    git -C "$repo" check-ignore -q "$f" 2>/dev/null || continue
+    [ -n "$(git -C "$repo" ls-files -- "$f" 2>/dev/null)" ] && continue
+    out="$out $f"
+  done
+  printf '%s' "$out"
 }
 
 # ------------------------------------------------------------- echo blocks ---
@@ -268,7 +301,11 @@ while IFS= read -r gitdir; do
   [ -n "$FILTER" ] && case "$repo" in *"$FILTER"*) ;; *) continue ;; esac
   [ "$(cd "$repo" && pwd)" = "$REPODOCS" ] && { SKIPPED+=("$repo|the source — it is where these files come from"); continue; }
 
-  remote="$(git -C "$repo" remote get-url origin 2>/dev/null || true)"
+  # The CONFIGURED url, not the resolved one: `git remote get-url` applies any
+  # url.<base>.insteadOf rewrite, and the question here is which repository this
+  # is, not which transport git will use to reach it.
+  remote="$(git -C "$repo" config --get remote.origin.url 2>/dev/null || true)"
+  [ -n "$remote" ] || remote="$(git -C "$repo" remote get-url origin 2>/dev/null || true)"
   [ -n "$remote" ] || { SKIPPED+=("$repo|no origin remote"); continue; }
 
   owner="$(owner_of "$remote")"
@@ -354,6 +391,9 @@ if [ "$MODE" = check ]; then
       bad+=("default branch is '$defbr', not master (ADR-015)")
     fi
 
+    ign="$(ignored_standard_files "$repo" CHANGELOG.md version.md CLAUDE.md AGENTS.md tools/git-hooks tools/release.sh .continue)"
+    [ -z "$ign" ] || bad+=("ignores files the standard tracks:$ign (golden rule 8 — an exception needs an ADR)")
+
     if [ -d "$repo/.continue" ]; then
       [ -f "$repo/.continue/README.md" ] || bad+=(".continue/ has no README.md (conventions §2)")
       untracked="$(git -C "$repo" ls-files --others --exclude-standard -- .continue 2>/dev/null | wc -l)"
@@ -425,6 +465,12 @@ for row in "${OURS[@]}"; do
       ;;
   esac
 
+  ign="$(blocking_ignored_files "$repo" $touched)"
+  if [ -n "$ign" ]; then
+    SKIPPED+=("$repo|ignores files the standard tracks and does not track them:$ign — git add would refuse, and -f is not the answer")
+    continue
+  fi
+
   dirty=""
   for f in $touched; do
     [ -e "$repo/$f" ] || continue     # a file that does not exist cannot be mid-edit
@@ -441,88 +487,40 @@ done
 
 echo "fleet $MODE: root $ROOT"
 echo
-echo "SELECTED (${#READY[@]}):"
-for row in "${READY[@]}"; do
-  repo="${row%%|*}"; remote="${row#*|}"
-  lang="EN"; pt_repository "$remote" && lang="PT"
-  printf '  %-4s %s\n' "$lang" "${repo#"$ROOT"/}"
-done
-echo
-echo "SKIPPED (${#SKIPPED[@]}):"
-for row in "${SKIPPED[@]}"; do
-  printf '  %-46s %s\n' "${row%%|*}" "${row#*|}" | sed "s#$ROOT/##"
-done
-echo
 
 if [ "$APPLY" -eq 0 ]; then
+  echo "SELECTED (${#READY[@]}):"
+  for row in "${READY[@]}"; do
+    repo="${row%%|*}"; remote="${row#*|}"
+    lang="EN"; pt_repository "$remote" && lang="PT"
+    printf '  %-4s %s\n' "$lang" "${repo#"$ROOT"/}"
+  done
+  echo
+  echo "SKIPPED (${#SKIPPED[@]}):"
+  for row in "${SKIPPED[@]}"; do
+    printf '  %-46s %s\n' "${row%%|*}" "${row#*|}" | sed "s#$ROOT/##"
+  done
+  echo
   echo "Dry run. Nothing was written. Re-run with --apply."
   exit 0
 fi
 
-# ------------------------------------------------------------------- apply ---
+echo "Applying to ${#READY[@]} repositories. A failure in one is a finding about"
+echo "that one; the pass continues and reports everything at the end."
+echo
 
-TRAILERS="Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>
-Claude-Session: https://claude.ai/code/session_014qeYCqGQKLAdRPHEBpWbJC"
 
-declare -a FAILED=() CREATED_CHANGELOG=() CHANGELOG_IN_VERSION=()
-
-for row in "${READY[@]}"; do
-  repo="${row%%|*}"; remote="${row#*|}"
-  name="${repo#"$ROOT"/}"
-
-  had_config="$(git -C "$repo" config core.hooksPath || true)"
-  declare -a paths=()
-
-  if [ "$MODE" = hooks ]; then
-    had_hooks=1; [ -d "$repo/tools/git-hooks" ] || had_hooks=0
-    mkdir -p "$repo/tools/git-hooks"
-    ev="$(escape_var_of "$repo/tools/git-hooks/commit-msg")"
-    write_hook "$HOOK_SRC/commit-msg" "$repo/tools/git-hooks/commit-msg" "$ev"
-    write_hook "$HOOK_SRC/pre-push"   "$repo/tools/git-hooks/pre-push"   "$ev"
-    paths=(tools/git-hooks/commit-msg tools/git-hooks/pre-push)
-
-    if generated_here "$repo/tools/release.sh" 'repodocs:tool'; then
-      cp "$TOOL_SRC/release.sh" "$repo/tools/release.sh"
-      chmod +x "$repo/tools/release.sh"
-      paths+=(tools/release.sh)
-    fi
-    git -C "$repo" config core.hooksPath tools/git-hooks
-    action_desc="the git hooks"
-  else
-    for b in $ECHO_BLOCKS; do
-      src="$(block_source "$b" "$remote")"
-      stamp_block "$repo/CLAUDE.md" "$b" "$src"
-      stamp_block "$repo/AGENTS.md" "$b" "$src"
-    done
-    if ! diff -q <(tail -n +2 "$repo/CLAUDE.md") <(tail -n +2 "$repo/AGENTS.md") >/dev/null 2>&1; then
-      FAILED+=("$name|the twins came out different — not committed (ADR-007)")
-      echo "  ! $name — twins differ after stamping, rolling back"
-      git -C "$repo" checkout -- CLAUDE.md AGENTS.md 2>/dev/null || true
-      continue
-    fi
-    paths=(CLAUDE.md AGENTS.md)
-    action_desc="the echo blocks"
-  fi
-
-  # --porcelain and not `diff`, because on a first install the files are
-  # untracked and `git diff` is blind to them.
-  if [ -z "$(git -C "$repo" status --porcelain -- "${paths[@]}")" ]; then
-    echo "  =    $name — already current${had_config:+}"
-    continue
-  fi
-
-  old="$(first_semver "$repo/version.md")"
-  new="$(bump_z "$old")"
-  perl -0pi -e "s/\Q$old\E/$new/" "$repo/version.md" 2>/dev/null || \
-    sed -i "0,/$old/s//$new/" "$repo/version.md"
-  paths+=(version.md)
-
-  entry="$(mktemp)"
+# The changelog entry and the commit subject are the same sentence, written
+# before the commit (conventions §1). SUBJECT is set as a side effect because
+# the heading IS the subject and inventing it twice is how the two drift.
+SUBJECT=""
+write_entry() {     # $1 = file, $2 = remote, $3 = new version, $4 = escape var
+  local f="$1" remote="$2" new="$3" ev="${4:-REPODOCS_NO_HOOK}"
   if [ "$MODE" = hooks ]; then
     if pt_repository "$remote"; then
-      subject="$new - os hooks de git são regenerados a partir do repodocs"
-      cat > "$entry" <<PTENTRY
-## $subject
+      SUBJECT="$new - os hooks de git são regenerados a partir do repodocs"
+      cat > "$f" <<PTENTRY
+## $SUBJECT
 
 Os dois hooks do padrão são reescritos a partir do repodocs, e o
 \`tools/release.sh\` junto quando ele veio de lá. \`commit-msg\` confere a forma do
@@ -531,7 +529,9 @@ mensagem vaga, **e confere que o \`X.Y.Z\` do assunto é a versão que este comm
 carrega no \`version.md\`**. \`pre-push\` compara o \`version.md\` local com o do
 branch padrão no remoto — versão repetida e versão que anda para trás — **só
 quando o push realmente atualiza aquele branch**, de modo que deleção de branch,
-tag e branch de tópico passam.
+tag e branch de tópico passam. Ele também avisa quando há arquivo em
+\`.continue/\` fora do git: a recuperação de um item da fila depende de ele estar
+versionado.
 
 O hook **não confere idioma** e não teria como: o que ele mede é a forma e o
 número.
@@ -540,9 +540,9 @@ Válvula de escape declarada nos dois: \`$ev=1\`. Num clone novo, ligue com
 \`git config core.hooksPath tools/git-hooks\`.
 PTENTRY
     else
-      subject="$new - the git hooks are regenerated from repodocs"
-      cat > "$entry" <<ENENTRY
-## $subject
+      SUBJECT="$new - the git hooks are regenerated from repodocs"
+      cat > "$f" <<ENENTRY
+## $SUBJECT
 
 Both hooks of the standard are rewritten from repodocs, and \`tools/release.sh\`
 with them when it came from there. \`commit-msg\` checks the shape of the subject
@@ -551,7 +551,8 @@ message, **and checks that the subject's \`X.Y.Z\` is the version this commit
 carries in \`version.md\`**. \`pre-push\` compares the local \`version.md\` against
 the remote default branch for a repeated or a backwards version — **only when
 the push actually updates that branch**, so a branch deletion, a tag and a topic
-branch pass through.
+branch pass through. It also warns when \`.continue/\` holds files git does not
+track: recovering a queue item depends on it being versioned.
 
 The hook does **not** check the language and could not: what it measures is the
 shape and the number.
@@ -562,9 +563,9 @@ ENENTRY
     fi
   else
     if pt_repository "$remote"; then
-      subject="$new - os blocos de eco são regenerados a partir do repodocs"
-      cat > "$entry" <<PTENTRY
-## $subject
+      SUBJECT="$new - os blocos de eco são regenerados a partir do repodocs"
+      cat > "$f" <<PTENTRY
+## $SUBJECT
 
 As quatro regras marcadas de \`CLAUDE.md\` e \`AGENTS.md\` são reescritas a partir
 da fonte única em [samirhvbr/repodocs](https://github.com/samirhvbr/repodocs):
@@ -578,9 +579,9 @@ que ainda não existe, e um documento só sai dela quando a coisa que ele descre
 esvazie essa pasta como arrumação.**
 PTENTRY
     else
-      subject="$new - the echo blocks are regenerated from repodocs"
-      cat > "$entry" <<ENENTRY
-## $subject
+      SUBJECT="$new - the echo blocks are regenerated from repodocs"
+      cat > "$f" <<ENENTRY
+## $SUBJECT
 
 The four marked rules in \`CLAUDE.md\` and \`AGENTS.md\` are rewritten from the
 single source at [samirhvbr/repodocs](https://github.com/samirhvbr/repodocs):
@@ -595,6 +596,94 @@ conditions. **Never empty that folder as tidying.**
 ENENTRY
     fi
   fi
+}
+
+# ------------------------------------------------------------------- apply ---
+
+TRAILERS="Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_014qeYCqGQKLAdRPHEBpWbJC"
+
+declare -a FAILED=() APPLIED=() CREATED_CHANGELOG=() CHANGELOG_IN_VERSION=()
+ERR=""
+
+# Undoes only what this pass wrote. `git reset -- .` would have unstaged
+# whatever the person working in that repository had already staged, which is
+# somebody else's work and none of this script's business.
+rollback_one() {    # $1 = repo, $2 = mode, $3 = had_hooks, $4 = had_config, $5... = the paths we touched
+  local repo="$1" mode="$2" had_hooks="$3" had_config="$4"; shift 4
+  [ $# -eq 0 ] || git -C "$repo" reset -q -- "$@" 2>/dev/null || true
+  git -C "$repo" checkout -- version.md 2>/dev/null || true
+  [ -f "$repo/CHANGELOG.md" ] && git -C "$repo" checkout -- CHANGELOG.md 2>/dev/null
+  if [ "$mode" = hooks ] && [ "$had_hooks" -eq 0 ]; then
+    rm -f "$repo/tools/git-hooks/commit-msg" "$repo/tools/git-hooks/pre-push"
+    rmdir "$repo/tools/git-hooks" 2>/dev/null || true
+    rmdir "$repo/tools" 2>/dev/null || true
+  fi
+  [ "$mode" = echo ] && git -C "$repo" checkout -- CLAUDE.md AGENTS.md 2>/dev/null
+  [ -z "$had_config" ] && git -C "$repo" config --unset core.hooksPath 2>/dev/null
+  return 0
+}
+
+# One repository's failure is a finding about that repository, never the end of
+# the batch. This runs with `set -e` suspended by its caller and checks its own
+# commands: a refused `git add` in one clone used to end a pass over fifty, and
+# the pass that died left two repositories with a written tree and no commit.
+#
+# Returns 0 applied · 2 nothing to do · 1 failed, with ERR saying why.
+apply_one() {
+  local repo="$1" remote="$2" name="$3"
+  local had_hooks=1 had_config ev src b old new entry subject body out
+  local -a paths=()
+  ERR=""
+
+  had_config="$(git -C "$repo" config core.hooksPath 2>/dev/null || true)"
+
+  if [ "$MODE" = hooks ]; then
+    [ -d "$repo/tools/git-hooks" ] || had_hooks=0
+    mkdir -p "$repo/tools/git-hooks" || { ERR="cannot create tools/git-hooks"; return 1; }
+    ev="$(escape_var_of "$repo/tools/git-hooks/commit-msg")"
+    write_hook "$HOOK_SRC/commit-msg" "$repo/tools/git-hooks/commit-msg" "$ev" \
+      || { ERR="cannot write commit-msg"; rollback_one "$repo" "$MODE" "$had_hooks" "$had_config" "${paths[@]}"; return 1; }
+    write_hook "$HOOK_SRC/pre-push" "$repo/tools/git-hooks/pre-push" "$ev" \
+      || { ERR="cannot write pre-push"; rollback_one "$repo" "$MODE" "$had_hooks" "$had_config" "${paths[@]}"; return 1; }
+    paths=(tools/git-hooks/commit-msg tools/git-hooks/pre-push)
+
+    if generated_here "$repo/tools/release.sh" 'repodocs:tool'; then
+      cp "$TOOL_SRC/release.sh" "$repo/tools/release.sh" \
+        && chmod +x "$repo/tools/release.sh" \
+        && paths+=(tools/release.sh) \
+        || { ERR="cannot write release.sh"; rollback_one "$repo" "$MODE" "$had_hooks" "$had_config" "${paths[@]}"; return 1; }
+    fi
+    git -C "$repo" config core.hooksPath tools/git-hooks \
+      || { ERR="cannot set core.hooksPath"; rollback_one "$repo" "$MODE" "$had_hooks" "$had_config" "${paths[@]}"; return 1; }
+  else
+    for b in $ECHO_BLOCKS; do
+      src="$(block_source "$b" "$remote")"
+      stamp_block "$repo/CLAUDE.md" "$b" "$src" || { ERR="cannot stamp $b into CLAUDE.md"; rollback_one "$repo" "$MODE" "$had_hooks" "$had_config" "${paths[@]}"; return 1; }
+      stamp_block "$repo/AGENTS.md" "$b" "$src" || { ERR="cannot stamp $b into AGENTS.md"; rollback_one "$repo" "$MODE" "$had_hooks" "$had_config" "${paths[@]}"; return 1; }
+    done
+    if ! diff -q <(tail -n +2 "$repo/CLAUDE.md") <(tail -n +2 "$repo/AGENTS.md") >/dev/null 2>&1; then
+      ERR="the twins came out different after stamping (ADR-007)"
+      rollback_one "$repo" "$MODE" "$had_hooks" "$had_config" CLAUDE.md AGENTS.md
+      return 1
+    fi
+    paths=(CLAUDE.md AGENTS.md)
+  fi
+
+  # --porcelain and not `diff`, because on a first install the files are
+  # untracked and `git diff` is blind to them.
+  [ -n "$(git -C "$repo" status --porcelain -- "${paths[@]}" 2>/dev/null)" ] || return 2
+
+  old="$(first_semver "$repo/version.md")"
+  new="$(bump_z "$old")"
+  perl -0pi -e "s/\Q$old\E/$new/" "$repo/version.md" 2>/dev/null \
+    || sed -i "0,/$old/s//$new/" "$repo/version.md" \
+    || { ERR="cannot bump version.md"; rollback_one "$repo" "$MODE" "$had_hooks" "$had_config" "${paths[@]}"; return 1; }
+  paths+=(version.md)
+
+  entry="$(mktemp)"
+  write_entry "$entry" "$remote" "$new" "${ev:-}"
+  subject="$SUBJECT"
 
   if [ ! -f "$repo/CHANGELOG.md" ] && grep -qiE '^#+.*changelog' "$repo/version.md" 2>/dev/null; then
     # The changelog lives inside version.md, in that repository's own heading
@@ -611,56 +700,114 @@ ENENTRY
   fi
   rm -f "$entry"
 
-  body="$(printf '%s\n' "Regenerated from the single source at samirhvbr/repodocs. Editing one of these files in place does not survive the next pass; change it there.")"
+  body="Regenerated from the single source at samirhvbr/repodocs. Editing one of these files in place does not survive the next pass; change it there."
 
-  git -C "$repo" add -- "${paths[@]}"
+  if ! out="$(git -C "$repo" add -- "${paths[@]}" 2>&1)"; then
+    ERR="git add refused: $(printf '%s' "$out" | head -n 2 | tr '\n' ' ')"
+    rollback_one "$repo" "$MODE" "$had_hooks" "$had_config" "${paths[@]}"
+    return 1
+  fi
 
   # The commit goes THROUGH the hooks it installs. A repository that would
   # refuse its own regeneration says so instead of being forced.
-  if ! git -C "$repo" commit -q -m "$subject" -m "$body" -m "$TRAILERS" -- "${paths[@]}"; then
-    FAILED+=("$name|commit refused — the repository was left as it was found")
-    echo "  !    $name — commit refused, rolling back"
-    git -C "$repo" reset -q -- "${paths[@]}" 2>/dev/null || true
-    git -C "$repo" checkout -- version.md 2>/dev/null || true
-    [ -f "$repo/CHANGELOG.md" ] && git -C "$repo" checkout -- CHANGELOG.md 2>/dev/null || true
-    if [ "$MODE" = hooks ] && [ "${had_hooks:-1}" -eq 0 ]; then
-      rm -f "$repo/tools/git-hooks/commit-msg" "$repo/tools/git-hooks/pre-push"
-      rmdir "$repo/tools/git-hooks" 2>/dev/null || true
-      rmdir "$repo/tools" 2>/dev/null || true
-    fi
-    [ "$MODE" = echo ] && git -C "$repo" checkout -- CLAUDE.md AGENTS.md 2>/dev/null || true
-    [ -z "$had_config" ] && git -C "$repo" config --unset core.hooksPath 2>/dev/null || true
-    continue
+  if ! out="$(git -C "$repo" commit -q -m "$subject" -m "$body" -m "$TRAILERS" -- "${paths[@]}" 2>&1)"; then
+    ERR="commit refused: $(printf '%s' "$out" | grep -m1 -E 'REJECTED|error|fatal' || printf '%s' "$out" | head -n 1)"
+    rollback_one "$repo" "$MODE" "$had_hooks" "$had_config" "${paths[@]}"
+    return 1
   fi
   echo "  +    $name — $subject"
 
-  if [ "$PUSH" -eq 1 ]; then
-    if ! out="$(git -C "$repo" push 2>&1)"; then
-      FAILED+=("$name|push refused: $(printf '%s' "$out" | tail -n 1)")
-      echo "  !    $name — PUSH REFUSED"
-      printf '%s\n' "$out" | sed 's/^/         /'
-    fi
+  if [ "$PUSH" -eq 0 ]; then
+    APPLIED+=("$name|$subject")
+    return 0
   fi
+
+  out="$(git -C "$repo" push 2>&1)" && { APPLIED+=("$name|$subject"); return 0; }
+
+  # The one refusal worth retrying is a remote that moved while we worked. The
+  # retry is a fetch and a replay of our own commit on top of it — never a
+  # force, never a merge nobody verified. A dirty tree or a conflicting replay
+  # is a decision about someone else's work, and that decision is not this
+  # script's (ADR-018).
+  if printf '%s' "$out" | grep -qE 'fetch first|non-fast-forward|behind'; then
+    if [ -n "$(git -C "$repo" status --porcelain 2>/dev/null)" ]; then
+      ERR="push refused (the remote moved) and the tree is not clean — the commit stays local"
+    elif git -C "$repo" fetch -q origin 2>/dev/null && git -C "$repo" rebase -q '@{upstream}' >/dev/null 2>&1; then
+      if out="$(git -C "$repo" push 2>&1)"; then
+        echo "  ~    $name — the remote had moved; replayed on top of it and pushed"
+        APPLIED+=("$name|$subject")
+        return 0
+      fi
+      ERR="rebased cleanly and the push was still refused: $(printf '%s' "$out" | grep -m1 -E 'REJECTED|rejected|error' || printf '%s' "$out" | tail -n 1)"
+    else
+      git -C "$repo" rebase --abort >/dev/null 2>&1 || true
+      ERR="push refused and the replay was not trivial — the commit stays local, unchanged"
+    fi
+  else
+    ERR="push refused: $(printf '%s' "$out" | grep -m1 -E 'REJECTED|rejected|error|fatal' || printf '%s' "$out" | tail -n 1)"
+  fi
+  return 1
+}
+
+for row in "${READY[@]}"; do
+  repo="${row%%|*}"; remote="${row#*|}"
+  name="${repo#"$ROOT"/}"
+
+  set +e
+  apply_one "$repo" "$remote" "$name"
+  rc=$?
+  set -e
+
+  case "$rc" in
+    0) ;;
+    2) echo "  =    $name — already current" ;;
+    *) echo "  !    $name — ${ERR:-unknown failure}"
+       FAILED+=("$name|${ERR:-unknown failure}") ;;
+  esac
 done
 
 echo
+echo "=============================================================================="
+echo "APPLIED (${#APPLIED[@]}):"
+if [ "${#APPLIED[@]}" -eq 0 ]; then
+  echo "  (none)"
+else
+  for row in "${APPLIED[@]}"; do printf '  %-34s %s\n' "${row%%|*}" "${row#*|}"; done
+fi
+
+echo
+echo "SKIPPED (${#SKIPPED[@]}):"
+for row in "${SKIPPED[@]}"; do
+  printf '  %-46s %s\n' "${row%%|*}" "${row#*|}" | sed "s#$ROOT/##"
+done
+
+echo
+echo "FAILED (${#FAILED[@]}):"
+if [ "${#FAILED[@]}" -eq 0 ]; then
+  echo "  (none)"
+else
+  for row in "${FAILED[@]}"; do printf '  %-34s %s\n' "${row%%|*}" "${row#*|}"; done
+fi
+echo "=============================================================================="
+
 if [ "${#CREATED_CHANGELOG[@]}" -gt 0 ]; then
+  echo
   echo "CHANGELOG.md CREATED — the repository had none (${#CREATED_CHANGELOG[@]}):"
   printf '  %s\n' "${CREATED_CHANGELOG[@]}"
-  echo
 fi
 if [ "${#CHANGELOG_IN_VERSION[@]}" -gt 0 ]; then
+  echo
   echo "CHANGELOG LIVES INSIDE version.md — no entry written, no second file created (${#CHANGELOG_IN_VERSION[@]}):"
   printf '  %s\n' "${CHANGELOG_IN_VERSION[@]}"
-  echo
 fi
+
+echo
 if [ "${#FAILED[@]}" -gt 0 ]; then
-  echo "NEEDS A PERSON (${#FAILED[@]}):"
-  for row in "${FAILED[@]}"; do printf '  %-40s %s\n' "${row%%|*}" "${row#*|}"; done
+  echo "${#APPLIED[@]} applied · ${#SKIPPED[@]} skipped · ${#FAILED[@]} failed. Every repository was attempted."
   exit 1
 fi
 if [ "$PUSH" -eq 1 ]; then
-  echo "Done. Every selected repository is committed and pushed."
+  echo "${#APPLIED[@]} applied and pushed · ${#SKIPPED[@]} skipped · nothing failed."
 else
-  echo "Done. Every selected repository is committed; nothing was pushed (--no-push)."
+  echo "${#APPLIED[@]} applied · ${#SKIPPED[@]} skipped · nothing failed; nothing was pushed (--no-push)."
 fi
