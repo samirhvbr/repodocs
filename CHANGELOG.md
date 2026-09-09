@@ -9,6 +9,23 @@ at `git commit` time.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 1.14.4 - the release race control came back with a number, and the finding stops being conditional
+
+`1.14.3` was pushed without running `tools/release.sh` by hand. The tag ended with
+**exactly one Release**, published by the workflow alone — so the workflow covers the normal
+path on its own, and the duplicate measured on `1.14.2` came from the second publisher
+rather than from the workflow misbehaving.
+
+The finding was written before the result existed and said *"if the tag ends with one
+Release…"*. It now carries the number. That matters beyond tidiness: a conditional in a
+record is an invitation for the next reader to assume the outcome, and assuming an outcome
+that was never measured is the failure this week has been spent naming.
+
+With evidence behind it, the cheapest of the three shapes is also the supported one:
+**change the instruction, not the code** — `RELEASES-RULE` telling the operator to push and
+let the workflow publish, running the script by hand only when the workflow is absent or has
+failed. The *"running it is always safe"* sentence goes either way.
+
 ## 1.14.3 - the finding that one tag can carry two Releases, and the control that proves the normal path
 
 Registered, not fixed — `tools/release.sh` and `release.yml` ship to the whole fleet.

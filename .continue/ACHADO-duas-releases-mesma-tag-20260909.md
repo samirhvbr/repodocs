@@ -95,7 +95,22 @@ gh api -X DELETE repos/samirhvbr/repodocs/releases/385845771
   when the workflow is absent or failed"* removes the race without any code — and the
   sentence about "always safe" has to go either way.
 
-> **Verification for whichever shape is chosen:** push a version bump and do **not** run
-> the script. One Release for that tag means the workflow alone covers the normal path,
-> and the manual run is only ever a repair. That control was run for `1.14.3` and is
-> recorded in the changelog entry for it.
+## The control, and its result
+
+`1.14.3` was pushed and `tools/release.sh` was **not** run by hand. Measured afterwards:
+
+```
+$ gh api "repos/samirhvbr/repodocs/releases?per_page=10" \
+    --jq '[.[] | select(.tag_name=="1.14.3")] | length'
+1
+```
+
+**One Release**, published by the workflow alone. So the workflow covers the normal path on
+its own, and the duplicate on `1.14.2` came from the second publisher — not from the
+workflow misbehaving.
+
+That makes the cheapest of the three shapes the one with evidence behind it: **change the
+instruction, not the code.** `RELEASES-RULE` telling the operator to push and let the
+workflow do it — running the script by hand only when the workflow is absent or has failed
+— removes the race without touching `release.sh`. The *"running it is always safe"* sentence
+has to go regardless of which shape is chosen.
