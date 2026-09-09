@@ -9,6 +9,44 @@ at `git commit` time.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 1.14.8 - D3 and D6 are decided, and the queue's own merge tool is caught reading silence as a state
+
+**D3 — `post-rewrite`.** The spec ranked `pre-push` higher because it refuses where
+`post-rewrite` only reports. The owner weighed what the spec had left out: **where the
+person is when the message arrives.** A refusal at `pre-push` lands with the rebase cold
+and the context gone, and it makes one hook carry two unrelated promises — so a failure
+there stops saying which one broke. The gap is closed by the pair: the report at the
+moment of the rewrite, plus the version comparison `pre-push` already refuses on.
+
+**D6 — no.** Required checks only. Blocking direct push to the default branch is out, and
+the fleet's flow is unchanged. The measured problem was a merge with a pending check, and
+D5 alone closes it.
+
+### 🔬 The finding that earned its own section
+
+A background task waited **5 hours and 49 minutes** on a PR that had merged hours before.
+Its condition called `gh pr checks --json`, which this `gh` does not accept: every
+iteration printed a usage error, the substitution returned empty, the comparison was
+false, and it slept again. From outside it was indistinguishable from waiting.
+
+It belongs in this spec because it is the spec's own thesis arriving in **the instrument
+the queue uses to decide a merge**. That reading is the last gate before the merge and it
+is unpinned: the day `gh` changes a flag, the gate goes blind in silence. D5 does not
+cover it — a required check protects the merge on GitHub's side, not the agent's decision
+to call it. The shape of the fix is the exit-2 rule applied to a shell loop: compare
+against a value the CLI actually produced, and treat *empty* as *"did not measure"*.
+
+### D5's numbers, checked by a second session
+
+Re-measured independently and they agree — `test` at 9m06s over 11 runs, `assunto` at 13s,
+`Provas` at 7m58s, and `blue3-intranet`'s three between 19s and 4m31s.
+
+⚠️ **One correction that sharpens the `shvia-code` row instead of contradicting it:** its
+only non-`Release` workflow triggers on **`push`, not `pull_request`**. The check-run does
+appear on a pushed branch, so requiring it works for a same-repository PR — but it never
+runs against the merge result and would not run at all from a fork. Requiring it buys less
+than the row suggests.
+
 ## 1.14.7 - D5 is decided, and two repositories cannot switch protection on because their checks are already red
 
 The stamping spec gains the measurement that made D5 decidable, and one finding that

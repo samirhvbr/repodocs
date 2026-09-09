@@ -180,6 +180,67 @@ judgement that they carry less risk.
 
 ---
 
+## 🔬 The queue's own merge tool went blind, and nobody saw it for 5h49
+
+09/09/2026, and it belongs in this document because it is the spec's thesis arriving in the
+instrument the queue uses to **decide a merge**.
+
+A background task was left waiting for a PR's checks with this condition:
+
+```bash
+until [ "$(gh pr checks 84 --json state --jq '…')" = "0" ]; do sleep 30; done
+```
+
+This `gh` does not accept `--json` on `pr checks`. Every iteration printed a usage error to
+stderr, the command substitution returned empty, the comparison was false, and the loop
+slept again — **for 5 hours and 49 minutes**, while the PR it was watching had merged hours
+earlier. From outside it looked exactly like *waiting*.
+
+> **The tool did not fail. It answered something plausible — an empty string — and the
+> caller read it as "still pending".** Same shape as `commit-msg` never being invoked, as
+> `--auto` waiting for nothing, as `max(cru, pt)` staying green.
+
+🔴 **Why this one is worse than a wasted process:** the fleet's queue reads
+`gh pr checks` to decide whether a merge may happen. That reading is the last gate before
+the merge, and it is unpinned — **the day `gh` changes a flag, the gate goes blind in
+silence and every answer becomes "not ready" or, with the comparison inverted, "ready".**
+D5 does not cover this: a required check protects the merge on GitHub's side, not the
+agent's own decision to call it.
+
+**The shape of a fix, not filed as a decision because it needs no owner:** any wait on an
+external CLI compares against a value the CLI **actually produced** — a run's `status`, an
+explicit `completed` — and treats *empty* as *"did not measure"*, never as a state. It is
+the exit-2 rule of `prova-committer-nao-derruba.sh`, applied to a shell loop.
+
+---
+
+## 🔬 D5's measurement, checked by a second session
+
+Re-measured independently on 09/09/2026, from `gh run list --event pull_request` over the
+last twelve runs of each repository. The numbers agree with the table above:
+
+| repository | job | measured average | n |
+|---|---|---|---|
+| `shvia-web` | `test` | **9m06s** | 11 |
+| `shvia-web` | `assunto` | 13s | 11 |
+| `shvia-desktop` | `Provas (Rust + política do runner)` | 7m58s | 3 |
+| `blue3-intranet` | `Tests (phpunit / MariaDB)` | 4m31s | 4 |
+| `blue3-intranet` | `migrate do zero, sem baseline` | 41s | 2 |
+| `blue3-intranet` | `Lint (Pint nos alterados + php -l)` | 19s | 4 |
+
+⚠️ **And one correction that sharpens the `shvia-code` row rather than contradicting it.**
+Its only non-`Release` workflow is `build-windows.yml`, and it triggers on **`push`, not
+`pull_request`**. A check-run does appear on a PR whose branch was pushed — so requiring it
+works for a same-repository branch — but it never runs against the merge result, and it
+would not run at all for a PR from a fork. Requiring `build` there buys less than the row
+suggests, and the difference is worth knowing before the switch is thrown.
+
+🔬 Confirmed by the same sweep: `repodocs`, `shvia-rota`, `shvia-site` and `ai-benchmark`
+have **no workflow triggered by `pull_request` at all** — the "no CI exists" line is
+absence of a trigger, not a repository that happens to have had no PRs.
+
+---
+
 ## Why the eight are unprotected: absence from the standard, not a decision
 
 🔬 Measured: `tools/fleet.sh` and `templates/skeleton/` **never mention branch protection**
@@ -201,18 +262,41 @@ the single protected repository, `sshvterm-desktop`, is the single one outside
 |---|---|---|---|
 | **D1** | Run `./tools/fleet.sh echo --apply` and `hooks --apply` over the fleet | items 1 and 3 | one pass, 54 repositories, `_quarentena/` excluded by the tool |
 | **D2** | Schedule the `version.md` → `CHANGELOG.md` migration | item 2 | 23 repositories, entries reshaped by hand; the automatic version was tried at `1.9.3` and reverted at `1.9.4` |
-| **D3** | Which shape closes the `rebase --continue` gap | item 4 | see D3a/D3b below — they are not equivalent |
+| **D3** ✅ | **Decided 09/09/2026: `post-rewrite` (D3a).** Reasoning below the table. | item 4 | a guard that REPORTS; the refusal stays with `pre-push`, which already exists |
 | **D3a** | `post-rewrite` hook | — | it runs **after** the rewrite: it can report, never refuse. A guard that reports is a different promise |
 | **D3b** | Move the check into `pre-push` (which already exists and already compares versions) | — | catches it later, but **refuses** — and `pre-push` is the one gate the fleet already treats as the human's entry point |
 | **D4** ✅ | **Decided `1.14.5`: change the instruction, not the code.** `RELEASES-RULE` loses *"running it is always safe"* and gains the measured rule — the workflow covers the push; running the script by hand right after duplicates. Applying it is one template edit + a fleet pass | item 5 | nothing new: it rides the D1 rollout. The two refused alternatives are recorded in the finding so they are not re-opened without new evidence |
 | **D5** | Which checks become required, **per repository** | item 6 | `test` = ~10 min per PR · `assunto` = no merge without stamping · `sshvterm-desktop` already runs three and is the only precedent |
-| **D6** | Whether protection also blocks direct push to the default branch | item 6 | it would end "commit and push to master", which is the fleet's current flow in 8 of 9 repositories — this is the expensive half, and the spec does **not** recommend it by default |
+| **D6** ✅ | **Decided 09/09/2026: NO.** Required checks only (D5). Direct push to the default branch stays. | item 6 | none — the fleet's flow is unchanged |
 | **D7** | Whether `.continue/` items of this class stay per-repository or centralise here | all nine | centralising makes them visible; it also moves them away from the repository that has to act |
 | **D8** | Where the version-carrier guard runs, and whether `fleet.sh` **refuses** to bump a repository with multiple carriers and no synchroniser | item 7 | the refusal is one more case in a script that already refuses several; the cost is a bump that stops working until somebody adds the synchroniser — which is the point |
 | **D9** | **Which** repositories move to stamp-at-merge — not whether | item 8 | 🔴 *this is the expensive one and the spec does not recommend "all nine".* `versao-no-merge.sh` is ~300 lines serving a repository with 26 PRs in a day; six of the nine would pay that complexity for a collision they never have. Ordered by measured traffic: `SHVIA-WEB` has it, `SHVIA-DESKTOP` is the one with a collision on record, and the rest have none |
 | **D10** | Whether the method lessons become a **fifth echo block** or a document in `docs/` that the agent files point at | item 9 | the block regenerates everywhere and turns method into boilerplate nobody re-reads; the pointer keeps one text and costs a hop. **Not equivalent, and the spec leans to the pointer** |
 
-🔴 **D6 and D9 are the two to read twice.** Both change how people work rather than what a script does, and both are the kind of decision that looks small in a table and is not.
+### ✅ D3 — decided 09/09/2026: `post-rewrite`
+
+> *"O `pre-push` já mede `version.md` contra o remoto; empilhar carimbo lá acopla duas
+> promessas no mesmo hook e pega tarde, com o rebase frio. `post-rewrite` fala na hora, no
+> lugar do erro."*
+
+The spec put D3b ahead because it **refuses** where `post-rewrite` only reports. The
+decision weighs what the spec left out: **where the person is when the message arrives.**
+A refusal at `pre-push` lands minutes or hours after the rebase, with the renumbering cold
+and the context to fix it gone; and it makes `pre-push` carry two unrelated promises, so a
+failure there stops saying which one broke.
+
+⚠️ **What the fleet accepts, written down so nobody rediscovers it as a defect:**
+`post-rewrite` **cannot refuse** — it runs after the rewrite. The gap is closed by the
+PAIR, not by the hook alone: the report at the moment of the error, plus the `pre-push`
+version comparison that already exists and already refuses.
+
+### ✅ D6 — decided 09/09/2026: no
+
+Required checks only (D5). **Blocking direct push to the default branch is out**, and the
+fleet's flow — the agent commits and pushes to the default branch — is unchanged. The
+measured problem was a merge with a pending check; D5 alone closes it.
+
+🔴 **D9 is the one to read twice.** Both change how people work rather than what a script does, and both are the kind of decision that looks small in a table and is not.
 
 **D6:** Requiring status checks and blocking direct push are
 separate switches. The first makes the merge wait; the second changes how everyone works.
