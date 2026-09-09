@@ -26,6 +26,32 @@ failed loudly — each instrument answered something plausible, which is what ma
 reading easy. What broke the error every time was the same move: dump the unfiltered
 exchange and read it.
 
+## 1.14.5 - the release race stops offering three shapes and names the one the evidence chose
+
+The finding from `1.14.3` ended with *"a lead, not a decision"* and three candidate fixes.
+Two controls later there is no reason to keep offering three: `1.14.3` and `1.14.4` were
+pushed **without** the manual run and each got exactly **one** Release, while `1.14.2` —
+the one where the script was run right after the push — has two on the same tag.
+
+**The decision: change the instruction, not the code.** The workflow publishes correctly on
+its own, so nothing in `release.sh` is broken and nothing in it needs a lock. What is broken
+is a sentence telling the operator to start a second publisher inside the same seconds.
+
+The two alternatives are recorded as refused, so nobody re-opens them without new evidence:
+re-checking after creating is code in nine repositories for a race that stops existing when
+the sentence changes, and it narrows the window without closing it; retiring the manual path
+is the right destination in the wrong order, because that path exists precisely while the
+workflow is not yet everywhere (`fleet.sh check` still reports `9× release.sh differs` and
+`9× hooks not enabled`).
+
+The sentence that goes is **"Running it is always safe, so it is both the check and the
+fix"** — false in exactly the situation the surrounding text puts the reader in. The
+replacement is written out in the finding, and says what was measured rather than what was
+assumed: the workflow covers the push; running the script by hand right after duplicates.
+
+**Not applied.** It is one edit in `templates/echo-blocks/RELEASES-RULE.md` followed by a
+fleet rollout, and rollouts are sequenced in the spec rather than done in passing.
+
 ## 1.14.4 - the release race control came back with a number, and the finding stops being conditional
 
 `1.14.3` was pushed without running `tools/release.sh` by hand. The tag ended with

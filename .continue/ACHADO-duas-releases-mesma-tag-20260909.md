@@ -81,19 +81,53 @@ already on `385845772`, so removing the other changes nothing visible:
 gh api -X DELETE repos/samirhvbr/repodocs/releases/385845771
 ```
 
-## A lead, not a decision
+## The decision, taken on the evidence
 
-- **Re-check after creating, not only before.** `release.sh` could list Releases for the
-  tag immediately after publishing and delete its own duplicate if it finds two. It is
-  narrow and it closes the measured window; it does not close a true simultaneous create.
-- **One publisher, not two.** The workflow exists because *"this fires no matter who
-  pushed"*, which is a real reason. The manual path exists because the workflow is not
-  everywhere yet. Retiring the manual path is only possible once `fleet.sh check` says the
-  workflow is present in all nine — and that is a different item.
-- **Or make the instruction the guard:** `RELEASES-RULE` says to run the script after
-  pushing. Saying instead *"push, then let the workflow do it; run the script by hand only
-  when the workflow is absent or failed"* removes the race without any code — and the
-  sentence about "always safe" has to go either way.
+**Change the instruction, not the code.** The control below is what chose it: the workflow
+publishes correctly on its own, so nothing in `release.sh` is broken and nothing in it needs
+a lock. What is broken is a sentence telling the operator to run a second publisher inside
+the same seconds.
+
+Two alternatives were considered and are recorded so nobody re-opens them without new
+evidence:
+
+| Shape | Why not |
+|---|---|
+| **Re-check after creating** — `release.sh` lists Releases for the tag right after publishing and deletes its own duplicate | Code, in nine repositories, to fix a race that stops existing when the instruction changes. And it narrows the window without closing it: two truly simultaneous creates still pass |
+| **One publisher** — retire the manual path | Correct destination, wrong order. The manual path exists because the workflow is not in all nine yet; `fleet.sh check` reports `9× release.sh differs` and `9× hooks not enabled` today. It closes after the rollout, not before |
+
+### What the block says today, and what it has to say
+
+The `RELEASES-RULE` echo block ships this in all nine repositories:
+
+```markdown
+- `.github/workflows/release.yml` does it on any push that touches `version.md`.
+- `./tools/release.sh` does it by hand. It is **idempotent and self-healing**:
+  it publishes whatever is missing and moves a drifted badge back. Running it is
+  always safe, so it is both the check and the fix.
+```
+
+🔴 **`Running it is always safe` is the false half**, and it is false in exactly the
+situation the surrounding text puts the reader in. The replacement:
+
+```markdown
+- `.github/workflows/release.yml` does it on any push that touches `version.md`,
+  and on the normal path it is the **only** publisher you need. Push, and it
+  publishes.
+- `./tools/release.sh` is the **repair**, not the routine: run it when the
+  workflow is absent or has failed, or to backfill. On its own it is idempotent —
+  it publishes whatever is missing and moves a drifted badge back.
+- 🔴 **Do not run it right after a push.** Both publishers call the same script and
+  both decide by asking whether the Release already exists, so within the seconds
+  after a push **both ask before either answers** — and the GitHub API does not
+  refuse a second Release on an existing tag. Measured 09/09/2026 in `repodocs`:
+  `1.14.2` ended with **two** Releases on one tag; `1.14.3` and `1.14.4`, pushed
+  without the manual run, ended with **one** each.
+```
+
+**Not applied yet.** It is one edit in `templates/echo-blocks/RELEASES-RULE.md` and then
+`fleet.sh echo --apply` across the fleet — which is a rollout, and rollouts are sequenced in
+[`REPODOCS-CARIMBO-20260909.md`](REPODOCS-CARIMBO-20260909.md), not done in passing.
 
 ## The control, and its result
 
