@@ -9,6 +9,30 @@ at `git commit` time.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 1.14.10 - `shvia-web` requires both checks, and the trap of the check that never runs gets its own section
+
+**D5 ◐ — `shvia-web` decided 09/09: both `assunto` and `test` are required.** Not the cheap
+option, and the owner named the reason rather than the cost: *a red `test` merging is today's
+defect*. The ~10 minutes per PR is paid on purpose. The other eight repositories stay open —
+`repodocs` has no `test` job at all, so one answer for nine was never the shape.
+
+**The trap is promoted from a bullet to a section**, because it stops being hypothetical the
+moment a check is required. GitHub does not distinguish *"failed"* from *"never reported"* —
+both are simply not green, so **a required check that never runs for a given event blocks the
+merge forever**.
+
+`assunto` is exactly that shape: `ci.yml:177` gates it on `github.event_name ==
+'pull_request'`, so it produces **no check run at all** on a direct push. Correct while
+protection gates PRs, and a live trap the moment somebody pushes straight to the default
+branch — which D6 deliberately left allowed, in eight of nine repositories.
+
+The rule that comes out of it: whatever goes on the required list has to run on **every event
+the protection covers**. Before requiring a job, ask which events it skips; if it skips one
+that can still land on the branch, widen the job's `if:` or do not require it.
+
+It is the same silence as the rest of this document. The check is not wrong — it is
+**absent**, and absence reads as *not yet*, forever.
+
 ## 1.14.9 - the D5 blocker is answered, item 8 becomes reproducible, and the collision gets an item of its own
 
 Three things the owner asked for, none of them implemented.

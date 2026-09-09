@@ -315,7 +315,7 @@ when it cannot measure. **Waits on: D11.**
 | **D3a** | `post-rewrite` hook | — | it runs **after** the rewrite: it can report, never refuse. A guard that reports is a different promise |
 | **D3b** | Move the check into `pre-push` (which already exists and already compares versions) | — | catches it later, but **refuses** — and `pre-push` is the one gate the fleet already treats as the human's entry point |
 | **D4** ✅ | **Decided `1.14.5`: change the instruction, not the code.** `RELEASES-RULE` loses *"running it is always safe"* and gains the measured rule — the workflow covers the push; running the script by hand right after duplicates. Applying it is one template edit + a fleet pass | item 5 | nothing new: it rides the D1 rollout. The two refused alternatives are recorded in the finding so they are not re-opened without new evidence |
-| **D5** 🔬 | Which checks become required, **per repository** | item 6 | `test` = ~10 min per PR · `assunto` = no merge without stamping · `sshvterm-desktop` already runs three and is the only precedent. **The blocker is answered below the table: the jobs can be required one by one.** |
+| **D5** ◐ | Which checks become required, **per repository** | item 6 | 🔒 **`shvia-web` decided 09/09: BOTH — `assunto` + `test`.** Not the cheap option, and the owner named the reason: *a red `test` merging is today's defect.* The ~10 min per PR is paid on purpose. The other eight stay open — `repodocs` has no test job at all, so one answer for nine was never the shape |
 | **D6** ✅ | **Decided 09/09/2026: NO.** Required checks only (D5). Direct push to the default branch stays. | item 6 | none — the fleet's flow is unchanged |
 | **D7** | Whether `.continue/` items of this class stay per-repository or centralise here | all nine | centralising makes them visible; it also moves them away from the repository that has to act |
 | **D8** | Where the version-carrier guard runs, and whether `fleet.sh` **refuses** to bump a repository with multiple carriers and no synchroniser | item 7 | the refusal is one more case in a script that already refuses several; the cost is a bump that stops working until somebody adds the synchroniser — which is the point |
@@ -383,11 +383,24 @@ answer to D5 per repository.
   enforces stamping (seconds) without making every PR wait ~10 min. A real trade, not a
   half-measure — and it closes the *measured* problem, which was a merge landing with the
   placeholder still in the subject.
-- **`assunto` runs only on `pull_request`** (`ci.yml:177`). Right shape here, since
-  protection gates PRs — but the general trap belongs in writing: **a required check that
-  never runs for a given event blocks the merge forever**, waiting for something that will
-  not come. Whatever goes on the required list has to run on the events the protection
-  covers.
+### 🔴 The trap that comes with any required check, and it is not hypothetical here
+
+**A required check that never runs for a given event blocks the merge forever**, waiting for
+something that will not come. GitHub does not distinguish *"failed"* from *"never reported"*
+— both are simply *not green*.
+
+`assunto` is exactly that shape: `ci.yml:177` gates it on
+`if: github.event_name == 'pull_request'`, so it produces **no check run at all** on a direct
+push. That is the right shape while protection gates PRs — and it becomes a live trap the
+moment somebody pushes straight to the default branch, which is still the flow in eight of
+nine repositories (D6 deliberately left it allowed).
+
+**The rule, for whatever goes on the required list:** it has to run on **every event the
+protection covers**. Before requiring a job, ask which events it skips — and if it skips one
+that can still land on the branch, either widen the job's `if:` or do not require it.
+
+⚠️ This is the same silence as everything else in this document: the check is not wrong, it
+is **absent**, and absence reads as *not yet* forever.
 
 ---
 
