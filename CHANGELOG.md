@@ -9,24 +9,14 @@ at `git commit` time.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
-## 1.14.5 - a filtered summary is not a measurement, and four wrong findings in one day say so
+## 1.14.6 - the release race stops offering three shapes and names the one the evidence chose
 
-Sixth entry in §6 of `conventions.md`, and the one with the highest count behind it.
-
-Four false or inverted findings on 09/09/2026, all from believing a summariser instead of
-the raw exchange: `/tmp` read as "outside the sandbox" **twice**, in two different
-instruments, when `workspace-write` includes it by design; a `sandboxMode` field that does
-not exist being sent and silently discarded, so a day of measurements described the
-server's default rather than the setting under test; and a `tool_call` reported missing
-that had been emitted all along, hidden by a summariser printing two event types and a
-`grep` that died of pattern complexity and returned empty.
-
-**Empty output is not absence, and partial output is not the whole.** None of the four
-failed loudly — each instrument answered something plausible, which is what made the wrong
-reading easy. What broke the error every time was the same move: dump the unfiltered
-exchange and read it.
-
-## 1.14.5 - the release race stops offering three shapes and names the one the evidence chose
+> **Renumbered from `1.14.5` before pushing.** Another session had already stamped that
+> number on `master` while this entry was being written — in the same checkout, which is
+> the floor rule of the fleet being broken in `repodocs` itself. **The `pre-push` hook
+> caught it** (*"version 1.14.5 is already on master"*) and refused; nothing was forced.
+> That refusal is the guard working, and it is the same collision family this repository
+> is about to write a spec for.
 
 The finding from `1.14.3` ended with *"a lead, not a decision"* and three candidate fixes.
 Two controls later there is no reason to keep offering three: `1.14.3` and `1.14.4` were
@@ -51,6 +41,51 @@ assumed: the workflow covers the push; running the script by hand right after du
 
 **Not applied.** It is one edit in `templates/echo-blocks/RELEASES-RULE.md` followed by a
 fleet rollout, and rollouts are sequenced in the spec rather than done in passing.
+
+## 1.14.6 - the stamping chain gets a spec, and branch protection turns out to be missing in eight of nine
+
+Six items in one document because they share a shape, not a subject: **the instrument
+answered something plausible and nobody checked the trigger.** The `commit-msg` hook is
+correct and never runs on `rebase --continue`; `--auto` is the right flag and waits for
+nothing when nothing is required; a ratchet reads `max(cru, pt)` and stays green while
+debt grows under it. None failed loudly.
+
+🔬 **The new measurement: 8 of 9 repositories have no branch protection.** Only
+`sshvterm-desktop` has any (`tests,servidor,build`). That is what makes `gh pr merge
+--auto` inert — it waits for **required** checks, and there are none — proven live on
+`shvia-desktop#3`, which merged instantly reporting `auto=false`. Until that changes,
+every defence against a blind merge is human discipline, and that discipline failed the
+same day it was written down, with the person who wrote it.
+
+The spec proposes and does not implement. D1–D7 are the decisions each item waits on, and
+two deserve reading twice: **D3**, because `post-rewrite` runs after the rewrite and can
+only report while `pre-push` can refuse — different promises, nine copies of whichever
+wins; and **D6**, because requiring checks and blocking direct push are separate switches,
+and only the first fixes the measured problem. Blocking direct push would end the
+commit-and-push flow that 8 of 9 repositories use today, and the spec does not recommend
+it by default.
+
+⚠️ Recorded inside the document: the first pass at its own protection table called every
+repository "PROTECTED", because the script tested a variable that was non-empty for
+holding the 404 error JSON. The measurement written to prove *"empty output is not
+absence"* fell into it on the first run.
+
+## 1.14.5 - a filtered summary is not a measurement, and four wrong findings in one day say so
+
+Sixth entry in §6 of `conventions.md`, and the one with the highest count behind it.
+
+Four false or inverted findings on 09/09/2026, all from believing a summariser instead of
+the raw exchange: `/tmp` read as "outside the sandbox" **twice**, in two different
+instruments, when `workspace-write` includes it by design; a `sandboxMode` field that does
+not exist being sent and silently discarded, so a day of measurements described the
+server's default rather than the setting under test; and a `tool_call` reported missing
+that had been emitted all along, hidden by a summariser printing two event types and a
+`grep` that died of pattern complexity and returned empty.
+
+**Empty output is not absence, and partial output is not the whole.** None of the four
+failed loudly — each instrument answered something plausible, which is what made the wrong
+reading easy. What broke the error every time was the same move: dump the unfiltered
+exchange and read it.
 
 ## 1.14.4 - the release race control came back with a number, and the finding stops being conditional
 
