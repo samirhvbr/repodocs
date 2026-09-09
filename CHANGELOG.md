@@ -9,6 +9,35 @@ at `git commit` time.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 1.14.3 - the finding that one tag can carry two Releases, and the control that proves the normal path
+
+Registered, not fixed — `tools/release.sh` and `release.yml` ship to the whole fleet.
+
+Measured while verifying the `1.14.2` release, and **produced by following the documented
+instruction**: the `RELEASES-RULE` block says to run `./tools/release.sh` after pushing, and
+`release.yml` fires on every push and calls the same script. Both decide by asking whether
+the Release already exists, and in a race both ask before either answers. The GitHub API
+does not refuse a second Release on an existing tag, so `1.14.2` ended with **two ids on one
+tag, created in the same second**. Every version before it has exactly one.
+
+The sentence that has to change is in the echo block in every repository of the fleet:
+*"running it is always safe, so it is both the check and the fix"*. Idempotent alone it is;
+concurrency-safe it is not — and "always safe" is what made running it right after a push
+look like diligence. It is the week's shape one level up: an instrument reporting a property
+it does not have **under a condition nobody tested**. `release.sh` was tested alone, never
+beside itself.
+
+**The control, run on this very version:** `1.14.3` was pushed and the script was **not**
+run by hand. If the tag ends with one Release, the workflow alone covers the normal path and
+the manual run is only ever a repair — which is the cheapest of the three fixes the document
+names, because it changes no code, only the instruction.
+
+The duplicate on `1.14.2` was deliberately **not** deleted: removing a published Release is
+outward-facing and is the owner's call. `Latest` already sits on `385845772`, so the
+one-line cleanup changes nothing visible.
+
+Full record: [`.continue/ACHADO-duas-releases-mesma-tag-20260909.md`](.continue/ACHADO-duas-releases-mesma-tag-20260909.md).
+
 ## 1.14.2 - the finding that a search returning zero is being read as a conclusion
 
 Registered, not fixed. It is a rule about method, it applies to all nine repositories,
