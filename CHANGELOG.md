@@ -42,6 +42,42 @@ assumed: the workflow covers the push; running the script by hand right after du
 **Not applied.** It is one edit in `templates/echo-blocks/RELEASES-RULE.md` followed by a
 fleet rollout, and rollouts are sequenced in the spec rather than done in passing.
 
+## 1.14.7 - the stamping spec gains the three items about who assigns the number, and the phases
+
+`1.14.6` wrote the spec with six items and D1–D7. Three of the day's failures were not in
+it, and they share a subject none of the six touches: **who assigns a version number, and
+when**. They are added as items 7–9 with D8–D10, and the document gains the phase order it
+did not have. Nothing above item 7 was changed except **D4**, which said the measurement
+lived with another session — it now says what that measurement showed.
+
+- **Item 7 — the version-carrier guard runs after the commit** (M1 of the 08/09 review,
+  unresolved). `build.rs`, `sync-version.mjs` and `sync-version.sh` all exist and all work,
+  in CI, after the push. Measured result: three red `master` in one day from the same
+  gesture. Same sentence as items 4 and 5 with a different subject: **the guard is correct
+  and the trigger is late.**
+- **Item 8 — one repository stamps at merge and the other seven do not.** Measured:
+  `scripts/versao-no-merge.sh` exists in `SHVIA-WEB` and nowhere else. `SHVIA-WEB` moved
+  there on 29/08 after four collisions in one day between four sessions; `SHVIA-DESKTOP`
+  still stamps in the branch and produced the `1.4.31` collision that led to item 4.
+  🔬 **It happened again while the item was being written, here**: two sessions stamped
+  `1.14.5`, then `1.14.6`. The `pre-push` hook refused both times and nothing was forced —
+  the guard worked, and it refuses at the end, after the entry is written.
+  🔴 The spec does **not** recommend porting the script to nine repositories: D9 asks
+  *which*, and the honest answer may be one more.
+- **Item 9 — the method lessons live in one repository.** The premise this started from was
+  wrong and the correction is the item: `fleet.sh echo` **cannot** overwrite them
+  (`stamp_block()` replaces only between markers; every method section sits above them).
+  The real risk is **non-arrival**, and it does not close by itself.
+
+**The phases are the part the six-item version was missing**, and the order is not
+preference. Phase 0 closes D8 and D3 **before** any fleet pass, because a rollout bumps a
+version in every repository it touches — with item 7 open, the rollout *is* the gesture
+that produced the three red `master`. Phase 1 is the pass, and the D4 edit has to land in
+the template **before** it, or the false sentence gets stamped into nine repositories on
+purpose.
+
+Still a spec. Nothing implemented, no switch turned on.
+
 ## 1.14.6 - the stamping chain gets a spec, and branch protection turns out to be missing in eight of nine
 
 Six items in one document because they share a shape, not a subject: **the instrument
