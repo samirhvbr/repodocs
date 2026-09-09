@@ -9,6 +9,38 @@ at `git commit` time.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 1.14.1 - the finding that `commit-msg` never runs on `rebase --continue`
+
+Registered, not fixed. The hook is the same template in nine repositories and the change
+lands in all of them, so it needs a spec rather than a patch made in passing.
+
+Found while renumbering a version collision in `SHVIA-DESKTOP`: a commit landed with its
+subject saying `1.4.33` while `version.md` said `1.4.34`, and the guard that exists to
+catch exactly that said nothing. It was caught by re-reading `git log`.
+
+Measured in a throwaway repository carrying the fleet's own `commit-msg`, with one log
+line inserted **before every early exit** — that line is what separates *"git never called
+it"* from *"the hook ran and returned"*, and the two have different fixes. Positive
+control checked first.
+
+`commit`, `commit --amend`, `cherry-pick --continue` and `rebase -i` (reword) all invoke
+the hook and all refuse a mismatched subject. **`rebase --continue` never calls it**, and
+the mismatched commit lands. The gap is that narrow: `rebase -i` with `reword` is fine, so
+it is the `--continue` step, not rebase as a whole.
+
+🔴 **`merge --continue` is NOT the bug.** The hook is called and exits at `commit-msg:29`
+on `MERGE_HEAD`, with the reason written at line 23: a merge's versions live in the
+commits being merged. It is a declared exemption, and it is the row most likely to be
+"fixed" by mistake.
+
+The lead, measured and left open: `post-rewrite` does not exist in `tools/git-hooks/`
+today, and git calls it after rebase and amend with the list of rewritten commits. But it
+runs **after** the rewrite — it can report, not refuse — and a guard that reports is not
+the promise a guard that blocks makes. The spec has to choose, out loud.
+
+Full table, method and consequence:
+[`.continue/ACHADO-commit-msg-no-rebase-20260909.md`](.continue/ACHADO-commit-msg-no-rebase-20260909.md).
+
 ## 1.14.0 - the ADR count in the docs index and the agent files stopped at 019 and 018
 
 `docs/README.md` announced *"ADRs 001–019"* and both agent files announced
