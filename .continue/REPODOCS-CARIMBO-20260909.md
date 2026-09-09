@@ -1,4 +1,4 @@
-# The stamping chain — nine items, and the decisions they wait on
+# The stamping chain — ten items, and the decisions they wait on
 
 > **Status: SPEC. Nothing here is implemented.** It proposes; the owner decides item by
 > item, and D1–D7 below are the decisions that unblock them. Written 09/09/2026 after a
@@ -14,7 +14,7 @@ The `commit-msg` hook is correct and is never called on `rebase --continue`. `--
 is the right flag and waits for nothing when no check is required. A ratchet reads
 `max(cru, pt)` and stays green while debt grows underneath. None of them failed loudly.
 
-That is why these are one document rather than nine tickets: the fix for each is
+That is why these are one document rather than ten tickets: the fix for each is
 mechanical, and the reason they were all open at once is that **the fleet's guards are
 content without trigger**.
 
@@ -123,11 +123,36 @@ isolates a directory, not a number"*. `SHVIA-DESKTOP` still stamps in the branch
 09/09 two fronts forked from `1.4.30` and both stamped `1.4.31` — which is what sent
 somebody into the `rebase --continue` that produced item 4.
 
-🔬 **And it happened again while this very item was being written**, in `repodocs` itself:
-two sessions stamped `1.14.5`, and then `1.14.6`. The `pre-push` hook refused both times
-(*"version X is already on master"*) and nothing was forced — **the guard worked**. But it
-refuses at the *end*, after the changelog entry is written and the commit is made, and the
-recovery is a renumber by hand: exactly the gesture that item 4 shows is unguarded.
+🔬 **And it happened again while this very item was being written**, in `repodocs` itself —
+**two sessions writing this same document, in the same checkout.** The evidence is on
+`master` and reproduces with one command:
+
+```
+$ git log --format='%h %s' origin/master | grep '^[0-9a-f]* 1\.14\.5'
+f9609bf 1.14.5 - the release race stops offering three shapes and names the one the evidence chose
+544c1b4 1.14.5 - a filtered summary is not a measurement, and four wrong findings in one day say so
+
+$ git log --format='%h %s' origin/master | grep -c '^[0-9a-f]* 1\.14\.4'
+1                                      # positive control: a healthy version has exactly one
+```
+
+**Two commits on `master` carry the same version number.** Then it repeated one number
+higher: the second session's `f0c9ba9 1.14.6 - the stamping chain gets a spec, and branch
+protection turns out to be missing in eight of nine` took `1.14.6` while the first was
+renumbering into it.
+
+The `pre-push` hook refused both times — *"REJECTED — version 1.14.5 is already on master"*,
+then the same for `1.14.6` — and **nothing was forced**. The guard worked. Three things it
+did not do, and they are the item:
+
+1. **It refuses at the end.** By the time it speaks, the changelog entry is written, the
+   commit is made, and the number is inside both.
+2. **The recovery is a renumber by hand** — edit `version.md`, move the changelog block,
+   amend the subject. Exactly the gesture item 4 shows is unguarded on `rebase --continue`.
+3. **It did not stop the collision that mattered.** `544c1b4` was committed *into the other
+   session's working tree*, between that session's edit and its commit, so its changelog
+   entry landed in the wrong position and had to be moved. No hook sees that: it is not a
+   push, it is two sessions sharing a directory. That is item 10.
 
 ⚠️ **This is not a recommendation to port `versao-no-merge.sh` to nine repositories.** It is
 a 300-line script serving a repository with 26 PRs in one day; six of the nine merge a
@@ -256,6 +281,30 @@ the single protected repository, `sshvterm-desktop`, is the single one outside
 
 ---
 
+### 10. 🔴 The main checkout is used as a working directory, and that is what collided today
+`SHVIA-WEB` merged a floor rule into its `AGENTS.md` on 09/09/2026 (`2.110.228`): **the main
+checkout is never a working directory; every session opens a worktree.** It is not in
+`repodocs`, and `repodocs` is where it was needed hours later.
+
+🔬 **Measured here, today.** Two sessions worked in `~/x/repodocs` at the same time. One
+committed `544c1b4` into the other's working tree, **between that session's edit and its
+commit** — so a changelog entry written for the top of the file landed below a newer one and
+had to be moved by hand. It is the same cause behind four earlier incidents in `SHVIA-WEB`
+(`b71d71c`, the duplicated export, the symlinked `vendor`, the dirty `master`), and this is
+the first time it landed inside the same directory rather than across two.
+
+**No hook can see it.** `pre-push` guards the push and `commit-msg` guards the subject;
+neither is called when a second session writes into the tree you are editing. The window is
+between *edit* and *commit*, which is not an event git exposes.
+
+⚠️ **And the rule as merged is honest about being text.** Its registered verification is a
+**sample, not a proof** — `git status` on the main checkout answers about the instant, and
+two readings the same day disagreed. `SHVIA-WEB` filed the mechanical half as **WT-1**: a
+hook that refuses a write in the main checkout while a worktree is alive, exiting non-zero
+when it cannot measure. **Waits on: D11.**
+
+---
+
 ## Decisions
 
 | # | Decision | What it unblocks | Cost of saying yes |
@@ -266,12 +315,14 @@ the single protected repository, `sshvterm-desktop`, is the single one outside
 | **D3a** | `post-rewrite` hook | — | it runs **after** the rewrite: it can report, never refuse. A guard that reports is a different promise |
 | **D3b** | Move the check into `pre-push` (which already exists and already compares versions) | — | catches it later, but **refuses** — and `pre-push` is the one gate the fleet already treats as the human's entry point |
 | **D4** ✅ | **Decided `1.14.5`: change the instruction, not the code.** `RELEASES-RULE` loses *"running it is always safe"* and gains the measured rule — the workflow covers the push; running the script by hand right after duplicates. Applying it is one template edit + a fleet pass | item 5 | nothing new: it rides the D1 rollout. The two refused alternatives are recorded in the finding so they are not re-opened without new evidence |
-| **D5** | Which checks become required, **per repository** | item 6 | `test` = ~10 min per PR · `assunto` = no merge without stamping · `sshvterm-desktop` already runs three and is the only precedent |
+| **D5** 🔬 | Which checks become required, **per repository** | item 6 | `test` = ~10 min per PR · `assunto` = no merge without stamping · `sshvterm-desktop` already runs three and is the only precedent. **The blocker is answered below the table: the jobs can be required one by one.** |
 | **D6** ✅ | **Decided 09/09/2026: NO.** Required checks only (D5). Direct push to the default branch stays. | item 6 | none — the fleet's flow is unchanged |
 | **D7** | Whether `.continue/` items of this class stay per-repository or centralise here | all nine | centralising makes them visible; it also moves them away from the repository that has to act |
 | **D8** | Where the version-carrier guard runs, and whether `fleet.sh` **refuses** to bump a repository with multiple carriers and no synchroniser | item 7 | the refusal is one more case in a script that already refuses several; the cost is a bump that stops working until somebody adds the synchroniser — which is the point |
-| **D9** | **Which** repositories move to stamp-at-merge — not whether | item 8 | 🔴 *this is the expensive one and the spec does not recommend "all nine".* `versao-no-merge.sh` is ~300 lines serving a repository with 26 PRs in a day; six of the nine would pay that complexity for a collision they never have. Ordered by measured traffic: `SHVIA-WEB` has it, `SHVIA-DESKTOP` is the one with a collision on record, and the rest have none |
-| **D10** | Whether the method lessons become a **fifth echo block** or a document in `docs/` that the agent files point at | item 9 | the block regenerates everywhere and turns method into boilerplate nobody re-reads; the pointer keeps one text and costs a hop. **Not equivalent, and the spec leans to the pointer** |
+| **D9** ◐ | **Which** repositories move to stamp-at-merge — not whether. 🔒 **Owner ratified 09/09: NOT the nine.** Which ones remains open, and *"one more"* is a legitimate answer | item 8 | 🔴 *this is the expensive one and the spec does not recommend "all nine".* `versao-no-merge.sh` is ~300 lines serving a repository with 26 PRs in a day; six of the nine would pay that complexity for a collision they never have. Ordered by measured traffic: `SHVIA-WEB` has it, `SHVIA-DESKTOP` is the one with a collision on record, and the rest have none |
+| **D10** ✅ | Whether the method lessons become a **fifth echo block** or a document in `docs/` that the agent files point at | item 9 | the block regenerates everywhere and turns method into boilerplate nobody re-reads; the pointer keeps one text and costs a hop. **Not equivalent. 🔒 Owner decided 09/09: the pointer.** The block regenerates everywhere and turns method into boilerplate nobody re-reads |
+| **D11** | Whether the *main checkout is never a working directory* rule enters `repodocs` as text, as **WT-1's** mechanical hook, or both | item 10 | the text costs one paragraph in the agent files and is a sample, not a proof; the hook is a fourth file in `tools/git-hooks/` and lands in nine repositories. **They are not alternatives** — the text says what to do, the hook is what makes it true |
+* The block regenerates everywhere and turns method into boilerplate nobody re-reads |
 
 ### ✅ D3 — decided 09/09/2026: `post-rewrite`
 
@@ -303,6 +354,40 @@ separate switches. The first makes the merge wait; the second changes how everyo
 The measured problem — a merge with a pending check — is fixed by the first alone.
 
 ---
+
+---
+
+### 🔬 The D5 blocker, answered: the jobs are required one by one
+
+**Yes — `assunto` can be required alone. It does not drag `test`.**
+
+`assunto` and `test` are two jobs in one workflow file (`ci.yml:12` and `ci.yml:176`), and
+branch protection does not match on workflows: it matches on **check-run names**. Each job
+publishes its own. Measured on `shvia-web`:
+
+```
+$ gh api "repos/samirhvbr/shvia-web/commits/<sha>/check-runs" \
+    --jq '.check_runs[] | "\(.name)  ::  \(.app.slug)"' | sort -u
+assunto  ::  github-actions
+release  ::  github-actions
+test     ::  github-actions
+```
+
+Three names, three independent check runs, from one workflow. *Require status checks to
+pass* takes the names — so `assunto` alone, `assunto` + `test`, or any subset, is a valid
+answer to D5 per repository.
+
+**Two consequences to weigh, not obstacles:**
+
+- **Requiring only `assunto` lets a red `test` merge.** That is the cheap option: it
+  enforces stamping (seconds) without making every PR wait ~10 min. A real trade, not a
+  half-measure — and it closes the *measured* problem, which was a merge landing with the
+  placeholder still in the subject.
+- **`assunto` runs only on `pull_request`** (`ci.yml:177`). Right shape here, since
+  protection gates PRs — but the general trap belongs in writing: **a required check that
+  never runs for a given event blocks the merge forever**, waiting for something that will
+  not come. Whatever goes on the required list has to run on the events the protection
+  covers.
 
 ---
 

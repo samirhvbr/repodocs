@@ -9,6 +9,47 @@ at `git commit` time.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 1.14.9 - the D5 blocker is answered, item 8 becomes reproducible, and the collision gets an item of its own
+
+Three things the owner asked for, none of them implemented.
+
+**D5 is unblocked, and the answer is measured, not inferred.** `assunto` and `test` are two
+jobs in one workflow (`ci.yml:12` and `ci.yml:176`), and branch protection does not match on
+workflows — it matches on **check-run names**, one per job. `gh api .../check-runs` on
+`shvia-web` returns three: `assunto`, `test`, `release`. So **`assunto` can be required
+alone and does not drag `test`**, and D5 can be answered per repository with any subset.
+
+Two consequences are written beside it rather than left to be discovered: requiring only
+`assunto` lets a red `test` merge — the cheap option, and it does close the measured problem
+— and `assunto` runs only on `pull_request`, which is the right shape here but carries the
+general trap that **a required check that never runs for an event blocks the merge forever**.
+
+**Item 8 now reproduces from `master` with one command.** It said "two sessions stamped
+1.14.5, then 1.14.6"; it now carries the hashes, both subjects, and a positive control:
+
+```
+$ git log --format='%h %s' origin/master | grep '^[0-9a-f]* 1\.14\.5'
+f9609bf 1.14.5 - the release race stops offering three shapes and names the one the evidence chose
+544c1b4 1.14.5 - a filtered summary is not a measurement, and four wrong findings in one day say so
+```
+
+Two commits on `master` with the same version number. The control (`1.14.4`) returns one.
+The item also names the three things `pre-push` did **not** do, and the third is why item 10
+exists: `544c1b4` was committed *into the other session's working tree*, between that
+session's edit and its commit, so a changelog entry written for the top of the file landed
+below a newer one. No hook sees that — it is not a push, it is two sessions sharing a
+directory.
+
+**Item 10: the main checkout is used as a working directory.** `SHVIA-WEB` merged the floor
+rule at `2.110.228` — *the main checkout is never a working directory; every session opens a
+worktree* — and it is not in `repodocs`, which is where it was needed hours later. It is the
+same cause as four earlier incidents there, and the first to land inside one directory
+rather than across two. **D11** asks whether it enters as text, as the `WT-1` hook, or both,
+and says they are not alternatives: the text says what to do, the hook is what makes it true.
+
+**Owner ratifications recorded:** D9 ◐ — **not the nine**; which ones stays open and *"one
+more"* is a legitimate answer. D10 ✅ — **the pointer**, not a fifth echo block.
+
 ## 1.14.8 - D3 and D6 are decided, and the queue's own merge tool is caught reading silence as a state
 
 **D3 — `post-rewrite`.** The spec ranked `pre-push` higher because it refuses where
