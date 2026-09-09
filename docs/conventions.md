@@ -226,6 +226,20 @@ Recorded because each one produced a confident, wrong conclusion:
   was written into a changelog entry before anyone opened the file. **Read the
   header line, not the file** — `grep -m1 'Status:'` — and open the file before
   a status becomes a claim about someone's work.
+- 🔴 **A filtered summary is not a measurement — read the raw wire before
+  concluding.** Four false or inverted findings in one day (09/09/2026) all came
+  from believing a summariser: `/tmp` counted as "outside the sandbox" **twice**,
+  in two different instruments, when `workspace-write` includes it by design; a
+  `sandboxMode` field that does not exist being sent and **silently discarded**,
+  so every measurement described the server's default rather than the setting;
+  and a `tool_call` reported as missing that was emitted all along, hidden by a
+  summariser that printed only two event types and a `grep` that died of pattern
+  complexity and returned empty.
+  **Empty output is not absence, and partial output is not the whole.** In every
+  one of the four the instrument answered something plausible, and none of them
+  failed loudly. What broke the error each time was dumping the unfiltered
+  exchange — the protocol trace, the actual bytes sent, the process's own
+  stdout — and reading it.
 
 ---
 

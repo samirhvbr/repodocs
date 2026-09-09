@@ -9,6 +9,23 @@ at `git commit` time.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 1.14.5 - a filtered summary is not a measurement, and four wrong findings in one day say so
+
+Sixth entry in §6 of `conventions.md`, and the one with the highest count behind it.
+
+Four false or inverted findings on 09/09/2026, all from believing a summariser instead of
+the raw exchange: `/tmp` read as "outside the sandbox" **twice**, in two different
+instruments, when `workspace-write` includes it by design; a `sandboxMode` field that does
+not exist being sent and silently discarded, so a day of measurements described the
+server's default rather than the setting under test; and a `tool_call` reported missing
+that had been emitted all along, hidden by a summariser printing two event types and a
+`grep` that died of pattern complexity and returned empty.
+
+**Empty output is not absence, and partial output is not the whole.** None of the four
+failed loudly — each instrument answered something plausible, which is what made the wrong
+reading easy. What broke the error every time was the same move: dump the unfiltered
+exchange and read it.
+
 ## 1.14.4 - the release race control came back with a number, and the finding stops being conditional
 
 `1.14.3` was pushed without running `tools/release.sh` by hand. The tag ended with
