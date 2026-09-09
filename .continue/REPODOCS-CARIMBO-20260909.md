@@ -153,6 +153,48 @@ them a hop away. **Waits on: D10.**
 
 ---
 
+## D5 — decided 09/09/2026, with the measured cost and the exact names
+
+The owner decided per repository from the measurement below. **The names in the second
+column are what GitHub offers as required contexts** — they are *check-run* names, i.e.
+job names, not workflow names. 🔬 `CI` is a workflow and **is not selectable**; `assunto`
+and `test` are separate check-runs, so requiring one does not drag the other.
+
+| repository | required | measured cost | state on the default branch |
+|---|---|---|---|
+| `shvia-web` | `assunto` · `test` | 10s · **9m08s** | ✅ green |
+| `shvia-desktop` | `Provas (Rust + política do runner)` | ~8m | ✅ green |
+| `blue3-intranet` | `Tests (phpunit / MariaDB)` · `Lint (Pint nos alterados + php -l)` · `migrate do zero, sem baseline` | ~3m · 44s | 🔴 **Tests and Lint FAILING** |
+| `shvia-code` | `build` | ~4m | 🔴 **FAILING** |
+| `repodocs` · `shvia-rota` · `ai-benchmark` · `shvia-site` | **none** | — | no CI exists |
+
+🔴 **Two of them cannot be switched on today.** `blue3-intranet` has been red since
+02/09 (three consecutive runs) and `shvia-code` since 03/09 (four). **Requiring a check
+that is already failing locks the repository**: no PR merges until someone fixes it. Those
+two wait for a green default branch; the switch is not the work, the red is.
+
+⚠️ **The four with "none" are without protection for a reason worth writing down: they
+have no CI to require.** Their only workflow is `Release`, which runs **after** the merge —
+requiring it would be decoration. They are unprotected by **absence of a check**, not by a
+judgement that they carry less risk.
+
+---
+
+## Why the eight are unprotected: absence from the standard, not a decision
+
+🔬 Measured: `tools/fleet.sh` and `templates/skeleton/` **never mention branch protection**
+— the only occurrence of the word in the skeleton is an unrelated security section. And
+the single protected repository, `sshvterm-desktop`, is the single one outside
+`fleet.sh`'s reach: somebody switched it on by hand there.
+
+> **What the standard does not carry does not arrive.** That sentence is the whole spec in
+> one case, and it is why protection becomes an item of the standard here — while the act
+> of enabling stays with the owner, because it is a GitHub action and not a repository
+> change. No `fleet.sh` mode can do it, and pretending otherwise would put a promise in a
+> tool that cannot keep it.
+
+---
+
 ## Decisions
 
 | # | Decision | What it unblocks | Cost of saying yes |

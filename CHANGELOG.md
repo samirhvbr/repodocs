@@ -9,6 +9,32 @@ at `git commit` time.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 1.14.7 - D5 is decided, and two repositories cannot switch protection on because their checks are already red
+
+The stamping spec gains the measurement that made D5 decidable, and one finding that
+changes the order of the work.
+
+🔬 **The required contexts are job names, not workflow names.** `CI` is a workflow and
+GitHub does not offer it; `assunto` and `test` are separate check-runs, so requiring the
+10-second subject gate does **not** drag the 9-minute suite along. That was the open
+question, and it is answered: the two are independent.
+
+🔴 **`blue3-intranet` and `shvia-code` cannot be switched on today.** Their checks have
+been failing on the default branch since 02/09 and 03/09 respectively — three and four
+consecutive runs. **Requiring an already-red check locks the repository**: nothing merges
+until it is fixed. The switch is not the work there; the red is.
+
+The four without CI stay without protection, and the reason is recorded so it does not
+read as a risk judgement later: their only workflow is `Release`, which runs **after** the
+merge. Requiring it would be decoration.
+
+**And the tese closes.** `fleet.sh` and `templates/skeleton/` never mention branch
+protection; the single protected repository is the single one outside `fleet.sh`'s reach,
+switched on by hand. The eight are open by **absence from the standard**, not by decision
+— *what the standard does not carry does not arrive*. Protection becomes an item of the
+standard; enabling stays with the owner, because no `fleet.sh` mode can perform a GitHub
+action and putting that promise in the tool would be a promise it cannot keep.
+
 ## 1.14.6 - the release race stops offering three shapes and names the one the evidence chose
 
 > **Renumbered from `1.14.5` before pushing.** Another session had already stamped that
