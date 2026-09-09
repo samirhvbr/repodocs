@@ -9,6 +9,36 @@ at `git commit` time.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 1.14.11 - the stamp tool and one-subject-per-commit contradict each other, and #94 paid it by accident
+
+Item 11, with **D12**. Two things the house wrote, both followed, cannot both be followed on
+the same delivery.
+
+`COMMIT-RULE` splits a delivery **by subject** and puts the changelog entry **in the same
+commit as the change** — *"é ela que carrega a descrição"*. Four findings, four subjects,
+four tests ⇒ four commits, four entries.
+
+`scripts/versao-no-merge.sh` refuses exactly that: *"há 4 marcadores no CHANGELOG.md —
+esperado exatamente 1"*. Not a message it could relax — it reads the description with
+`grep -m1` and stamps **one** version per branch. Its model is one entry per branch; the
+rule's model is one entry per subject.
+
+🔬 **Measured on `shvia-web#94`**, which merged the four entries into one with four `###`
+sections and kept the four commits. It stamped and it merged — and three of the four commits
+now carry no changelog line of their own. That half of the rule was **given up quietly, by
+whoever hit the wall, at the moment of merging**, which is the worst place for a convention
+to be decided.
+
+**It is an item and not a note in that entry** because the next person to split a delivery
+hits the same wall and picks whichever half they happen to value, and the fleet ends up with
+both conventions and no record of the choice.
+
+**D12 is not a tie, and the spec says which way it leans:** the script accepting N markers
+keeps both halves of the rule and costs a loop in one script — it already rewrites N subjects,
+so the machinery is there. The rule accepting one entry per branch is free and permanently
+gives up *"a entrada vem no mesmo commit da mudança"* for every split delivery. `#94` already
+paid that price once, by accident.
+
 ## 1.14.10 - `shvia-web` requires both checks, and the trap of the check that never runs gets its own section
 
 **D5 ◐ — `shvia-web` decided 09/09: both `assunto` and `test` are required.** Not the cheap

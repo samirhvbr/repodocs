@@ -1,4 +1,4 @@
-# The stamping chain — ten items, and the decisions they wait on
+# The stamping chain — eleven items, and the decisions they wait on
 
 > **Status: SPEC. Nothing here is implemented.** It proposes; the owner decides item by
 > item, and D1–D7 below are the decisions that unblock them. Written 09/09/2026 after a
@@ -14,7 +14,7 @@ The `commit-msg` hook is correct and is never called on `rebase --continue`. `--
 is the right flag and waits for nothing when no check is required. A ratchet reads
 `max(cru, pt)` and stays green while debt grows underneath. None of them failed loudly.
 
-That is why these are one document rather than ten tickets: the fix for each is
+That is why these are one document rather than eleven tickets: the fix for each is
 mechanical, and the reason they were all open at once is that **the fleet's guards are
 content without trigger**.
 
@@ -305,6 +305,41 @@ when it cannot measure. **Waits on: D11.**
 
 ---
 
+### 11. 🔴 The stamp tool and the one-subject-per-commit rule contradict each other
+🔬 **Measured 09/09/2026 on `shvia-web#94`, and it is a contradiction between two things the
+house wrote, not a bug in either.**
+
+`COMMIT-RULE` says a delivery is **split into commits by subject**, and that the changelog
+entry travels **in the same commit as the change** — *"é ela que carrega a descrição"*. Four
+findings, four subjects, four tests ⇒ four commits, four entries.
+
+`scripts/versao-no-merge.sh` refuses that branch:
+
+```
+🔴 há 4 marcadores no CHANGELOG.md — esperado exatamente 1.
+   Mais de um significa branch com duas entregas ou rebase mal resolvido.
+```
+
+It is not a defensive message it could relax: the script reads the description with
+`grep -m1` and stamps **one** version for the branch. **Its model is one entry per branch;
+the rule's model is one entry per subject.** Both are written down, and they cannot both be
+followed on the same delivery.
+
+**What #94 did, and it was a workaround rather than a decision:** the four entries were
+merged into one with four `###` sections, keeping the four commits. It stamped and it
+merged. It also means three of the four commits carry no changelog line of their own, which
+is the half of the rule that was given up — quietly, by whoever hit the wall, at the moment
+of merging. That is the worst place for a convention to be decided.
+
+⚠️ **The reason it is an item and not a note in that entry:** the next person to split a
+delivery hits the same wall and picks whichever half they happen to value, and the fleet ends
+up with both conventions and no record of the choice. One of the two has to give, in
+writing, once.
+
+**Waits on: D12.**
+
+---
+
 ## Decisions
 
 | # | Decision | What it unblocks | Cost of saying yes |
@@ -322,6 +357,7 @@ when it cannot measure. **Waits on: D11.**
 | **D9** ◐ | **Which** repositories move to stamp-at-merge — not whether. 🔒 **Owner ratified 09/09: NOT the nine.** Which ones remains open, and *"one more"* is a legitimate answer | item 8 | 🔴 *this is the expensive one and the spec does not recommend "all nine".* `versao-no-merge.sh` is ~300 lines serving a repository with 26 PRs in a day; six of the nine would pay that complexity for a collision they never have. Ordered by measured traffic: `SHVIA-WEB` has it, `SHVIA-DESKTOP` is the one with a collision on record, and the rest have none |
 | **D10** ✅ | Whether the method lessons become a **fifth echo block** or a document in `docs/` that the agent files point at | item 9 | the block regenerates everywhere and turns method into boilerplate nobody re-reads; the pointer keeps one text and costs a hop. **Not equivalent. 🔒 Owner decided 09/09: the pointer.** The block regenerates everywhere and turns method into boilerplate nobody re-reads |
 | **D11** | Whether the *main checkout is never a working directory* rule enters `repodocs` as text, as **WT-1's** mechanical hook, or both | item 10 | the text costs one paragraph in the agent files and is a sample, not a proof; the hook is a fourth file in `tools/git-hooks/` and lands in nine repositories. **They are not alternatives** — the text says what to do, the hook is what makes it true |
+| **D12** | Which half gives: **the script accepts N markers** (stamp one version, keep every entry — it already rewrites N subjects, so this is the smaller change) or **the rule accepts one entry per branch** (a delivery keeps its commits, the changelog describes the delivery) | item 11 | 🔴 *not a tie.* The first keeps both halves of `COMMIT-RULE` and costs a loop in one script; the second is free and permanently gives up *"a entrada vem no mesmo commit da mudança"* for any split delivery. The spec leans to the **script**, and says so rather than leaving it open — `shvia-web#94` already paid the second option once, by accident |
 * The block regenerates everywhere and turns method into boilerplate nobody re-reads |
 
 ### ✅ D3 — decided 09/09/2026: `post-rewrite`
