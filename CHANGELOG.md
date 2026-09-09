@@ -9,6 +9,54 @@ at `git commit` time.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 1.14.2 - the finding that a search returning zero is being read as a conclusion
+
+Registered, not fixed. It is a rule about method, it applies to all nine repositories,
+and its home is the template — which is why it is here and not in the repository that
+tripped over it.
+
+Found in `SHVIA-WEB`, doing a sweep that a real defect had made necessary: a cleanup
+listener hooked on `deleted` for a model that soft-deletes, so trashing a project
+destroyed its scope and **restoring it silently widened** the project's reach. The
+obvious follow-up was *which other models with `SoftDeletes` have the same problem*, and
+the first step of answering it was `grep -c 'use SoftDeletes;'`.
+
+It answered **0** for three models that all soft-delete. They write it as
+`use HasFactory, SoftDeletes;`. Three of the five rows of a table whose entire purpose
+was to say where the defect could repeat were about to be reported as not applicable.
+
+**`0 occurrences` is a plausible answer and is indistinguishable from `does not exist`.**
+The pattern did not error and did not warn: it returned the same number a correct search
+returns in a healthy repository. It is the fourth shape of a silence this standard already
+names — a test that skips and reads as passing, an incomplete allowlist that is green, a
+review panel that agrees on one inherited premise — and the worst of the four, because
+the output of a correct search and a broken one are byte-identical. A search that returns
+too much gets noticed; one that returns too little gets believed.
+
+The lesson, and it is the usable form because it does not require suspecting the pattern:
+
+> A search that returns zero requires a positive control before it becomes a conclusion:
+> look for something you KNOW exists, using the same pattern. If the control also returns
+> zero, the pattern is wrong — not the repository.
+
+It was applied to this document while writing it. A term the owner referred to, `D-NOVA`,
+did not appear anywhere; the zero was not trusted until the same search, over the same
+paths, found `GH-F2` where it was known to be. The control passed, so the zero is real:
+**`D-NOVA` is not written down anywhere in the fleet.**
+
+**An adjacent premise was measured and corrected.** The note that brought this in said
+three fleet-wide lessons in `SHVIA-WEB/AGENTS.md` risk being overwritten by the next
+`fleet.sh echo`. It cannot: `stamp_block()` replaces only what lies between the
+`<!-- NAME:repodocs -->` markers, and in that file (1482 lines) the markers are at
+1342–1402 and 1438–1482 while every method section is above 1342. The instinct was right
+and the mechanism was not — the real risk is **non-arrival**, not overwriting: a lesson
+about method living in one repository is a lesson the other eight do not have, and
+nothing carries it there.
+
+Full record, including the provenance of the owner's count of six (two measured here,
+four not verified — §16) and the two shapes a guard could take:
+[`.continue/ACHADO-busca-que-devolve-zero-20260909.md`](.continue/ACHADO-busca-que-devolve-zero-20260909.md).
+
 ## 1.14.1 - the finding that `commit-msg` never runs on `rebase --continue`
 
 Registered, not fixed. The hook is the same template in nine repositories and the change
