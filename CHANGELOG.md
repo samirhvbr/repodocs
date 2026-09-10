@@ -9,6 +9,26 @@ at `git commit` time.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 1.14.12 - D12 goes to the top of the spec as the next implementation, with the sentence that makes it urgent
+
+Ratified, not implemented — this repository has a writer, and the change is theirs to make.
+What lands here is the **order**: D12 is the first thing to do on returning, and the banner
+at the top of the spec now says so instead of leaving it as one row in a table of twelve.
+
+The sentence that moves it from *next* to *first*:
+
+> While the script refuses N markers, the next split delivery gives up the same half — in
+> silence, at the moment of merging.
+
+It is not a prediction. `shvia-web#94` did exactly that on the day the item was written:
+four commits by subject, four entries, the script refused, and the entries were merged into
+one by whoever hit the wall. **Three of the four commits landed with no changelog line of
+their own, and nobody decided that — the tool did.** Every split delivery after it pays the
+same price until the script changes.
+
+The machinery is already there, which is why this is the cheap half of D12: the script
+rewrites **N subjects** in its stamping rebase. What it does not do is keep N headings.
+
 ## 1.14.11 - the stamp tool and one-subject-per-commit contradict each other, and #94 paid it by accident
 
 Item 11, with **D12**. Two things the house wrote, both followed, cannot both be followed on

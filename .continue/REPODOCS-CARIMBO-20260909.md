@@ -1,8 +1,28 @@
 # The stamping chain — eleven items, and the decisions they wait on
 
 > **Status: SPEC. Nothing here is implemented.** It proposes; the owner decides item by
-> item, and D1–D7 below are the decisions that unblock them. Written 09/09/2026 after a
+> item, and D1–D12 below are the decisions that unblock them. Written 09/09/2026 after a
 > day in which six defects, four false findings and two inert guards all had one shape.
+
+> ## ▶ Next implementation: **D12** — the script accepts N markers
+>
+> 🔒 **Ratified 09/09/2026, and it is the first thing to do on returning to this
+> repository.** `scripts/versao-no-merge.sh` stops refusing a branch with more than one
+> `## (versão no merge)` heading: it stamps one version and keeps **every** entry. The rule
+> does not give.
+>
+> **Why it is first and not merely next:**
+>
+> > **While the script refuses N, the next split delivery gives up the same half — in
+> > silence, at the moment of merging.**
+>
+> That is not a prediction. `shvia-web#94` did exactly it on the day this was written: four
+> commits by subject, four entries, the script refused, and the entries were merged into one
+> by whoever hit the wall. Three of the four commits landed with no changelog line of their
+> own, and nobody decided that — the tool did.
+>
+> The machinery is already there: the script rewrites **N subjects** in its stamping rebase.
+> What it does not do is keep N headings. See item 11 and D12.
 
 ## The shape they share
 
