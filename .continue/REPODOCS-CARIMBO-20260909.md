@@ -1,4 +1,4 @@
-# The stamping chain — eleven items, and the decisions they wait on
+# The stamping chain — twelve items, and the decisions they wait on
 
 > **Status: SPEC. Nothing here is implemented.** It proposes; the owner decides item by
 > item, and D1–D12 below are the decisions that unblock them. Written 09/09/2026 after a
@@ -34,7 +34,7 @@ The `commit-msg` hook is correct and is never called on `rebase --continue`. `--
 is the right flag and waits for nothing when no check is required. A ratchet reads
 `max(cru, pt)` and stays green while debt grows underneath. None of them failed loudly.
 
-That is why these are one document rather than eleven tickets: the fix for each is
+That is why these are one document rather than twelve tickets: the fix for each is
 mechanical, and the reason they were all open at once is that **the fleet's guards are
 content without trigger**.
 
@@ -360,6 +360,62 @@ writing, once.
 
 ---
 
+### 12. 🔴 A test that compares dated output against a fixed shape is a time bomb, not a flake
+🔬 **Measured 10/09/2026 in `shvia-web`, and it cost a red `master` that nobody caused.**
+
+`master` sat at the same SHA whose CI had passed **green at 22:35 the night before**, and
+`ForensePentestTest > manda_salvar_o_log_antes_de_qualquer_coisa` began failing on its own.
+
+**The mechanism is worse than a date printed in a string: the report has a dated BRANCH.**
+`ForensePentest::relogio()` computes `access_expira = CORTE_C188 + 14 days`
+(`2026-08-26` → `2026-09-09`), and once that instant passes the output takes the other path:
+
+| `$dias >= 0` | `$dias < 0` |
+|---|---|
+| `PRAZO: N dia(s)` + **`SALVAR O LOG É O PASSO 1`** + `tar czf` | `A JANELA DO C188 JÁ EXPIROU` |
+
+The block the test asserted **stops existing**. Not formatting — flow. Which is why
+asserting only the invariants was not an option: the section under test lives in one branch,
+and the file's other 19 cases pass precisely because they assert lines common to both.
+
+🔴 **And that is why it is not flaky.** A flake fails *sometimes*. This passed for twelve
+days and then failed **always**, at an instant the code itself could compute in advance.
+**The distinction changes what you do: a flake is re-run, a time bomb is defused.**
+
+Fixed in `shvia-web` by freezing the clock in `setUp`, plus a case for the expired branch —
+which had none, and is the real state since 09/09. The assertion that closes it is an
+**absence**: past the deadline the report no longer tells you to save the log, because
+saving a log that has already rotated is an instruction nobody can follow.
+
+### The rule, and the sweep that has signal
+
+> **The danger is not a fixed date in the code — it is a fixed date compared against
+> `now()` in a way that makes the output change at a knowable instant. The first is a
+> constant; the second is a deadline.**
+
+The broad sweep (*"a test that asserts output and mentions a date"*) flags 12+ files in one
+repository and nearly all are relative dates that never cross a boundary — **low signal**.
+The narrow one is `grep -rnE "'20[0-9]{2}-[0-9]{2}-[0-9]{2}'" app/`, read with the rule
+above: **7 hits, 5 of them protocol/API versions** (`anthropic-version`,
+`X-GitHub-Api-Version`, `PROTOCOL`).
+
+🔬 **The measured counterexample is what makes the rule usable, and it is one line away from
+the bomb.** `LimparContasPentest::DATA_PENTEST` holds **the same date** as `CORTE_C188`, in
+the sibling command. It is **not** a bomb:
+
+```php
+if ((string) $u->created_at < self::DATA_PENTEST) {   // two STORED values
+```
+
+No branch of it turns with the calendar, and its test needs no frozen clock. Without this
+counterexample the rule reads as *"fixed dates are dangerous"*, which would send whoever
+applies it to freeze clocks in tests that never needed it — and a rule that cries wolf is
+the one somebody switches off.
+
+**Waits on: D13.**
+
+---
+
 ## Decisions
 
 | # | Decision | What it unblocks | Cost of saying yes |
@@ -378,6 +434,7 @@ writing, once.
 | **D10** ✅ | Whether the method lessons become a **fifth echo block** or a document in `docs/` that the agent files point at | item 9 | the block regenerates everywhere and turns method into boilerplate nobody re-reads; the pointer keeps one text and costs a hop. **Not equivalent. 🔒 Owner decided 09/09: the pointer.** The block regenerates everywhere and turns method into boilerplate nobody re-reads |
 | **D11** | Whether the *main checkout is never a working directory* rule enters `repodocs` as text, as **WT-1's** mechanical hook, or both | item 10 | the text costs one paragraph in the agent files and is a sample, not a proof; the hook is a fourth file in `tools/git-hooks/` and lands in nine repositories. **They are not alternatives** — the text says what to do, the hook is what makes it true |
 | **D12** | Which half gives: **the script accepts N markers** (stamp one version, keep every entry — it already rewrites N subjects, so this is the smaller change) or **the rule accepts one entry per branch** (a delivery keeps its commits, the changelog describes the delivery) | item 11 | 🔴 *not a tie.* The first keeps both halves of `COMMIT-RULE` and costs a loop in one script; the second is free and permanently gives up *"a entrada vem no mesmo commit da mudança"* for any split delivery. The spec leans to the **script**, and says so rather than leaving it open — `shvia-web#94` already paid the second option once, by accident |
+| **D13** | Whether the narrow sweep runs across the other eight repositories, and whether the rule joins the method lessons of D10 | item 12 | the sweep is one `grep` per repository read against a written rule — cheap. What is not cheap is the fix per hit, and the `shvia-web` case says most hits are **not** bombs: the counterexample sat one line from the bomb, holding the same date. **The spec leans to sweeping and reporting, not to fixing in the same pass** — a hit is a question, not a defect |
 * The block regenerates everywhere and turns method into boilerplate nobody re-reads |
 
 ### ✅ D3 — decided 09/09/2026: `post-rewrite`

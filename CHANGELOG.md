@@ -9,6 +9,42 @@ at `git commit` time.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 1.14.13 - the time-bomb rule enters the spec with the counterexample that keeps it usable
+
+Item 12, with **D13**. Measured in `shvia-web` on 10/09/2026: `master` went red sitting at
+the same SHA whose CI had passed **green at 22:35 the night before**, because a test
+asserted output from a report whose **branch** depends on `now()`.
+
+`ForensePentest::relogio()` computes `access_expira = CORTE_C188 + 14 days` (`2026-08-26` →
+`2026-09-09`). Past that instant the block the test asserted — `SALVAR O LOG É O PASSO 1`,
+`tar czf` — **stops existing**, replaced by *"A JANELA DO C188 JÁ EXPIROU"*. Not formatting:
+flow. Which is also why asserting only the invariants was not an option — the section under
+test lives in one branch, and the file's other 19 cases pass because they assert lines
+common to both.
+
+🔴 **It is not flaky, and the distinction is the point.** A flake fails sometimes; this
+passed for twelve days and then failed **always**, at an instant the code could compute in
+advance. **A flake is re-run; a time bomb is defused.**
+
+The rule, as ratified:
+
+> The danger is not a fixed date in the code — it is a fixed date compared against `now()`
+> in a way that makes the output change at a knowable instant. The first is a constant; the
+> second is a deadline.
+
+**And the counterexample is what makes it usable**, which is why it is in the spec beside
+the rule rather than left in the `shvia-web` changelog.
+`LimparContasPentest::DATA_PENTEST` holds **the same date**, in the sibling command, one
+line away — and is **not** a bomb, because it compares `$u->created_at` against the constant:
+two stored values, no branch turning with the calendar. Without it the rule reads as *"fixed
+dates are dangerous"*, and whoever applied it would freeze clocks in tests that never needed
+one. A rule that cries wolf is the one somebody switches off.
+
+**D13** asks whether the narrow sweep — `grep -rnE "'20[0-9]{2}-[0-9]{2}-[0-9]{2}'" app/`,
+read against the rule — runs across the other eight repositories. The spec leans to
+**sweeping and reporting, not fixing in the same pass**: in `shvia-web` 5 of 7 hits were
+protocol versions and the 6th was the counterexample, so a hit is a question, not a defect.
+
 ## 1.14.12 - D12 goes to the top of the spec as the next implementation, with the sentence that makes it urgent
 
 Ratified, not implemented — this repository has a writer, and the change is theirs to make.
