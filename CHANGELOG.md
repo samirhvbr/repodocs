@@ -9,6 +9,32 @@ at `git commit` time.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 1.14.14 - a repository whose normative documentation is Portuguese has no row in §8, and EOP has been that shape since 1.76.155
+
+`EOP/CLAUDE.md` carries two rules that contradict each other three hundred lines
+apart: its own golden rule 10 (*"pt-BR em docs/ADRs"*) and the `§Language` block
+that this repository regenerates into it (*"everything … is written in English
+(US)"*). The owner's verdict on 11/09 is that **golden rule 10 wins for EOP** —
+`docs/` and the ADRs stay Portuguese, commit messages and the changelog stay
+English — which is what the disk has done since `1.76.155`. The practice was never
+in doubt; the norm was.
+
+**§8 cannot absorb that today, and the finding is why.** Its three carve-outs key
+on *what kind of text* (product strings), *which repository* (the Blue3 internal
+ones) and *where in the lifecycle* (`.continue/`, temporary by construction). EOP
+is a fourth shape: **one repository, one directory, permanently**, with everything
+the English rule exists for — commits, changelog, releases, PRs, issues, code
+comments — staying English.
+
+⛔ **Nothing is decided here.** Whether §8 gains a fourth row or EOP's `docs/`
+converts is an ADR, and the finding names both shapes with their cost.
+`.continue/ACHADO-doc-normativa-em-portugues-20260911.md` carries the measurement.
+
+⚠️ **And the echo was left alone on purpose:** EOP's `§Language` sits inside the
+`RELEASES-RULE:repodocs` block, so a fix written there would be undone on the next
+regeneration — and, worse, would tell the next reader the contradiction was
+resolved. EOP got a note *outside* the block instead, pointing here.
+
 ## 1.14.13 - the time-bomb rule enters the spec with the counterexample that keeps it usable
 
 Item 12, with **D13**. Measured in `shvia-web` on 10/09/2026: `master` went red sitting at
