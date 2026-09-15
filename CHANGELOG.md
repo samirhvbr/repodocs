@@ -9,6 +9,20 @@ at `git commit` time.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 1.14.15 - the release workflow moves to checkout v7 and its Node 24 runtime
+
+The release workflow moves from `actions/checkout@v5` to `@v7`. Version 7 uses
+the Node 24 action runtime, updates its direct and transitive dependencies, and
+refuses unsafe fork checkout by default for privileged workflow triggers. This
+repository's release workflow runs only on pushes that change `version.md` or
+on manual dispatch, so the new fork-checkout restriction does not alter its
+trigger or permissions model.
+
+The workflow remains intentionally outside a pull-request CI job: its only
+effect is publishing a tag and Release after the version reaches `master`.
+Static validation confirms the YAML and action reference are valid, and the
+release script's dry run confirms `1.14.15` is the next unpublished version.
+
 ## 1.14.14 - a repository whose normative documentation is Portuguese has no row in §8, and EOP has been that shape since 1.76.155
 
 `EOP/CLAUDE.md` carries two rules that contradict each other three hundred lines
