@@ -9,6 +9,118 @@ at `git commit` time.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 1.14.14 - a repository whose normative documentation is Portuguese has no row in §8, and EOP has been that shape since 1.76.155
+
+`EOP/CLAUDE.md` carries two rules that contradict each other three hundred lines
+apart: its own golden rule 10 (*"pt-BR em docs/ADRs"*) and the `§Language` block
+that this repository regenerates into it (*"everything … is written in English
+(US)"*). The owner's verdict on 11/09 is that **golden rule 10 wins for EOP** —
+`docs/` and the ADRs stay Portuguese, commit messages and the changelog stay
+English — which is what the disk has done since `1.76.155`. The practice was never
+in doubt; the norm was.
+
+**§8 cannot absorb that today, and the finding is why.** Its three carve-outs key
+on *what kind of text* (product strings), *which repository* (the Blue3 internal
+ones) and *where in the lifecycle* (`.continue/`, temporary by construction). EOP
+is a fourth shape: **one repository, one directory, permanently**, with everything
+the English rule exists for — commits, changelog, releases, PRs, issues, code
+comments — staying English.
+
+⛔ **Nothing is decided here.** Whether §8 gains a fourth row or EOP's `docs/`
+converts is an ADR, and the finding names both shapes with their cost.
+`.continue/ACHADO-doc-normativa-em-portugues-20260911.md` carries the measurement.
+
+⚠️ **And the echo was left alone on purpose:** EOP's `§Language` sits inside the
+`RELEASES-RULE:repodocs` block, so a fix written there would be undone on the next
+regeneration — and, worse, would tell the next reader the contradiction was
+resolved. EOP got a note *outside* the block instead, pointing here.
+
+## 1.14.13 - the time-bomb rule enters the spec with the counterexample that keeps it usable
+
+Item 12, with **D13**. Measured in `shvia-web` on 10/09/2026: `master` went red sitting at
+the same SHA whose CI had passed **green at 22:35 the night before**, because a test
+asserted output from a report whose **branch** depends on `now()`.
+
+`ForensePentest::relogio()` computes `access_expira = CORTE_C188 + 14 days` (`2026-08-26` →
+`2026-09-09`). Past that instant the block the test asserted — `SALVAR O LOG É O PASSO 1`,
+`tar czf` — **stops existing**, replaced by *"A JANELA DO C188 JÁ EXPIROU"*. Not formatting:
+flow. Which is also why asserting only the invariants was not an option — the section under
+test lives in one branch, and the file's other 19 cases pass because they assert lines
+common to both.
+
+🔴 **It is not flaky, and the distinction is the point.** A flake fails sometimes; this
+passed for twelve days and then failed **always**, at an instant the code could compute in
+advance. **A flake is re-run; a time bomb is defused.**
+
+The rule, as ratified:
+
+> The danger is not a fixed date in the code — it is a fixed date compared against `now()`
+> in a way that makes the output change at a knowable instant. The first is a constant; the
+> second is a deadline.
+
+**And the counterexample is what makes it usable**, which is why it is in the spec beside
+the rule rather than left in the `shvia-web` changelog.
+`LimparContasPentest::DATA_PENTEST` holds **the same date**, in the sibling command, one
+line away — and is **not** a bomb, because it compares `$u->created_at` against the constant:
+two stored values, no branch turning with the calendar. Without it the rule reads as *"fixed
+dates are dangerous"*, and whoever applied it would freeze clocks in tests that never needed
+one. A rule that cries wolf is the one somebody switches off.
+
+**D13** asks whether the narrow sweep — `grep -rnE "'20[0-9]{2}-[0-9]{2}-[0-9]{2}'" app/`,
+read against the rule — runs across the other eight repositories. The spec leans to
+**sweeping and reporting, not fixing in the same pass**: in `shvia-web` 5 of 7 hits were
+protocol versions and the 6th was the counterexample, so a hit is a question, not a defect.
+
+## 1.14.12 - D12 goes to the top of the spec as the next implementation, with the sentence that makes it urgent
+
+Ratified, not implemented — this repository has a writer, and the change is theirs to make.
+What lands here is the **order**: D12 is the first thing to do on returning, and the banner
+at the top of the spec now says so instead of leaving it as one row in a table of twelve.
+
+The sentence that moves it from *next* to *first*:
+
+> While the script refuses N markers, the next split delivery gives up the same half — in
+> silence, at the moment of merging.
+
+It is not a prediction. `shvia-web#94` did exactly that on the day the item was written:
+four commits by subject, four entries, the script refused, and the entries were merged into
+one by whoever hit the wall. **Three of the four commits landed with no changelog line of
+their own, and nobody decided that — the tool did.** Every split delivery after it pays the
+same price until the script changes.
+
+The machinery is already there, which is why this is the cheap half of D12: the script
+rewrites **N subjects** in its stamping rebase. What it does not do is keep N headings.
+
+## 1.14.11 - the stamp tool and one-subject-per-commit contradict each other, and #94 paid it by accident
+
+Item 11, with **D12**. Two things the house wrote, both followed, cannot both be followed on
+the same delivery.
+
+`COMMIT-RULE` splits a delivery **by subject** and puts the changelog entry **in the same
+commit as the change** — *"é ela que carrega a descrição"*. Four findings, four subjects,
+four tests ⇒ four commits, four entries.
+
+`scripts/versao-no-merge.sh` refuses exactly that: *"há 4 marcadores no CHANGELOG.md —
+esperado exatamente 1"*. Not a message it could relax — it reads the description with
+`grep -m1` and stamps **one** version per branch. Its model is one entry per branch; the
+rule's model is one entry per subject.
+
+🔬 **Measured on `shvia-web#94`**, which merged the four entries into one with four `###`
+sections and kept the four commits. It stamped and it merged — and three of the four commits
+now carry no changelog line of their own. That half of the rule was **given up quietly, by
+whoever hit the wall, at the moment of merging**, which is the worst place for a convention
+to be decided.
+
+**It is an item and not a note in that entry** because the next person to split a delivery
+hits the same wall and picks whichever half they happen to value, and the fleet ends up with
+both conventions and no record of the choice.
+
+**D12 is not a tie, and the spec says which way it leans:** the script accepting N markers
+keeps both halves of the rule and costs a loop in one script — it already rewrites N subjects,
+so the machinery is there. The rule accepting one entry per branch is free and permanently
+gives up *"a entrada vem no mesmo commit da mudança"* for every split delivery. `#94` already
+paid that price once, by accident.
+
 ## 1.14.10 - `shvia-web` requires both checks, and the trap of the check that never runs gets its own section
 
 **D5 ◐ — `shvia-web` decided 09/09: both `assunto` and `test` are required.** Not the cheap
