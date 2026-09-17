@@ -205,6 +205,13 @@ Dependabot watches what this repository has (§ADR-009). A dependency is added
 deliberately, pinned, and reviewed for its own transitive surface. An
 unmaintained package is a vulnerability with a delay.
 
+**A GitHub Action is a dependency that runs with the workflow's permissions, and
+it is referenced by a full commit SHA, never by a tag** — a tag is a pointer its
+owner can move, and the workflow that publishes a Release is the one holding
+`contents: write`. The readable tag goes in a trailing comment, because a pin
+does not expire and the comment is what makes it auditable by reading:
+[ADR-025](decisions.md#adr-025--a-github-action-is-referenced-by-commit-sha-never-by-a-tag).
+
 ## 11. Incident response
 
 1. **Contain** — cut the exposure before explaining it.

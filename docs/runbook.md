@@ -147,6 +147,9 @@ diff LICENSE /path/to/repodocs/LICENSE
 
 # every version in history has a tag and a Release (prints what is missing)
 ./tools/release.sh --backfill --dry-run
+
+# no action referenced by a movable tag (ADR-025) — silence is conformance
+grep -rn 'uses: .*@v[0-9]' .github/workflows/
 ```
 
 If the `diff` on the twins reports anything other than the mirroring comment,

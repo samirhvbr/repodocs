@@ -1229,3 +1229,67 @@ skipping in silence is not.
 puts a question to a reader — *did the pertinent tests run?* — because the hook
 that could ask it would be the four-minute hook `pre-push` was designed not to
 be.
+
+---
+
+## ADR-025 — a GitHub Action is referenced by commit SHA, never by a tag
+
+**Status:** `ACCEPTED` · 17/09/2026 · Applies
+[security.md §3.3](security.md#3-general-rules-mandatory) — least privilege, always — to
+the one dependency this standard itself ships · Constrains the workflow permitted by
+[ADR-013](#adr-013--a-release-workflow-is-not-a-ci-workflow)
+
+**Context.** The skeleton's `release.yml` referenced `actions/checkout@v5` and this
+repository's own copy `@v7`. A tag is a pointer the action's owner can move at any moment,
+to any commit, with no notice and no signal on our side. The step sits in the one job this
+standard defines that elevates to `contents: write` — it exists to create a tag and publish
+a Release — so whatever that reference resolves to runs with permission to write to the
+repository.
+
+Measured across the fleet on 17/09/2026: three repositories carried that file
+byte-for-byte identically, all on the tag. One of them, `sshvterm-desktop`, had a rule of
+its own requiring SHAs, eight actions obeying it in a different workflow — and this file,
+the privileged one, outside it. A rule that lives inside one repository is invisible from
+the other two, which is [ADR-001](#adr-001--repodocs-is-the-fleets-documentation-standard)'s
+argument applied to a dependency instead of to a document.
+
+**The premise that fixing the source propagates is false, and that shapes the decision.**
+`tools/fleet.sh` writes the two git hooks, `tools/release.sh` and the four echo blocks; it
+has never written anything under `.github/workflows/`. The three copies are identical
+because they were born from the same skeleton, not because anything keeps them so. This
+ADR therefore binds **new** repositories through the skeleton, and existing ones through a
+pass somebody runs — §8 of the runbook, not a sync.
+
+**Decision.** Every `uses:` in a workflow of this fleet names a **full 40-character commit
+SHA**, with the readable tag in a trailing comment:
+
+```yaml
+- uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
+```
+
+It holds for `actions/*` and for third parties alike. A third party is the case the rule
+was written for; a first party being exempt is the kind of exception nobody should have to
+argue in a review.
+
+**The cost is real and is accepted with its mitigation.** A pin does not expire. The day
+the major it points at is retired, nothing fails and nothing announces itself — the pin
+keeps working until a runner refuses it. The fleet met exactly this on 16/09/2026: a
+workflow pinned to `actions/checkout` v4 ran **green**, and GitHub reported in an
+annotation *on the successful run* that the Node 20 runtime that action declares no longer
+exists and had been forced onto 24. Two things follow, and they are the mitigation:
+
+1. **The tag comment is not decoration.** It is what lets a reader audit a pin without
+   resolving forty characters against an API.
+2. **A deprecation annotation on a green run is work, not noise.** It is the only notice a
+   pin will ever get.
+
+**No mechanical guard.** Like
+[ADR-021](#adr-021--the-queue-empties-by-production-and-by-nothing-else) and
+[ADR-024](#adr-024--a-change-in-behavior-ships-with-the-test-that-fails-when-the-behavior-breaks),
+this puts a question to whoever reviews a workflow instead of installing something to ask
+it. `pre-push` does not parse YAML, and
+[ADR-009](#adr-009--no-ci-workflow-in-this-repository) keeps a CI workflow out of this
+repository, so a checker would have nowhere to live that is not a new subsystem. The grep
+that answers it is one line and is in
+[runbook.md §7](runbook.md#7-verifying-a-repository-still-conforms), where silence is
+conformance.

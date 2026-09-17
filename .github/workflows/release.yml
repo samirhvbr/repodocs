@@ -46,7 +46,10 @@ jobs:
     permissions:
       contents: write          # only this job writes; creating a tag needs it
     steps:
-      - uses: actions/checkout@v7
+      # Pinned by full 40-character commit SHA, with the tag in the comment (ADR-025).
+      # A tag is a pointer its owner can move at any time, and this is the job that holds
+      # `contents: write`.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
         with:
           # Full history: the backfill walks git log, and the notes come from
           # the CHANGELOG section for the version.

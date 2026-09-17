@@ -9,6 +9,46 @@ at `git commit` time.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 1.14.16 - the pin rule stops belonging to one repository and becomes the standard's
+
+`1.14.15` moved this repository's release workflow to `actions/checkout@v7` and left it a
+tag. BD-03 of the sshvterm review had found the same shape in three fleet repositories and
+prescribed fixing it *"na fonte"* — which turns out to be two claims, one true and one not:
+the **rule** belongs here; the **file** does not travel from here.
+
+**[ADR-025](docs/decisions.md#adr-025--a-github-action-is-referenced-by-commit-sha-never-by-a-tag)**
+— every `uses:` in a fleet workflow names a full 40-character commit SHA, with the readable
+tag in a trailing comment. It holds for `actions/*` and third parties alike, because a
+first-party exemption is the kind of exception nobody should have to argue in a review. The
+reason it is a rule and not a preference: the step in question is the one job this standard
+defines that elevates to `contents: write`, and a tag is a pointer its owner can move at any
+moment, with no notice on our side.
+
+**The cost is in the ADR rather than left to be discovered.** A pin does not expire; when
+the major it points at is retired nothing fails and nothing announces itself. The fleet met
+exactly that on 16/09: a workflow pinned to `actions/checkout` v4 ran **green**, with
+GitHub's annotation on the successful run saying the Node 20 runtime it declares no longer
+exists and had been forced onto 24. So the ADR carries the two consequences that make the
+rule survivable — the tag comment is what makes a pin auditable by reading, and a
+deprecation annotation on a green run is work rather than noise.
+
+It reaches the fleet as a rule in
+[security.md §10](docs/security.md#10-dependency-maintenance), one line of `grep` in
+[runbook.md §7](docs/runbook.md#7-verifying-a-repository-still-conforms) where silence is
+conformance, and the pin itself in **both** copies of `release.yml` here — this
+repository's and the skeleton's. The skeleton was still on `@v5`: a repository created this
+week would have been born two majors behind *and* on a tag.
+
+⚠️ **It does not reach the repositories that already exist, and that is measured, not
+assumed.** `tools/fleet.sh` writes the two git hooks, `tools/release.sh` and the four echo
+blocks, and has never written anything under `.github/workflows/`. The three sshvterm
+repositories were fixed in their own commits — `2.1.16`, `1.3.44` and `0.4.32` — before this
+one. Any other repository is §8 of the runbook, by hand.
+
+No mechanical guard, for the reason ADR-009 and ADR-024 already give: `pre-push` does not
+parse YAML, there is no CI workflow here to host a checker, and the question is one line of
+`grep` that a reviewer can run.
+
 ## 1.14.15 - the release workflow moves to checkout v7 and its Node 24 runtime
 
 The release workflow moves from `actions/checkout@v5` to `@v7`. Version 7 uses
