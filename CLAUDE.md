@@ -10,7 +10,7 @@
 > where we stopped, **always first**) · [docs/conventions.md](docs/conventions.md)
 > (the norm this repository exists to hold) ·
 > [docs/versioning.md](docs/versioning.md) (how a version and a commit are
-> written) · [docs/decisions.md](docs/decisions.md) (ADRs 001–027 — do not
+> written) · [docs/decisions.md](docs/decisions.md) (ADRs 001–028 — do not
 > re-litigate a decided direction, link the ADR) ·
 > [docs/security.md](docs/security.md) (normative; wins any conflict).
 
@@ -271,8 +271,10 @@ is `master` — a house convention so that every script, hook and runbook can sa
 
 Single branch, `master`. Direct push is allowed. **Force-push and deletion are
 dead for everyone, the owner included** — a rewritten history is an audit trail
-destroyed, and `.claude/settings.json` denies `--force`, `-f`, `reset --hard`
-and `clean -fd` regardless of what the allow-list says.
+destroyed. Since 1.17.0 that holds as a rule of conduct, not as a block:
+`.claude/settings.json` no longer denies `--force`, `-f`, `reset --hard` or
+`clean -fd`, and a force-push matches `Bash(git push:*)` in the allow-list
+([ADR-028](docs/decisions.md#adr-028--the-owners-permission-lists-five-commands-ask-seven-rules-leave-deny)).
 
 ---
 

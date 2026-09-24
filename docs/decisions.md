@@ -1432,3 +1432,37 @@ the newest model never appeared.
 **No mechanical guard,** for the reasons of ADR-025 and ADR-026. Two lines in
 [runbook.md §7](runbook.md#7-verifying-a-repository-still-conforms) ask the question, and silence
 is conformance.
+
+---
+
+## ADR-028 — the owner's permission lists: five commands ask, seven rules leave deny
+
+**Status:** `ACCEPTED` · 24/09/2026 · The owner's decision · Changes the mechanism behind
+[security.md](security.md) §2 and §3.6; the rule of conduct against rewriting published history
+stands
+
+**Context.** The owner rewrote the permission lists of `.claude/settings.json` by hand and asked
+for the same lists across the fleet.
+
+**Decision.**
+
+- `rm -rf`, `curl * | sh`, `curl * | bash`, `wget * | sh` and `wget * | bash` move from `deny` to
+  `ask`: they run after a confirmation.
+- `Read(./.env)`, `Read(./.env.*)`, `git push --force`, `git push -f`, `git push * --force*`,
+  `git reset --hard` and `git clean -fd` leave `deny` and go to no list.
+- Key reads — `*.pem`, `*.key`, `*.p8`, `*.p12`, `*.pfx` — stay denied, and so does every rule a
+  repository added for its own stack.
+
+**What it means, stated so it is not discovered later.** With `Bash(git push:*)` and `Read` in the
+allow-list, a force-push and a read of `.env` run without a prompt; `git reset --hard` and
+`git clean -fd`, which no allow rule matches, fall to the default prompt. Measured across the 48
+repositories we own on the day: 41 allow `Bash(git push:*)`, 42 allow `Read`, and 9 have a real
+`.env` on disk. This was put to the owner in those terms before the change was replicated, and the
+answer was to keep the lists as written.
+
+No reason was recorded, and none is invented here. The rule of conduct stays where it was: nobody
+rewrites a published history (CLAUDE.md, *Branch*; the echo block *"never force, never rewrite
+history"*); what changed is that `.claude/settings.json` no longer enforces it.
+
+**Scope.** This repository, the skeleton, and every repository we own, applied as a delta to each
+one's own lists — a repository's stack-specific allow and ask entries are untouched.

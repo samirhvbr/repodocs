@@ -54,9 +54,9 @@ line of application code.
 |---|---|---|
 | Credentials, tokens, private keys | Committed by accident, then valid forever in git history | §5. `.gitignore` covers the classes; a leak requires **rotation**, not a revert |
 | The template skeleton | A weak default propagates silently to every new repository | Review of `templates/skeleton/` is review of every future repo |
-| Agent permissions | An agent runs a destructive or history-rewriting command | `.claude/settings.json` deny-list; it always beats the allow-list |
+| Agent permissions | An agent runs a destructive or history-rewriting command | `.claude/settings.json`: `rm -rf` and `curl`/`wget` piped into a shell ask for confirmation; key reads are denied, and a denied rule always beats the allow-list. Reading `.env` is not restricted since 1.17.0 ([ADR-028](decisions.md#adr-028--the-owners-permission-lists-five-commands-ask-seven-rules-leave-deny)) |
 | Documents read by an agent | Prompt injection through text the agent treats as instruction | §4.9 |
-| Published history | Force-push or hard reset destroys the audit trail | `git push --force`, `-f`, `reset --hard`, `clean -fd` are denied |
+| Published history | Force-push or hard reset destroys the audit trail | Rule of conduct §3.6. Since 1.17.0 not a mechanical block: `git push --force`, `-f`, `reset --hard`, `clean -fd` are in no list, and a force-push matches `Bash(git push:*)` ([ADR-028](decisions.md#adr-028--the-owners-permission-lists-five-commands-ask-seven-rules-leave-deny)) |
 | The repository's own visibility | A private repo made public with content that assumed privacy | The pre-flight checklist in [runbook.md](runbook.md) |
 
 ## 3. General rules (mandatory)
@@ -72,8 +72,10 @@ line of application code.
    boundary as hostile until validated.
 5. **Deny by default.** A new permission, route or capability starts closed and
    is opened deliberately, with the reason written down.
-6. **A published history is not rewritten.** Force-push and hard reset are
-   denied to everyone, the owner included.
+6. **A published history is not rewritten.** Nobody force-pushes or hard-resets
+   it, the owner included. Since 1.17.0 nothing in `.claude/settings.json` blocks
+   either ([ADR-028](decisions.md#adr-028--the-owners-permission-lists-five-commands-ask-seven-rules-leave-deny)):
+   the rule holds by conduct.
 7. **A guard needs a declared escape hatch.** A control with no documented
    bypass gets bypassed with `--no-verify`, which disables every control at once.
 8. **A security fix becomes an ADR** in [decisions.md](decisions.md) when it

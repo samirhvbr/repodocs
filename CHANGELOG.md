@@ -9,6 +9,25 @@ at `git commit` time.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 1.17.0 - ADR-028 records the owner's permission lists, and the documents stop promising a block
+
+The previous commit changed what `.claude/settings.json` enforces; five documents still described
+the old lists as if they were in force, and one of them is normative. `CLAUDE.md` and `AGENTS.md`
+said the file *"denies --force, -f, reset --hard and clean -fd regardless of what the allow-list
+says"*. `security.md` §2 listed the deny-list as the mitigation for history rewriting and §3.6 said
+force-push and hard reset *"are denied to everyone"*. Both `.claude/README.md` files said
+`git push --force` *"is still blocked"* and that `.env` reads were denied.
+
+Each now says what the file does: key reads denied; `rm -rf` and piped `curl`/`wget` ask; force-push,
+hard reset, `clean -fd` and `.env` reads in no list, with the consequence spelled out — a force-push
+and a `.env` read match the allow-list and run without a prompt. The rule of conduct against
+rewriting a published history is kept in every place it was stated; only the claim that the
+settings file enforces it is gone.
+
+ADR-028 records the change as the owner's decision, with the measurement put to him before it was
+replicated (41 of 48 repositories allow `Bash(git push:*)`, 9 have a real `.env`). It records that no
+reason was given and invents none. The twins point at "ADRs 001–028".
+
 ## 1.17.0 - five commands move from deny to ask, and seven rules leave deny
 
 The owner rewrote the permission lists of `.claude/settings.json` on 24/09/2026, and this commit

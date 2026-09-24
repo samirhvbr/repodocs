@@ -15,7 +15,7 @@ enforces is [docs/conventions.md](../docs/conventions.md).
 
 | File | Role |
 |------|------|
-| `settings.json` | The **active** profile, versioned. Today: **nothing that chooses the model**, `effortLevel: high`, `defaultMode: plan`, a 17-rule deny-list and a 17-entry allow-list. |
+| `settings.json` | The **active** profile, versioned. Today: **nothing that chooses the model**, `effortLevel: high`, `defaultMode: plan`, a 5-rule deny-list, an 8-rule ask-list and a 17-entry allow-list. |
 | `settings.local.json` | Machine-local override, **gitignored** — it may hold paths and tokens that belong to one machine. Never commit it. |
 
 ## Why this file does not choose the model
@@ -52,15 +52,18 @@ project must keep it.
 
 ## The deny-list beats the allow-list — always
 
-`Bash(git push:*)` is allowed, and `git push --force` / `-f` is still blocked.
-That asymmetry is the point: pushing is routine, rewriting published history is
-not, and no allow-list entry can re-open a denied one. The same holds for
-`git reset --hard` and `git clean -fd`.
+No allow-list entry can re-open a denied rule — that mechanism is unchanged.
+What is denied changed on 24/09/2026, by the owner's decision
+([ADR-028](../docs/decisions.md#adr-028--the-owners-permission-lists-five-commands-ask-seven-rules-leave-deny)):
 
-Secret reads are denied by path (`.env`, `*.pem`, `*.key`, `*.p8`, `*.p12`,
-`*.pfx`) even though this repo has no such file. The rule travels with the
-skeleton, where the files *will* exist — a guard added after the first secret
-lands is a guard added too late.
+- **Denied:** key reads by path — `*.pem`, `*.key`, `*.p8`, `*.p12`, `*.pfx`.
+- **Ask for confirmation:** `sudo`, `rm -rf`, `curl`/`wget` piped into a shell,
+  `gh repo edit`, `gh repo delete`.
+- **In no list:** `git push --force` / `-f`, `git reset --hard`, `git clean -fd`
+  and reading `.env`. A force-push and a `.env` read match `Bash(git push:*)` and
+  `Read` in the allow-list and run without a prompt; `reset --hard` and
+  `clean -fd` fall to the default prompt. Not rewriting published history is a
+  rule of conduct here, not a block.
 
 ## Granting a new permission is the owner's act
 
