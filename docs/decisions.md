@@ -1293,3 +1293,73 @@ repository, so a checker would have nowhere to live that is not a new subsystem.
 that answers it is one line and is in
 [runbook.md §7](runbook.md#7-verifying-a-repository-still-conforms), where silence is
 conformance.
+
+---
+
+## ADR-026 — a repository does not pin the model, and a window suffix is a version pin
+
+**Status:** `ACCEPTED` · 24/09/2026 · Governs `.claude/settings.json` and
+[`templates/skeleton/`](../templates/skeleton/) · Applies
+[ADR-001](#adr-001--repodocs-is-the-fleets-documentation-standard) to a configuration file
+instead of to a document
+
+**Context.** The owner asked why the `/model` picker never offered the newer Opus. Three
+layers were holding the previous one, and only one of them lives in a repository:
+
+1. `env.ANTHROPIC_DEFAULT_OPUS_MODEL=claude-opus-5` — it remaps the `opus` alias **and the
+   picker's "Opus" entry**, so the newer model is not selectable at all while it is set.
+2. `"model": "opus[1m]"` in `.claude/settings.json`.
+3. The same two keys in `<config_dir>/remote-settings.json` — **server-managed settings**,
+   fetched from the account at startup and polled while a session runs. They outrank every
+   local file, `.claude/settings.local.json` and the command line included, and that file is
+   a cache, not a configuration: a local edit to it on 24/09/2026 was reverted at 10:06:37
+   the same morning.
+
+Measured the same day across `~/x`: six repositories still carry the env pin alive inside
+`env`, 56 further copies sit in worktrees — which take the fix from the branch they were cut
+from — and nine in `_quarentena/`. All of them descend from the same skeleton, which is
+[ADR-001](#adr-001--repodocs-is-the-fleets-documentation-standard)'s argument arriving at a
+JSON file instead of at a document.
+
+**The suffix is the part nobody could see.** `opus[1m]` reads as a window choice on top of a
+version-free alias, and the profile comment in this repository said exactly that — *"the 1M
+window is explicit via the `[1m]` suffix on `model`"*. But the 1M variant existed only for the
+previous Opus, so the suffix was what chose the version: every session was born on the older
+model while the catalog already offered the newer one. The alias promised "always the newest
+Opus" and the suffix quietly cancelled the promise. EOP measured this first, on 23/09/2026,
+and dropped the suffix there at the cost of the window.
+
+**Decision.** The skeleton ships **no `model` key**, and neither does this repository.
+
+- A repository that wants to pin a model **names the version** — `"model": "opus55"` — never
+  a bare alias carrying a window suffix. A pin somebody can read is a pin somebody can
+  revisit; this one had survived unread for weeks.
+- `CLAUDE_CODE_SUBAGENT_MODEL` stays `opus` on purpose: a subagent should follow the newest
+  Opus, not the session's pick.
+- `ANTHROPIC_DEFAULT_OPUS_MODEL` is not written into a repository at all. It does not pin one
+  session's model — it redefines what the word `opus` means for everything that reads it, the
+  picker included, which is a much larger claim than a settings file should make.
+
+**The cost is real and is accepted.** Without a `model` key the session takes whatever the
+account sends, so the 1M window stops being something this repository guarantees. That is the
+trade, stated plainly: the window was the whole argument for the suffix, and the suffix was
+the pin.
+
+**This ADR unblocks nothing by itself, and saying so is half its value.** The deciding layer
+belongs to the account, not to us. Removing these keys changes what a repository born from the
+skeleton inherits, and what the day the account is cleaned looks like — nothing else. Whoever
+reads this after hitting the same wall should go to the account's managed settings first and
+to a settings file second.
+
+**No mechanical guard.** Like [ADR-021](#adr-021--the-queue-empties-by-production-and-by-nothing-else),
+[ADR-024](#adr-024--a-change-in-behavior-ships-with-the-test-that-fails-when-the-behavior-breaks)
+and [ADR-025](#adr-025--a-github-action-is-referenced-by-commit-sha-never-by-a-tag), this puts a
+question to whoever reviews a settings file instead of installing something to ask it:
+`pre-push` does not parse JSON, and [ADR-009](#adr-009--no-ci-workflow-in-this-repository) keeps
+a CI workflow out of this repository. The check is one line —
+
+```bash
+python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print(d.get("model","(none)"), (d.get("env") or {}).get("ANTHROPIC_DEFAULT_OPUS_MODEL","(no pin)"))' .claude/settings.json
+```
+
+— and `(none) (no pin)`, or a version spelled out, is conformance.

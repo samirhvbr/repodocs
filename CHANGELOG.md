@@ -9,6 +9,30 @@ at `git commit` time.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 1.15.0 - ADR-026 records that a pin in a repository cannot outrank the account
+
+The previous commit removed two keys. This one writes down why, because the finding is the
+kind that gets re-litigated by the next session that wants the 1M window back: it looks like
+a free win until you know the variant existed only for the older Opus.
+
+ADR-026 states the precedence plainly — server-managed settings, cached in
+`<config_dir>/remote-settings.json`, outrank `.claude/settings.json`, `settings.local.json`
+and the command line, and that file is a cache whose local edit was reverted at 10:06:37 on
+24/09/2026. It states the rule that follows: a repository that pins a model names the version
+(`"model": "opus55"`), never a bare alias with a window suffix, and
+`ANTHROPIC_DEFAULT_OPUS_MODEL` is not written into a repository at all — it does not pin one
+session, it redefines what `opus` means for everything that reads it, the picker included.
+
+It also states what the ADR does **not** do, which is the half most likely to be lost: it
+unblocks nothing. The deciding layer belongs to the account. Six repositories of the fleet
+still carried the env pin when this was measured, plus 56 copies in worktrees and nine in
+quarantine.
+
+No mechanical guard, for the reason ADR-021, ADR-024 and ADR-025 give: `pre-push` does not
+parse JSON and [ADR-009](docs/decisions.md) keeps CI out of here. The conformance check is the
+one-line `python3 -c` in the ADR. `CLAUDE.md` and `AGENTS.md` pointed at "ADRs 001–024" and now
+point at 001–026.
+
 ## 1.15.0 - the skeleton stops pinning a model, and the window suffix stops being a version pin
 
 The owner asked why the `/model` picker never offered the newer Opus. Three layers were
