@@ -9,6 +9,25 @@ at `git commit` time.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 1.17.0 - five commands move from deny to ask, and seven rules leave deny
+
+The owner rewrote the permission lists of `.claude/settings.json` on 24/09/2026, and this commit
+carries his file exactly as he saved it. `rm -rf` and `curl`/`wget` piped into a shell leave
+`deny` and now ask for confirmation. Reading `.env` and `.env.*`, `git push --force`, `git push -f`,
+`git push * --force*`, `git reset --hard` and `git clean -fd` leave `deny` and go to no list. The
+key reads — `*.pem`, `*.key`, `*.p8`, `*.p12`, `*.pfx` — stay denied.
+
+What that means in practice, measured before the change was replicated: with `Bash(git push:*)` and
+`Read` in the allow-list, a force-push and a read of `.env` now run without a prompt, while
+`git reset --hard` and `git clean -fd`, which no allow rule matches, fall to the default prompt. It
+was put to the owner in those words, and the answer was to keep it as written.
+
+`templates/skeleton/.claude/settings.json` takes the same delta, so a repository born from the
+skeleton starts from the same lists; its `deny` and `ask` now equal this repository's, entry for
+entry. The documents that described the old lists are corrected in the next commit.
+
+No test: two JSON files. Checked that both parse and that the skeleton's lists match the root's.
+
 ## 1.16.0 - the norm that nothing in a repository chooses the model
 
 The previous commit changed this repository. This one writes the rule for the fleet, in the
