@@ -15,8 +15,24 @@ enforces is [docs/conventions.md](../docs/conventions.md).
 
 | File | Role |
 |------|------|
-| `settings.json` | The **active** profile, versioned. Today: `opus[1m]`, `effortLevel: high`, `defaultMode: plan`, a 17-rule deny-list and a 13-entry allow-list. |
+| `settings.json` | The **active** profile, versioned. Today: **no `model` key**, `effortLevel: high`, `defaultMode: plan`, a 17-rule deny-list and a 17-entry allow-list. |
 | `settings.local.json` | Machine-local override, **gitignored** — it may hold paths and tokens that belong to one machine. Never commit it. |
+
+## Why there is no `model` key
+
+A model pinned here cannot win. Server-managed settings — cached in
+`<config_dir>/remote-settings.json` and re-fetched at startup — outrank every
+local file, and a local edit to that cache is reverted on the next fetch.
+Measured on 24/09/2026, when the owner asked why Opus 5.5 never took hold: three
+layers were holding the previous Opus, and the repository was the only one of
+them anybody could edit.
+
+The pin this file used to carry was invisible on top of that. `opus[1m]` reads as
+a window choice and behaves as a version pin, because the 1M variant existed only
+for the previous Opus — so every session was born on it while the catalog already
+offered the newer one. To pin a model here again, **name the version**
+(`"model": "opus55"`), never a bare alias plus a window suffix
+([ADR-026](../docs/decisions.md#adr-026--a-repository-does-not-pin-the-model-and-a-window-suffix-is-a-version-pin)).
 
 ## Why `defaultMode: plan`
 

@@ -3,7 +3,11 @@
 > **Status:** `ACTIVE`
 
 `.claude/` in this repository follows the standard of the samirhvbr/Blue3 fleet:
-a **model profile** plus a **permission posture**, both versioned.
+a **permission posture**, versioned. **The model is deliberately not pinned**
+here — a pin in a repository cannot outrank the account's server-managed
+settings, and `opus[1m]` turned out to be a version pin wearing a window
+suffix (repodocs ADR-026). To pin one anyway, name the version:
+`"model": "opus55"`.
 
 Conduct rules for the agent are in [CLAUDE.md](../CLAUDE.md).
 

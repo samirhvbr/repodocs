@@ -9,6 +9,36 @@ at `git commit` time.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 1.15.0 - the skeleton stops pinning a model, and the window suffix stops being a version pin
+
+The owner asked why the `/model` picker never offered the newer Opus. Three layers were
+holding the previous one, and this repository was only one of them: `.claude/settings.json`
+carried `"model": "opus[1m]"` and, until 23/09, `env.ANTHROPIC_DEFAULT_OPUS_MODEL=claude-opus-5`
+— and `templates/skeleton/` carried both, which is how they reached every repository born from
+it. Measured on 24/09/2026 across the fleet: six repositories still have the env pin alive in
+`env`, plus 56 copies in worktrees and nine in quarantine.
+
+The suffix is the part worth writing down. `opus[1m]` reads as a window choice and behaves as a
+version pin, because the 1M variant existed only for the previous Opus — the alias promised
+"always the newest Opus" and the suffix silently undid it. A pin nobody can see is worse than a
+pin somebody argued for.
+
+Both keys are gone from the two settings files, and the `_comment_profile` that prescribed the
+suffix now says the opposite and names what to write instead: `"model": "opus55"`, the version
+spelled out. `.claude/README.md` advertised `opus[1m]` and a 13-entry allow-list that has
+counted 17 for a while; both numbers are now what the JSON says.
+
+**None of this unblocks the picker, and the new comment says so.** The layer that decides is
+the account's server-managed settings, cached in `<config_dir>/remote-settings.json` and
+re-fetched at startup: it outranks every local file, and a local edit to that cache was reverted
+at 10:06:37 the same morning it was made. What leaves here is a line that misleads — and that
+would take effect again the day the account is cleaned.
+
+No test ships with this: the change is two JSON keys and two documents, and `pre-push` does not
+parse JSON ([conventions.md §9](docs/conventions.md#9-a-change-in-behavior-ships-with-the-test-that-fails-when-the-behavior-breaks)).
+What was checked instead: both files parse with `json.load`, the twins still diff clean, and the
+fleet grep that produced the numbers above.
+
 ## 1.14.17 - pre-push reads the version of the commit being pushed, not of the working tree
 
 Since `1.9.2` the hook reads what git gives it on stdin, so a deletion, a tag and a topic
