@@ -150,6 +150,15 @@ diff LICENSE /path/to/repodocs/LICENSE
 
 # no action referenced by a movable tag (ADR-025) — silence is conformance
 grep -rn 'uses: .*@v[0-9]' .github/workflows/
+
+# nothing in the repository chooses the model (ADR-027) — silence is conformance.
+# The find reads every config file directly under .claude/ — settings, local
+# settings and any extensionless stand-by profile — but not its documents.
+find .claude -maxdepth 1 -type f ! -name '*.md' -print0 2>/dev/null | xargs -0 -r grep -nE \
+  '"(model|fallbackModel|availableModels)":|CLAUDE_CODE_SUBAGENT_MODEL|ANTHROPIC_(DEFAULT_[A-Z]+_)?MODEL' \
+  | grep -v '"_comment'
+grep -nE 'CLAUDE_CODE_SUBAGENT_MODEL|ANTHROPIC_(DEFAULT_[A-Z]+_)?MODEL' .codex/config.toml 2>/dev/null
+grep -rn '^model:' .claude/agents/ 2>/dev/null | grep -v 'model: inherit'
 ```
 
 If the `diff` on the twins reports anything other than the mirroring comment,

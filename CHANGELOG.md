@@ -9,6 +9,30 @@ at `git commit` time.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 1.16.0 - the norm that nothing in a repository chooses the model
+
+The previous commit changed this repository. This one writes the rule for the fleet, in the
+three places the standard keeps a rule: the decision, the norm, and the check.
+
+ADR-027 records the decision and the measurement behind it. Claude Code gives a subagent the
+session's model unless something intervenes, and in this fleet something always did:
+`CLAUDE_CODE_SUBAGENT_MODEL` in 50 settings files, 54 stand-by profiles in 18 repositories whose
+only purpose was to change the model by copying themselves over `settings.json` — pinning Opus
+4.8, Fable 5 and Sonnet 4.6 — and three `.codex/config.toml` exporting the Opus 5 pin into every
+shell Codex opens. It amends ADR-026 twice: the subagent clause goes, and so does the allowance to
+pin a model by naming its version, because there is no repository-level pin left to write well.
+It also says what it cannot do — the organization's managed settings outrank every file, and
+still carried the pins when it was written.
+
+`conventions.md` §7 gains the norm as a table of where a model choice has hidden in this fleet
+and must not be, and the `.claude/` row stops calling that folder a "model profile".
+`runbook.md` §7 gains the check. Its first draft grepped all of `.claude/` and flagged the
+documents that explain the rule, so it now reads only the configuration files directly under
+`.claude/`, `.codex/config.toml` and the agent definitions. It was run both ways: silent on this
+repository and on the skeleton, and it names the three lines still pinning EOP.
+
+The twins point at "ADRs 001–027".
+
 ## 1.16.0 - the subagent stops being pinned, and the model becomes the user's choice
 
 1.15.0 took `model` and the alias pin out of the skeleton and kept one variable on purpose:

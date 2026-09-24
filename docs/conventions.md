@@ -308,7 +308,7 @@ And these directories:
 
 | Path | Rule |
 |---|---|
-| `.claude/` | Model profile and permission posture, versioned. `settings.local.json` is the machine-local part and stays gitignored. Granting a permission is the owner's act, written with its reason. |
+| `.claude/` | Permission posture, versioned. **It never chooses the model** (below). `settings.local.json` is the machine-local part and stays gitignored. Granting a permission is the owner's act, written with its reason. |
 | `.continue/` | The queue (§1), with a mandatory `README.md` (§2). |
 | `docs/` | The record (§1), with a curated `README.md` index. `docs/decisions.md` is the ADR log — the strongest convention in the fleet, present in every repo. |
 | `.github/` | `CODEOWNERS`, `dependabot.yml`, workflows. |
@@ -352,6 +352,29 @@ a `hooks` block at all — the `PostToolUse` check of the `impeccable` skill. Th
 comment moved to a top-level `_comment_hooks` in commit `d362855`; the hook had
 been running correctly the whole time. The skeleton has no `hooks` block, so it
 was never wrong — this is written down for the repository that adds one.
+
+### Nothing in a repository chooses the model
+
+**The model is the user's choice, made with `/model`, and a subagent inherits it.** A
+repository states no opinion:
+
+| Where | What it never carries |
+|---|---|
+| `.claude/settings.json` | `model`, `fallbackModel`, `availableModels` |
+| its `env` block | `ANTHROPIC_MODEL`, `ANTHROPIC_DEFAULT_*_MODEL`, `CLAUDE_CODE_SUBAGENT_MODEL`, `CLAUDE_CODE_SUBAGENT_MODEL_FORCE` |
+| `.claude/` | stand-by profiles (`json-opus`, `opus-sonnet`, …) that swap `settings.json` to change the model |
+| `.claude/agents/*.md` | a `model:` other than `inherit` |
+| any other tool's config | an export of the variables above — `.codex/config.toml` did |
+
+Every one of these existed in this fleet, and every one outlived the model it named:
+`opus[1m]` held sessions on the previous Opus while the newer one was in the catalog, the stand-by
+profiles pinned Opus 4.8 and Sonnet 4.6, and `CLAUDE_CODE_SUBAGENT_MODEL=opus` sent every
+subagent to Opus 5 while the session ran 5.5. A pin in a repository cannot outrank the
+organization's managed settings anyway — that layer, which only an Owner edits, is where a
+fleet-wide choice belongs if one is ever needed
+([ADR-027](decisions.md#adr-027--the-model-is-the-users-choice-and-nothing-in-a-repository-makes-it)).
+
+A fork keeps the agent definitions its upstream wrote (§8, *when the repository is not ours*).
 
 ---
 

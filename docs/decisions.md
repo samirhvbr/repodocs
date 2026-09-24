@@ -1301,7 +1301,10 @@ conformance.
 **Status:** `ACCEPTED` · 24/09/2026 · Governs `.claude/settings.json` and
 [`templates/skeleton/`](../templates/skeleton/) · Applies
 [ADR-001](#adr-001--repodocs-is-the-fleets-documentation-standard) to a configuration file
-instead of to a document
+instead of to a document · **Amended by [ADR-027](#adr-027--the-model-is-the-users-choice-and-nothing-in-a-repository-makes-it) (24/09/2026)** — the
+finding stands; the clause keeping `CLAUDE_CODE_SUBAGENT_MODEL` at `opus` was measured to
+pin every subagent to the previous Opus and was removed, and so was the allowance to pin a
+model by naming its version
 
 **Context.** The owner asked why the `/model` picker never offered the newer Opus. Three
 layers were holding the previous one, and only one of them lives in a repository:
@@ -1363,3 +1366,69 @@ python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print(d.get("model"
 ```
 
 — and `(none) (no pin)`, or a version spelled out, is conformance.
+
+---
+
+## ADR-027 — the model is the user's choice, and nothing in a repository makes it
+
+**Status:** `ACCEPTED` · 24/09/2026 · **Amends
+[ADR-026](#adr-026--a-repository-does-not-pin-the-model-and-a-window-suffix-is-a-version-pin)**
+in two clauses · Governs `.claude/`, `.codex/` and
+[`templates/skeleton/`](../templates/skeleton/)
+
+**Context.** ADR-026 took `model` and the alias pin out of the skeleton and kept one variable
+deliberately: `CLAUDE_CODE_SUBAGENT_MODEL=opus`, *"a subagent follows the newest Opus, not the
+session's pick"*. Measured the same day, the purpose had already failed. With the session on
+Opus 5.5 — chosen with `/model` — a general-purpose subagent and a workflow agent each reported
+`claude-opus-5`. The variable names the `opus` alias; the alias resolves through
+`ANTHROPIC_DEFAULT_OPUS_MODEL`; and that pin was still alive in the account's managed settings.
+
+Claude Code resolves a subagent's model in this order: the model passed for that call, the
+`model` in the agent's definition (`inherit` meaning the session's), `CLAUDE_CODE_SUBAGENT_MODEL`,
+and last the session's own model. **By default a subagent runs on the session's model.** The
+variable was the only thing making it different, and it made it different in the wrong
+direction.
+
+The owner's decision, in his words: the choice of model is the user's, `/model` must be able to
+select anything available, and agent and subagent run on what the user chose.
+
+Measured across the repositories we own, the same day: 50 `.claude/settings.json` carried the
+variable, one of them also `ANTHROPIC_DEFAULT_SONNET_MODEL`. Eighteen repositories carried **54
+stand-by profiles** — `json-opus`, `json-fable5-opus`, `json-fable5-opus-sonnet`, `just-opus`,
+`opus-sonnet` — whose only job was to change the model by `cp <profile> settings.json`, and which
+pinned Opus 4.8, Fable 5 and Sonnet 4.6, all of them models the catalog had moved past. Three
+`.codex/config.toml` exported the pin into every shell Codex opens.
+
+**Decision.** Nothing in a repository chooses the model.
+
+- `.claude/settings.json` carries no `model`, `fallbackModel` or `availableModels`, and its `env`
+  carries no `ANTHROPIC_MODEL`, no `ANTHROPIC_DEFAULT_*_MODEL`, no `CLAUDE_CODE_SUBAGENT_MODEL`
+  and no `CLAUDE_CODE_SUBAGENT_MODEL_FORCE`.
+- There are no stand-by profiles that swap `settings.json` to change the model. `/model` does
+  that, per session, without rewriting a tracked file.
+- A custom agent in `.claude/agents/` says `model: inherit`, or says nothing.
+- No other tool's configuration exports those variables — `.codex/config.toml` included.
+
+This amends ADR-026 in two places: its subagent clause is gone, and so is its allowance to pin a
+model by naming the version. There is no repository-level pin left to write correctly.
+
+**Where the choice lives instead.** In the user's settings, which `/model` writes. Above
+everything, in the organization's managed settings, which only an Owner edits, which apply to
+every member, and which no file in a repository can outrank. When this ADR was written those
+still carried `model: opus[1m]`, `ANTHROPIC_DEFAULT_OPUS_MODEL=claude-opus-5` and
+`CLAUDE_CODE_SUBAGENT_MODEL=opus` — so until they are cleared there, they decide, and this ADR
+only guarantees that nothing in the fleet will take over from them afterwards.
+
+**Scope.** Repositories we own. A fork keeps its upstream's agent definitions as the upstream
+wrote them ([ADR-019](#adr-019--in-a-repository-that-is-not-ours-the-upstreams-conventions-win)):
+`claude-desktop-debian` carries three with `model: opus` or `sonnet` that are aaddrick's, not
+ours.
+
+**The cost is real and is accepted.** A repository can no longer make a mechanical subagent cheap,
+or give everyone the 1M window. Each user makes that call. Accepted because every such call this
+fleet made in a file outlived the model it named, and nobody noticed until the owner asked why
+the newest model never appeared.
+
+**No mechanical guard,** for the reasons of ADR-025 and ADR-026. Two lines in
+[runbook.md §7](runbook.md#7-verifying-a-repository-still-conforms) ask the question, and silence
+is conformance.
