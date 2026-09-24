@@ -15,7 +15,7 @@ enforces is [docs/conventions.md](../docs/conventions.md).
 
 | File | Role |
 |------|------|
-| `settings.json` | The **active** profile, versioned. Today: **nothing that chooses the model**, `effortLevel: high`, `defaultMode: plan`, a 5-rule deny-list, an 8-rule ask-list and a 17-entry allow-list. |
+| `settings.json` | The **active** profile, versioned. Today: **nothing that chooses the model**, `effortLevel: xhigh` (a default — `/effort` changes it for the session), `defaultMode: plan`, a 5-rule deny-list, an 8-rule ask-list and a 17-entry allow-list. |
 | `settings.local.json` | Machine-local override, **gitignored** — it may hold paths and tokens that belong to one machine. Never commit it. |
 
 ## Why this file does not choose the model

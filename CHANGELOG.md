@@ -9,6 +9,19 @@ at `git commit` time.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 1.17.1 - the default effort becomes xhigh, and /effort still changes it per session
+
+The owner raised `effortLevel` in `.claude/settings.json` from `high` to `xhigh`, the highest value a
+settings file accepts. It is a default, not a lock: a session opens at `xhigh`, and a user who wants
+another level sets it with `/effort` for that session; one who does nothing keeps `xhigh`. Nothing
+here forces it — no `CLAUDE_CODE_EFFORT_LEVEL` in `env`, which is the knob that would.
+
+`.claude/README.md` described the profile as `effortLevel: high` and now says `xhigh`, with the
+override spelled out. The skeleton keeps `high`: this change is this repository's, and a repository
+born from the skeleton chooses its own.
+
+No test: one JSON value and one document line. Checked that the file parses.
+
 ## 1.17.0 - ADR-028 records the owner's permission lists, and the documents stop promising a block
 
 The previous commit changed what `.claude/settings.json` enforces; five documents still described
