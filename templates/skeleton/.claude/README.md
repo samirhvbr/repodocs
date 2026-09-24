@@ -3,11 +3,11 @@
 > **Status:** `ACTIVE`
 
 `.claude/` in this repository follows the standard of the samirhvbr/Blue3 fleet:
-a **permission posture**, versioned. **The model is deliberately not pinned**
-here — a pin in a repository cannot outrank the account's server-managed
-settings, and `opus[1m]` turned out to be a version pin wearing a window
-suffix (repodocs ADR-026). To pin one anyway, name the version:
-`"model": "opus55"`.
+a **permission posture**, versioned. **Nothing here chooses the model**: no
+`model`, no `fallbackModel`, no `ANTHROPIC_MODEL`, `ANTHROPIC_DEFAULT_*_MODEL` or
+`CLAUDE_CODE_SUBAGENT_MODEL` in `env`. The model is the user's choice, made with
+`/model`, and a subagent inherits it (repodocs ADR-027). A custom agent in
+`agents/` says `model: inherit`, or nothing.
 
 Conduct rules for the agent are in [CLAUDE.md](../CLAUDE.md).
 

@@ -20,7 +20,7 @@
 |---|---|
 | [docs/](docs/README.md) | **The record** — architecture, decisions, security, runbooks |
 | [.continue/](.continue/README.md) | **The queue** — what is still open, and whose call it is |
-| [.claude/](.claude/README.md) | Model profile and permission posture for agents |
+| [.claude/](.claude/README.md) | Permission posture for agents — the model is the user's choice, never this folder's |
 | [CHANGELOG.md](CHANGELOG.md) | **The history** — newest first; each heading is a commit subject |
 | [version.md](version.md) | **The single authority on the version** — read as the first `X.Y.Z` in the file. Every bump becomes a tag and a published Release |
 

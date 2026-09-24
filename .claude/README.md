@@ -15,24 +15,31 @@ enforces is [docs/conventions.md](../docs/conventions.md).
 
 | File | Role |
 |------|------|
-| `settings.json` | The **active** profile, versioned. Today: **no `model` key**, `effortLevel: high`, `defaultMode: plan`, a 17-rule deny-list and a 17-entry allow-list. |
+| `settings.json` | The **active** profile, versioned. Today: **nothing that chooses the model**, `effortLevel: high`, `defaultMode: plan`, a 17-rule deny-list and a 17-entry allow-list. |
 | `settings.local.json` | Machine-local override, **gitignored** — it may hold paths and tokens that belong to one machine. Never commit it. |
 
-## Why there is no `model` key
+## Why this file does not choose the model
 
-A model pinned here cannot win. Server-managed settings — cached in
-`<config_dir>/remote-settings.json` and re-fetched at startup — outrank every
-local file, and a local edit to that cache is reverted on the next fetch.
-Measured on 24/09/2026, when the owner asked why Opus 5.5 never took hold: three
-layers were holding the previous Opus, and the repository was the only one of
-them anybody could edit.
+The model is the user's choice, made with `/model`, and a subagent inherits it.
+So this file carries no `model` and no `fallbackModel`, and its `env` carries none
+of the variables that steer one — `ANTHROPIC_MODEL`, `ANTHROPIC_DEFAULT_OPUS_MODEL`
+and its siblings, `CLAUDE_CODE_SUBAGENT_MODEL`
+([ADR-027](../docs/decisions.md#adr-027--the-model-is-the-users-choice-and-nothing-in-a-repository-makes-it)).
 
-The pin this file used to carry was invisible on top of that. `opus[1m]` reads as
-a window choice and behaves as a version pin, because the 1M variant existed only
-for the previous Opus — so every session was born on it while the catalog already
-offered the newer one. To pin a model here again, **name the version**
-(`"model": "opus55"`), never a bare alias plus a window suffix
+Two measurements on 24/09/2026 got it here. A pin in this file cannot win:
+server-managed settings — cached in `<config_dir>/remote-settings.json` and
+re-fetched at startup — outrank every local file, and a local edit to that cache
+is reverted on the next fetch. And every pin the fleet carried outlived the model
+it named. `opus[1m]` reads as a window choice and behaves as a version pin,
+because the 1M variant existed only for the previous Opus
 ([ADR-026](../docs/decisions.md#adr-026--a-repository-does-not-pin-the-model-and-a-window-suffix-is-a-version-pin)).
+`CLAUDE_CODE_SUBAGENT_MODEL=opus`, kept so that subagents would follow the newest
+Opus, resolved through the same pinned alias: with the session on Opus 5.5, a
+subagent and a workflow agent both reported `claude-opus-5`.
+
+Where the choice does live: in the user's own settings, which `/model` writes,
+and — above everything — in the organization's managed settings, which only an
+owner edits and which apply to every member.
 
 ## Why `defaultMode: plan`
 

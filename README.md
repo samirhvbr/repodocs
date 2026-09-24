@@ -54,7 +54,7 @@ opens another. It lives here now ([ADR-001](docs/decisions.md)).
 |---|---|
 | [docs/](docs/README.md) | **The record.** The norm, the versioning rules, the ADR log, the security guidelines, the bootstrap runbook |
 | [.continue/](.continue/README.md) | **The queue.** What is still open, and whose call it is. Git-tracked on purpose |
-| [.claude/](.claude/README.md) | Model profile and permission posture. The deny-list always beats the allow-list |
+| [.claude/](.claude/README.md) | Permission posture — the model is the user's choice, never this folder's. The deny-list always beats the allow-list |
 | [templates/](templates/README.md) | The skeleton a new repository copies, with its placeholder table |
 | [tools/](tools/) | `git-hooks/` (`commit-msg`, `pre-push` — enabled once per clone), `release.sh` (tag + GitHub Release for `version.md`) and `fleet.sh` (`hooks` · `echo` · `check` across the fleet; dry run by default, and `check` writes nothing anywhere) |
 | [.github/](.github/) | `CODEOWNERS`, `dependabot.yml` and `workflows/release.yml`. No **build/test** workflow, on purpose ([ADR-009](docs/decisions.md), narrowed by [ADR-013](docs/decisions.md)) |

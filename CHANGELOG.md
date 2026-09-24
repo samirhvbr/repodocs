@@ -9,6 +9,27 @@ at `git commit` time.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 1.16.0 - the subagent stops being pinned, and the model becomes the user's choice
+
+1.15.0 took `model` and the alias pin out of the skeleton and kept one variable on purpose:
+`CLAUDE_CODE_SUBAGENT_MODEL=opus`, so that a subagent would follow the newest Opus rather than
+the session's pick. Measured the same day, that purpose was already defeated. With the session
+switched to Opus 5.5 by `/model`, a general-purpose subagent and a workflow agent both reported
+`claude-opus-5`: the variable names the `opus` alias, and the alias still resolved through the
+`ANTHROPIC_DEFAULT_OPUS_MODEL` pin the account's managed settings carry. By default Claude Code
+gives a subagent the session's own model; the variable was the only thing making it different.
+
+The owner's decision is that the model is the user's choice — made with `/model`, inherited by
+every subagent, with the picker free to offer anything available. So the variable leaves both
+`.claude/settings.json` and the skeleton's, taking the whole `env` block with it, and the profile
+comment now says what the file does not do and why. The two `.claude/README.md` files and the two
+directory tables in `README.md` stop describing a "model profile"; the section that told a
+repository how to pin a model properly now says it does not pin one at all.
+
+No test ships with this: two JSON keys and four documents, and nothing here parses JSON on commit.
+What was checked instead: both files parse, the twins still diff clean, and the runbook's new
+conformance grep (next commit) is silent on this repository.
+
 ## 1.15.0 - ADR-026 records that a pin in a repository cannot outrank the account
 
 The previous commit removed two keys. This one writes down why, because the finding is the
