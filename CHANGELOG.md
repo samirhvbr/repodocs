@@ -9,6 +9,43 @@ at `git commit` time.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 1.14.17 - pre-push reads the version of the commit being pushed, not of the working tree
+
+Since `1.9.2` the hook reads what git gives it on stdin, so a deletion, a tag and a topic
+branch pass through. But the version it then compared was still `grep … version.md`: the
+**working tree's** file. A push publishes a commit, and the tree is whatever the checkout has
+on disk. On 23/09/2026 in SHVIA-DESKTOP, pushing `1.6.5` to `master` from a checkout at `1.6.3`
+was refused although the commit carried the right, higher number. The owner of that repository
+chose to fix it here, for the fleet, rather than drop the marker there.
+
+- The stdin loop keeps the local sha of the ref that updates the default branch, and the
+  version is read from `git show <sha>:version.md`. With no stdin (the hook run by hand), the
+  working tree is still the answer. A pushed commit without `version.md` warns and passes, as
+  a tree without one always did. The refusals now say where the version was read from.
+- `tools/git-hooks/pre-push` (this repository's own copy) is regenerated from the template by
+  the same stamp its previous version carries. Checked: applied to the `1.14.16` template, it
+  reproduces the `1.14.16` copy byte for byte.
+- The hook tables in `CLAUDE.md`/`AGENTS.md`, in the skeleton's, and in both `versioning.md`
+  now say "the `version.md` of the commit being pushed".
+
+**Measured with real `git push` against a local bare remote**, one fresh repository per case.
+The first run of the harness is worth recording: its `git add -A` committed the hook into the
+test commit, a checkout then deleted it, and "accepted" meant "no hook ran". The harness now
+keeps the hook outside the tree and marks any push where no `pre-push:` line appeared.
+
+| case | expected | `1.14.17` | `1.14.16` | SHVIA-DESKTOP's copy (pre-`1.9.2`) |
+|---|---|---|---|---|
+| 1 · push a `1.0.2` commit with the tree at `1.0.0` | accept | accept | **refuse** | **refuse** |
+| 2 · push a duplicate `1.0.1` with an uncommitted `1.0.9` in the tree | refuse | refuse | **accept** | **accept** |
+| 3 · delete a branch, tree = master | accept | accept | accept | **refuse** |
+| 4 · push a tag, tree = master | accept | accept | accept | **refuse** |
+| 5 · push a topic branch | accept | accept | accept | **refuse** |
+| 6 · normal bump | accept | accept | accept | accept |
+| 7 · version goes backward | refuse | refuse | refuse | refuse |
+
+Case 2 is the direction nobody reported: the old reading can **let a duplicate reach
+`master`** when the tree holds a bump that is not in the pushed commit.
+
 ## 1.14.16 - the pin rule stops belonging to one repository and becomes the standard's
 
 `1.14.15` moved this repository's release workflow to `actions/checkout@v7` and left it a

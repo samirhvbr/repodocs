@@ -39,7 +39,7 @@ Two hooks then run, and each exists because the other cannot reach its moment:
 | Hook | What it checks | Why there |
 |---|---|---|
 | `commit-msg` | The subject is `X.Y.Z - description`, **and that `X.Y.Z` is the version the commit carries in `version.md`**; no Conventional Commits prefix, no vague comment; a subject git wrote (`Merge`, `Revert`, `fixup!`) is exempt | It is the only moment the message exists and the commit does not |
-| `pre-push` | `version.md` against `origin/master` — duplicate and monotonicity, and only for a push that updates `master`; a deletion, a tag and a topic branch pass through | It is the only hook that sees the **remote**, and `commit-msg` provably does not run during a rebase, which is how duplicate versions get born |
+| `pre-push` | The `version.md` **of the commit being pushed** against `origin/master` — duplicate and monotonicity, and only for a push that updates `master`; a deletion, a tag and a topic branch pass through | It is the only hook that sees the **remote**, and `commit-msg` provably does not run during a rebase, which is how duplicate versions get born |
 
 ⚠️ **`pre-push` runs no suite, and that is a choice:** a push that waits four
 minutes becomes `--no-verify` the following week, and then the control is dead.
