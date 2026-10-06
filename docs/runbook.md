@@ -120,7 +120,9 @@ visibility:
       still in every clone.
 - [ ] Any secret ever committed has been **rotated**, not merely deleted.
 - [ ] No internal hostname, private IP range or infrastructure path that should
-      not be public.
+      not be public. **In this repository that is [`ci.md`](ci.md)**, which carries
+      the CI machine's address and SSH user on purpose; the echo block
+      `CICD-RULE` does not, and is the only part of it that leaves the repository.
 - [ ] `LICENSE` is present and `NOTICE` agrees with it about the license and the
       copyright holder.
 - [ ] `SECURITY.md` names a reporting address that is actually monitored.
@@ -178,13 +180,14 @@ which has three modes and one classification:
 ./tools/fleet.sh check                  # read-only: what is off, and by how much
 ./tools/fleet.sh hooks                  # dry run: who would be written to, and why not
 ./tools/fleet.sh hooks --apply          # hooks + release.sh, enabled, bumped, committed, pushed
-./tools/fleet.sh echo  --apply          # the four marked blocks in CLAUDE.md and AGENTS.md
+./tools/fleet.sh echo  --apply          # the marked blocks in CLAUDE.md and AGENTS.md
+./tools/fleet.sh echo  --apply --block CICD-RULE   # only one block, so it reaches the fleet alone
 ./tools/fleet.sh echo  --apply --no-push --only KIDS/KIDS-TD    # one repository, no push
 ```
 
 **`check` writes nothing, anywhere**, and is the one to run on a schedule. It
 reports per repository — hooks enabled and identical to the standard,
-`release.sh` identical, the four blocks stamped, the twins identical below the
+`release.sh` identical, the marked blocks stamped, the twins identical below the
 H1, the default branch, `.continue/README.md` present, queue files not in git,
 and with `--releases` whether `version.md` has its Release — then groups the
 findings by kind, because 258 findings across 54 repositories are a dozen things

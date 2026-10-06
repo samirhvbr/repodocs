@@ -1466,3 +1466,67 @@ history"*); what changed is that `.claude/settings.json` no longer enforces it.
 
 **Scope.** This repository, the skeleton, and every repository we own, applied as a delta to each
 one's own lists — a repository's stack-specific allow and ask entries are untouched.
+
+---
+
+## ADR-029 — the fleet's CI machine is documented once, and its rule reaches every repository as an echo block
+
+**Status:** `ACCEPTED` · 06/10/2026 · The owner's request · Records, at fleet level, what
+`shvia-web/deploy/servidor-cicd.md` decided for its own repositories on 28/09/2026
+
+**Context.** On 25/09/2026 the account's Actions budget ran out, and every job in a private
+repository failed within seconds with zero steps. On 28/09/2026 a self-hosted runner — the VM
+`cicd` — took those jobs. `shvia-web` documented it in `deploy/servidor-cicd.md`; `b3monitor`
+pointed at that file in its own ADR-002; `EOP` uses the machine as a test bench. On 06/10/2026 a
+collaborator, whose repositories belong to another account, needed the same CI, and the owner
+could not say where it was written down. It was written down — inside one product repository,
+which is exactly the failure [ADR-001](#adr-001--repodocs-is-the-fleets-documentation-standard)
+exists to prevent: a fleet-wide fact that is invisible to whoever opens another repository.
+
+**Decision.**
+
+1. [`ci.md`](ci.md) is the fleet-level page: what the machine is, the rules, how a repository
+   joins, and the case of a repository in another account. The machine's own runbook stays in
+   `shvia-web` and is linked, never copied.
+2. The rules reach every repository as the echo block `CICD-RULE`, with a `-PT` variant for the
+   Blue3 internal set. **The block carries the rule and not the address**, because it is copied
+   into public repositories. The address and the way in live in `ci.md`, which is in a private
+   repository, and `runbook.md` §6 lists it so it leaves before repodocs could be made public.
+3. **The runner is an opt-in.** No repository is required to move to it; `b3monitor` ADR-002 is
+   that repository's own decision and is not generalised here.
+4. **Joining is the owner's act**, and joining a collaborator's repository more so: the jobs run
+   with `sudo` and `docker` on a machine inside the office network. An agent never does it on its
+   own initiative.
+
+**Why an echo block, when ADR-024 said no to one.** ADR-024 declined because the four blocks then
+reached one repository of 54, and a fifth would have added stamping debt to a debt not yet paid.
+Measured 06/10/2026 with `fleet.sh check` over the 57 repositories of ours: `COMMIT-RULE` is
+missing from 4, `RELEASES-RULE` from 5, and `QUEUE-RULE` and `LANGUAGE-RULE` from 37. The debt is
+mostly paid for two blocks and **not** for the other two, so the argument is weaker than it was —
+it is not gone. What decides it here is the content. ADR-024's norm is a question put to a reader
+at the end of a task, and a pointer in a checklist serves it. This one is a **prohibition with a
+security consequence** — never register the runner in a public repository — and it has to be in
+front of the agent that is about to do it, in whichever repository that happens. A line in a
+document nobody opens at that moment does not do that.
+
+**It travels alone.** `fleet.sh` gains `--block NAME`, so this block can reach the fleet without
+carrying `QUEUE-RULE` and `LANGUAGE-RULE` into the 37 repositories that lack them. Those two are
+the queue's open item *"Stamp the four echo blocks across the fleet"*, still the owner's to
+schedule, and this decision does not schedule them by the side door.
+
+**What the block does not reach, stated so it is not discovered later.** `fleet.sh` writes only
+where the classification allows, so the block does **not** arrive in `shvia-web` (a written bump
+override, [ADR-017](#adr-017--the-bump-clause-may-be-overridden-by-a-repository-in-writing); its
+own runbook is the source there), in repositories without a `CLAUDE.md` and `AGENTS.md` pair, in
+forks, and in **every repository of another account** — the `B3DEV` repositories among them,
+which are exactly where the collaborator would use the CI. The host's conventions win there
+([ADR-019](#adr-019--in-a-repository-that-is-not-ours-the-upstreams-conventions-win)). Whether and
+how those repositories are told is the owner's decision with the collaborator, not a pass.
+
+**Not re-measured.** `ci.md` was written from the machine's runbook of 28–30/09/2026; nothing was
+checked on the machine itself on the day. The page says so on its first lines.
+
+**Consequences.** `tools/fleet.sh` gains `--block` and `FLEET_TRAILERS`, and
+[`tools/test-fleet.sh`](../tools/test-fleet.sh) — the first test of it in the tree, which
+ADR-024's clause 4 asked for. `fleet.sh check` reports `CICD-RULE not stamped` in every
+repository until a pass stamps it. New repositories receive the block from the skeleton.

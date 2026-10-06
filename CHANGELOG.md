@@ -9,6 +9,39 @@ at `git commit` time.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 1.18.0 - the fleet's CI runner is documented once, and its rule travels as an echo block
+
+The CI machine existed, worked, and was written down — inside one product repository. On 06/10/2026
+a collaborator whose repositories belong to another account needed the same CI, and the owner could
+not say where it was documented. `shvia-web/deploy/servidor-cicd.md` has it, `b3monitor` points at it,
+`EOP` uses it as a bench: the failure ADR-001 exists to prevent, a fleet-wide fact visible only to
+whoever opens the right repository.
+
+`docs/ci.md` is the fleet-level page: what `cicd` is, six rules, how a repository joins, the case of
+another account, what it does not do. The machine's own runbook stays where it is and is linked, not
+copied. The first thing the page says is the one that would have saved the question: **the dashboard
+on port 8080 is read-only and has no login — handing someone that address gives them a page to read,
+not a CI.** Using it means a runner registered for their repository, and that is the owner's act.
+
+ADR-029 records the decision, including the part that argues against itself: ADR-024 declined an
+echo block because the four then existing reached one repository of 54. Measured today, that debt is
+mostly paid for two of them and not for the other two (`QUEUE-RULE` and `LANGUAGE-RULE`, missing from
+37 of 57), so the argument is weaker, not gone. What decides it is that this rule is a prohibition
+with a security consequence — never register the runner in a public repository — and has to be in
+front of the agent about to do it. The block carries the rule and **not the address**; `runbook.md`
+§6 now names `ci.md` as the file that must lose the address before this repository could be public.
+
+The block is stamped here, in `CLAUDE.md` and `AGENTS.md`, and in the skeleton, with the twins
+checked identical. Three documents that were already stale are corrected in the same pass: the docs
+index said *ADRs 001–024* (there were 028), the skeleton's map said *3 blocks* (there were four), and
+`runbook.md` counted *the four blocks*.
+
+**What this does not do, and is the next decision.** Nothing is stamped in the fleet by this commit.
+`fleet.sh` would also not reach the `B3DEV` repositories, which belong to the collaborator's account
+and are exactly where the CI would be used (ADR-029). `ci.md` is written from the machine's runbook of
+28–30/09/2026 and was not re-measured on the machine. No test for the documents; the test of the
+tooling is in the previous commit.
+
 ## 1.18.0 - fleet.sh can stamp one echo block alone, and the CI rule block exists to be stamped
 
 A new norm needs to reach the fleet without dragging along what the owner has not scheduled.

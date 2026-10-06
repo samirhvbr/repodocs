@@ -52,8 +52,9 @@ repodocs = SOURCE OF CONSULTATION (never a dependency)
 │   ├── placeholders ......... runbook §2 owns the table + the sweep
 │   ├── per-repo decisions ... runbook §3: settings.json grants · bump triggers
 │   │                          · security.md §2 and §4
-│   ├── echo blocks .......... 3 blocks, verbatim, in CLAUDE.md AND AGENTS.md
+│   ├── echo blocks .......... 5 blocks, verbatim, in CLAUDE.md AND AGENTS.md
 │   │                          COMMIT-RULE · RELEASES-RULE · LANGUAGE-RULE
+│   │                          · QUEUE-RULE · CICD-RULE
 │   └── hooks ................ git config core.hooksPath tools/git-hooks  (1× per clone)
 │
 ├── 4. CONSULTING IT AFTERWARDS   ← the permanent part, the reason this page stays
