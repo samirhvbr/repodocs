@@ -9,6 +9,39 @@ at `git commit` time.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 1.18.0 - fleet.sh can stamp one echo block alone, and the CI rule block exists to be stamped
+
+A new norm needs to reach the fleet without dragging along what the owner has not scheduled.
+`./tools/fleet.sh echo --apply` regenerates **every** block, and measured on 06/10/2026 with
+`check`, `QUEUE-RULE` and `LANGUAGE-RULE` are still missing from 37 of the 57 repositories we
+own — the queue's open item *"Stamp the four echo blocks across the fleet"*, which is the owner's
+to schedule. A pass that carried the CI rule would have delivered those two as well, in the same
+commit, under a subject that does not mention them.
+
+So `fleet.sh` gains `--block NAME` (repeatable, `echo` and `check`): the pass is limited to the
+named block, an unknown name or `--block` with `hooks` exits 2 instead of stamping nothing, and a
+pass limited to `CICD-RULE` writes a commit subject and a changelog entry that say only that, in the
+repository's language. The default pass is unchanged except that its list now has a fifth block.
+`FLEET_TRAILERS` replaces the trailer lines of every commit the pass makes: the default names a
+model and a session that are not necessarily the caller's, and fifty commits claiming a co-author
+who did not write them is not something a later pass can undo, because history is not rewritten.
+
+`CICD-RULE.md` and `CICD-RULE-PT.md` are the block itself: the fleet has one CI machine, a public
+repository never gets its runner, the switch is the variable `CI_RUNNER`, and joining is the
+owner's act. **It carries no address** — it is copied into public repositories, so the machine's
+address and the way in live in a page that stays in this private repository (next commit).
+
+`tools/test-fleet.sh` is the first test of `fleet.sh` in the tree, which ADR-024 clause 4 asked for:
+throwaway repositories under a fake owner, the real script run against them, nothing pushed. Nine
+assertions, among them that the block files carry no IP address and no SSH target, that
+`--block CICD-RULE` stamps that block and no other, that the variant follows the owner on `origin`,
+that a second pass writes nothing, and that the twins stay identical below the H1. It passed, and it
+was then shown it can fail: three mutants of a scratch copy — the narrowing disabled, the trailer
+override ignored, an address added to the block — were each caught by the assertion meant for them.
+
+Not touched: the default trailers, still naming a model and a session of an earlier pass. Changing
+what an unconfigured run claims is the owner's call; the override makes it avoidable.
+
 ## 1.17.1 - the default effort becomes xhigh, and /effort still changes it per session
 
 The owner raised `effortLevel` in `.claude/settings.json` from `high` to `xhigh`, the highest value a

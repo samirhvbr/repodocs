@@ -5,8 +5,9 @@
 #   ./tools/fleet.sh hooks           dry run — classify, change nothing
 #   ./tools/fleet.sh hooks --apply   write the hooks and release.sh, enable,
 #                                    bump, commit, push
-#   ./tools/fleet.sh echo --apply    regenerate the four marked echo blocks in
-#                                    CLAUDE.md and AGENTS.md
+#   ./tools/fleet.sh echo --apply    regenerate the marked echo blocks in
+#                                    CLAUDE.md and AGENTS.md (--block NAME
+#                                    limits the pass to one of them)
 #   ./tools/fleet.sh check           read-only conformance report
 #
 # Why one script with three modes and not three scripts: the hard part is not
@@ -32,7 +33,7 @@ TOOL_SRC="$REPODOCS/templates/skeleton/tools"
 ECHO_SRC="$REPODOCS/templates/echo-blocks"
 
 # The blocks, in the order a repository that has none of them should receive.
-ECHO_BLOCKS="QUEUE-RULE RELEASES-RULE LANGUAGE-RULE COMMIT-RULE"
+ECHO_BLOCKS="QUEUE-RULE RELEASES-RULE LANGUAGE-RULE COMMIT-RULE CICD-RULE"
 
 MODE=""
 ROOT="${HOME}/x"
@@ -40,6 +41,7 @@ APPLY=0
 PUSH=1
 FILTER=""
 RELEASES=0
+ONLY_BLOCKS=""
 
 usage() {
   cat <<USAGE
@@ -56,8 +58,17 @@ options:
   --no-push          commit but do not push — a refused push is a human's call
   --root DIR         where the fleet lives (default: \$HOME/x)
   --only SUBSTRING   restrict to repositories whose path contains SUBSTRING
+  --block NAME       echo/check only, repeatable: restrict the pass to this
+                     block. A new block reaches the fleet alone this way,
+                     without carrying a block the owner has not yet scheduled
   --releases         check only: ask GitHub whether version.md has a Release
                      (one API call per repository, so it is off by default)
+
+environment:
+  FLEET_TRAILERS     the trailer lines of every commit this pass makes. The
+                     default names a model and a session that are not the
+                     caller's, so a pass should set it
+  FLEET_OWNERS       whose repositories are ours (default: samirhvbr BLUE3-ISP)
 
 In hooks and echo, each selected repository gets ONE commit: the files, the
 version bump and the changelog entry, in the language that repository is
@@ -78,6 +89,7 @@ while [ $# -gt 0 ]; do
     --no-push) PUSH=0 ;;
     --root) ROOT="$2"; shift ;;
     --only) FILTER="$2"; shift ;;
+    --block) ONLY_BLOCKS="$ONLY_BLOCKS $2"; shift ;;
     --releases) RELEASES=1 ;;
     -h|--help) usage; exit 0 ;;
     *) echo "fleet: unknown argument: $1" >&2; usage >&2; exit 2 ;;
@@ -86,6 +98,20 @@ while [ $# -gt 0 ]; do
 done
 
 [ "$MODE" = check ] && APPLY=0
+
+# --block narrows ECHO_BLOCKS, and a name that is not one of them is an error,
+# never an empty pass: a typo that silently stamped nothing would read as "done".
+if [ -n "$ONLY_BLOCKS" ]; then
+  [ "$MODE" = hooks ] && { echo "fleet: --block applies to echo and check, not hooks" >&2; exit 2; }
+  picked=""
+  for b in $ONLY_BLOCKS; do
+    case " $ECHO_BLOCKS " in
+      *" $b "*) picked="$picked $b" ;;
+      *) echo "fleet: unknown block '$b' — known: $ECHO_BLOCKS" >&2; exit 2 ;;
+    esac
+  done
+  ECHO_BLOCKS="${picked# }"
+fi
 
 # --------------------------------------------------------------- the rules ---
 
@@ -637,17 +663,57 @@ Escape hatch, declared in both: \`$ev=1\`. In a fresh clone, enable them with
 \`git config core.hooksPath tools/git-hooks\`.
 ENENTRY
     fi
+  elif [ "$ECHO_BLOCKS" = "CICD-RULE" ]; then
+    # A pass limited to the CI rule says only that: the subject has to describe
+    # the whole commit honestly, and this commit touches no other block.
+    if pt_repository "$remote"; then
+      SUBJECT="$new - a regra do runner de CI chega a este repositório pelo repodocs"
+      cat > "$f" <<PTENTRY
+## $SUBJECT
+
+\`CLAUDE.md\` e \`AGENTS.md\` ganham um bloco marcado, \`CICD-RULE\`, regenerado a
+partir da fonte única em [samirhvbr/repodocs](https://github.com/samirhvbr/repodocs)
+(\`docs/ci.md\`). Ele diz que a frota tem uma máquina de CI, a \`cicd\`, um runner
+self-hosted do GitHub Actions que não gasta os minutos hospedados da conta; que
+repositório público nunca a recebe, porque um pull request de fork rodaria o
+código dele numa máquina dentro da rede do escritório; que a chave é a variável
+de repositório \`CI_RUNNER\`, nunca uma edição do workflow; e que entrar é ato do
+dono, que um agente não pratica por iniciativa própria.
+
+O endereço da máquina e o procedimento ficam **de fora** do bloco de propósito:
+ele é copiado para repositórios públicos. Estão na fonte. Nenhum outro bloco é
+tocado por este commit.
+PTENTRY
+    else
+      SUBJECT="$new - the CI runner rule reaches this repository from repodocs"
+      cat > "$f" <<ENENTRY
+## $SUBJECT
+
+\`CLAUDE.md\` and \`AGENTS.md\` gain a marked block, \`CICD-RULE\`, regenerated from
+the single source at [samirhvbr/repodocs](https://github.com/samirhvbr/repodocs)
+(\`docs/ci.md\`). It says that the fleet has one CI machine, \`cicd\`, a self-hosted
+GitHub Actions runner that does not spend the account's hosted minutes; that a
+public repository never gets it, because a pull request from a fork would run its
+code on a machine inside the office network; that the switch is the repository
+variable \`CI_RUNNER\`, never an edit of the workflow; and that joining is the
+owner's act, which an agent does not perform on its own initiative.
+
+The machine's address and the procedure are **deliberately not** in the block: it
+is copied into public repositories. They are in the source. No other block is
+touched by this commit.
+ENENTRY
+    fi
   else
     if pt_repository "$remote"; then
       SUBJECT="$new - os blocos de eco são regenerados a partir do repodocs"
       cat > "$f" <<PTENTRY
 ## $SUBJECT
 
-As quatro regras marcadas de \`CLAUDE.md\` e \`AGENTS.md\` são reescritas a partir
-da fonte única em [samirhvbr/repodocs](https://github.com/samirhvbr/repodocs):
-\`QUEUE-RULE\`, \`RELEASES-RULE\`, \`LANGUAGE-RULE\` e \`COMMIT-RULE\`. Bloco é
-substituído por inteiro entre os marcadores, cabeçalho incluído — é isso que faz
-uma edição local não sobreviver e não confundir a próxima leitura.
+As regras marcadas de \`CLAUDE.md\` e \`AGENTS.md\` são reescritas a partir da
+fonte única em [samirhvbr/repodocs](https://github.com/samirhvbr/repodocs):
+\`QUEUE-RULE\`, \`RELEASES-RULE\`, \`LANGUAGE-RULE\`, \`COMMIT-RULE\` e \`CICD-RULE\`.
+Bloco é substituído por inteiro entre os marcadores, cabeçalho incluído — é isso
+que faz uma edição local não sobreviver e não confundir a próxima leitura.
 
 O \`QUEUE-RULE\` é novo e chega pela primeira vez: a \`.continue/\` guarda trabalho
 que ainda não existe, e um documento só sai dela quando a coisa que ele descreve
@@ -659,11 +725,11 @@ PTENTRY
       cat > "$f" <<ENENTRY
 ## $SUBJECT
 
-The four marked rules in \`CLAUDE.md\` and \`AGENTS.md\` are rewritten from the
-single source at [samirhvbr/repodocs](https://github.com/samirhvbr/repodocs):
-\`QUEUE-RULE\`, \`RELEASES-RULE\`, \`LANGUAGE-RULE\` and \`COMMIT-RULE\`. A block is
-replaced whole between its markers, heading included — which is what stops a
-local edit from surviving a regeneration and confusing the next reader.
+The marked rules in \`CLAUDE.md\` and \`AGENTS.md\` are rewritten from the single
+source at [samirhvbr/repodocs](https://github.com/samirhvbr/repodocs):
+\`QUEUE-RULE\`, \`RELEASES-RULE\`, \`LANGUAGE-RULE\`, \`COMMIT-RULE\` and \`CICD-RULE\`.
+A block is replaced whole between its markers, heading included — which is what
+stops a local edit from surviving a regeneration and confusing the next reader.
 
 \`QUEUE-RULE\` is new and arrives here for the first time: \`.continue/\` holds work
 that does not exist yet, and a document leaves it when — and only when — the
@@ -676,8 +742,11 @@ ENENTRY
 
 # ------------------------------------------------------------------- apply ---
 
-TRAILERS="Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>
-Claude-Session: https://claude.ai/code/session_014qeYCqGQKLAdRPHEBpWbJC"
+# The default names a model and a session that are not necessarily the caller's;
+# a pass run by anyone else sets FLEET_TRAILERS, or its commits claim a co-author
+# that did not write them.
+TRAILERS="${FLEET_TRAILERS:-Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_014qeYCqGQKLAdRPHEBpWbJC}"
 
 declare -a FAILED=() APPLIED=() CREATED_CHANGELOG=() CHANGELOG_IN_VERSION=()
 ERR=""

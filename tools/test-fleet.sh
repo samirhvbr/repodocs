@@ -1,0 +1,131 @@
+#!/usr/bin/env bash
+# test-fleet.sh — the fixture for `tools/fleet.sh echo`.
+#
+# It stands up throwaway repositories under a fake owner and runs the real
+# script against them, so what is asserted is what a pass over the fleet does:
+# which block is stamped, in which language, with which trailers, how many
+# commits, and that a second pass writes nothing. Nothing outside a temporary
+# directory is touched, no remote is contacted and nothing is pushed.
+#
+#   ./tools/test-fleet.sh        0 all passed · 1 an assertion failed
+#
+# Why it exists: ADR-024 puts `tools/fleet.sh` under the rule that a change in its
+# behavior arrives with the test that fails when the behavior breaks. This is the
+# first one in the tree; until 1.18.0 the fixture lived in a scratch directory.
+set -euo pipefail
+
+SELF_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+FLEET="$SELF_DIR/fleet.sh"
+ECHO_SRC="$(dirname "$SELF_DIR")/templates/echo-blocks"
+
+# A throwaway repository must not inherit the caller's hooks, signing or identity.
+export GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1
+export GIT_AUTHOR_NAME=fixture GIT_AUTHOR_EMAIL=fixture@example.invalid
+export GIT_COMMITTER_NAME=fixture GIT_COMMITTER_EMAIL=fixture@example.invalid
+export FLEET_OWNERS="fixowner BLUE3-ISP"
+export FLEET_TRAILERS="Co-Authored-By: Fixture <fixture@example.invalid>"
+
+TMP="$(mktemp -d)"
+trap 'rm -rf "$TMP"' EXIT
+
+PASSED=0
+fail() { echo "FAIL: $*" >&2; exit 1; }
+ok()   { PASSED=$((PASSED + 1)); echo "  ok  $*"; }
+
+make_repo() {   # $1 = dir, $2 = remote url
+  git init -q -b master "$1"
+  git -C "$1" config remote.origin.url "$2"
+  printf '# T\n\nbody\n' > "$1/CLAUDE.md"
+  cp "$1/CLAUDE.md" "$1/AGENTS.md"
+  printf '0.1.0\n' > "$1/version.md"
+  printf '# Changelog\n\n## 0.1.0 - second\n\nbody\n' > "$1/CHANGELOG.md"
+  git -C "$1" add -A
+  git -C "$1" commit -q -m '0.1.0 - first'
+  git -C "$1" commit -q --allow-empty -m '0.1.0 - second'
+}
+
+commits() { git -C "$1" rev-list --count HEAD; }
+
+echo "fleet echo fixture"
+
+# --- the templates themselves ------------------------------------------------
+
+# The block is copied into public repositories, so it must not carry the
+# machine's address or the way in. This is the property the whole design rests on.
+for f in "$ECHO_SRC/CICD-RULE.md" "$ECHO_SRC/CICD-RULE-PT.md"; do
+  grep -qE '[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' "$f" && fail "$(basename "$f") carries an IP address"
+  grep -qE 'samir@|ssh [a-z]+@' "$f" && fail "$(basename "$f") carries an SSH target"
+  [ "$(grep -c 'CICD-RULE' "$f")" -eq 2 ] || fail "$(basename "$f") must have exactly one opening and one closing marker"
+done
+ok "the CI block carries no address and no SSH target, in both languages"
+
+# --- a pass limited to the CI block -----------------------------------------
+
+ROOT="$TMP/one"
+mkdir -p "$ROOT"
+make_repo "$ROOT/en" 'https://github.com/fixowner/en.git'
+make_repo "$ROOT/pt" 'https://github.com/BLUE3-ISP/pt.git'
+before_en="$(commits "$ROOT/en")"
+
+out="$("$FLEET" echo --root "$ROOT" --block CICD-RULE --apply --no-push 2>&1)" \
+  || fail "the limited pass exited non-zero: $out"
+
+grep -q '<!-- CICD-RULE:repodocs -->' "$ROOT/en/CLAUDE.md" || fail "en: CICD-RULE not stamped in CLAUDE.md"
+grep -q '<!-- CICD-RULE:repodocs -->' "$ROOT/en/AGENTS.md" || fail "en: CICD-RULE not stamped in AGENTS.md"
+grep -q 'never gets that runner' "$ROOT/en/CLAUDE.md" || fail "en: got the wrong language"
+grep -q 'nunca recebe esse runner' "$ROOT/pt/CLAUDE.md" || fail "pt: the Portuguese variant was not chosen by the owner on origin"
+ok "the block is stamped in both files, and the variant follows the owner"
+
+for b in QUEUE-RULE RELEASES-RULE LANGUAGE-RULE COMMIT-RULE; do
+  grep -q "<!-- $b:repodocs -->" "$ROOT/en/CLAUDE.md" && fail "--block CICD-RULE also stamped $b"
+done
+ok "--block CICD-RULE stamps that block and no other"
+
+[ "$(commits "$ROOT/en")" -eq $((before_en + 1)) ] || fail "expected exactly one commit per repository"
+[ "$(cat "$ROOT/en/version.md")" = "0.1.1" ] || fail "version.md was not bumped"
+git -C "$ROOT/en" log -1 --format=%s | grep -q '^0\.1\.1 - the CI runner rule reaches this repository from repodocs$' \
+  || fail "en: the subject does not describe the commit: $(git -C "$ROOT/en" log -1 --format=%s)"
+git -C "$ROOT/pt" log -1 --format=%s | grep -q '^0\.1\.1 - a regra do runner de CI chega a este repositório pelo repodocs$' \
+  || fail "pt: the subject is not Portuguese or does not describe the commit: $(git -C "$ROOT/pt" log -1 --format=%s)"
+grep -q '^## 0\.1\.1 - the CI runner rule' "$ROOT/en/CHANGELOG.md" || fail "the changelog heading is not the commit subject"
+ok "one commit, bumped, the subject is the changelog heading, in the repository's language"
+
+git -C "$ROOT/en" log -1 --format=%B | grep -q 'Co-Authored-By: Fixture' || fail "FLEET_TRAILERS was not used"
+git -C "$ROOT/en" log -1 --format=%B | grep -q 'Opus 5' && fail "the default trailer leaked into a pass that overrode it"
+ok "FLEET_TRAILERS replaces the default trailers"
+
+diff -q <(tail -n +2 "$ROOT/en/CLAUDE.md") <(tail -n +2 "$ROOT/en/AGENTS.md") >/dev/null \
+  || fail "the twins differ below the H1 (ADR-007)"
+ok "the twins stay byte-identical below the H1"
+
+# --- idempotence -------------------------------------------------------------
+
+before_en="$(commits "$ROOT/en")"
+out="$("$FLEET" echo --root "$ROOT" --block CICD-RULE --apply --no-push 2>&1)" || fail "second pass failed: $out"
+[ "$(commits "$ROOT/en")" -eq "$before_en" ] || fail "a second pass made a commit"
+printf '%s' "$out" | grep -q 'already current' || fail "a second pass did not say it was current"
+ok "a second pass writes nothing"
+
+# --- refusals ----------------------------------------------------------------
+
+set +e
+"$FLEET" echo --root "$ROOT" --block NOT-A-BLOCK >/dev/null 2>&1; rc_unknown=$?
+"$FLEET" hooks --root "$ROOT" --block CICD-RULE >/dev/null 2>&1; rc_hooks=$?
+set -e
+[ "$rc_unknown" -eq 2 ] || fail "an unknown block must exit 2, got $rc_unknown"
+[ "$rc_hooks" -eq 2 ] || fail "--block with hooks must exit 2, got $rc_hooks"
+ok "an unknown block, and --block with hooks, are refused rather than stamping nothing"
+
+# --- the default pass carries every block -----------------------------------
+
+ROOT2="$TMP/two"
+mkdir -p "$ROOT2"
+make_repo "$ROOT2/all" 'https://github.com/fixowner/all.git'
+"$FLEET" echo --root "$ROOT2" --apply --no-push >/dev/null 2>&1 || fail "the default pass failed"
+for b in QUEUE-RULE RELEASES-RULE LANGUAGE-RULE COMMIT-RULE CICD-RULE; do
+  grep -q "<!-- $b:repodocs -->" "$ROOT2/all/CLAUDE.md" || fail "the default pass did not stamp $b"
+done
+ok "the default pass stamps all five blocks, CICD-RULE included"
+
+echo
+echo "$PASSED assertions passed."
