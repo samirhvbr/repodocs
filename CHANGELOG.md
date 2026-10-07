@@ -9,6 +9,41 @@ at `git commit` time.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 1.19.2 - the pass committed to whatever was checked out, and two stamps landed on a topic branch
+
+`1.19.0` stamped 44 repositories. **Two of them were not on their default
+branch**, and `fleet.sh` never asked: `BLUE3/BLUE3-INTRANET` was on
+`fatia-1c-sem-verificacao`, and `SHVIA/.continue` on `main` while its default is
+`master`. The block was committed and pushed to those branches, which means the
+default branch of both still does not carry it.
+
+The way this was found is the part worth recording. `release.sh` in
+`BLUE3-INTRANET` reported the current version as `1.8.84` while `version.md` in
+the checkout said `1.8.152` — and `release.sh` was right, because it reads
+`version.md` from `origin/<default>`, which is what gets published. The pass had
+written `1.8.152` to a topic branch. `fleet.sh check` meanwhile reported the
+block as **present**, because `check` greps the working tree. A pass that writes
+to a topic branch plus a check that reads the working tree agree with each other
+and are both wrong about the repository — a silent false-green, and the worst
+shape a conformance report can take.
+
+The gate now compares the checked-out branch against the **remote's default**,
+and skips with the branch named. Against the literal string `master` it would
+have been wrong in the other direction: `blue3-intranet-ntheme` works on `dev` as
+a written decision ([ADR-015](docs/decisions.md)), and a checkout sitting on its
+own default is exactly the case that has to pass. `tools/tests/fleet-echo-topic-branch.sh`
+asserts both halves — a topic branch is skipped, and a repository whose default
+is `dev` is still stamped — and against the previous `fleet.sh` the first two
+assertions fail while the third passes, which is what tells you the test is
+measuring the gate and not the weather.
+
+**The two stamps are left where they are.** Getting the block onto those default
+branches means merging a topic branch that is mid-work, or renaming a local
+branch — decisions about somebody's work in progress, and not a pass's to take.
+They are reported instead, and `check` will now say what it should have said
+from the start, because the gate that skips them also stops them from looking
+done.
+
 ## 1.19.1 - the echo pass left a stamped file behind in the one repository whose twin was never committed
 
 The stamping pass of `1.19.0` reached 48 repositories, applied 44 and refused 4.

@@ -550,6 +550,23 @@ for row in "${OURS[@]}"; do
   branch="$(git -C "$repo" symbolic-ref --quiet --short HEAD 2>/dev/null || true)"
   [ -n "$branch" ] || { SKIPPED+=("$repo|detached HEAD"); continue; }
 
+  # The checkout has to be ON the branch the push will publish. A pass that
+  # commits to whatever is checked out writes the block to a topic branch,
+  # pushes it there, and leaves the default branch without it — while `check`,
+  # which reads the working tree, goes on reporting the block as present.
+  # Measured 07/10/2026: of 44 repositories stamped, two landed on a topic
+  # branch (BLUE3-INTRANET on `fatia-1c-sem-verificacao`, SHVIA/.continue on
+  # `main` while its default is `master`).
+  #
+  # The comparison is against the REMOTE's default, never the literal "master":
+  # `blue3-intranet-ntheme` works on `dev` as a written decision, and a checkout
+  # sitting on its own default branch is exactly the case that must pass.
+  repo_default="$(git -C "$repo" symbolic-ref --quiet --short refs/remotes/origin/HEAD 2>/dev/null | sed 's#^origin/##' || true)"
+  if [ -n "$repo_default" ] && [ "$branch" != "$repo_default" ]; then
+    SKIPPED+=("$repo|checked out on '$branch', not the default branch '$repo_default' — the stamp would land on a topic branch")
+    continue
+  fi
+
   case "$MODE" in
     hooks)
       # A hook a repository wrote for itself is never overwritten. EOP's is the
