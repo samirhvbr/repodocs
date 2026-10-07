@@ -9,6 +9,34 @@ at `git commit` time.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 1.19.0 - the CICD blocks carry the address and the setting that replaced the prohibition
+
+The block is what actually reaches a repository, so this is where the reversal
+lands. Both variants — `CICD-RULE` and `CICD-RULE-PT` — change title, lose the
+paragraph that forbade a public repository, and gain two things.
+
+**A table with the address.** Until now the block said the address was *"in the
+source and not here — this block is copied into public repositories"*. It now
+carries `100.64.100.240`, the SSH line and the dashboard, with the one fact that
+makes publishing it tolerable stated in the same table: RFC 6598 shared space,
+not routable from the internet.
+
+**The setting, written as a requirement rather than advice.** *"On a public
+repository on `cicd`, that setting is not optional."* A block that reversed rule
+1 and left nothing in its place would be a block that reads as permission and
+teaches nothing, and the agent reading it is usually the only reader it gets.
+
+Two sentences were added because the block is the only part of this that most
+repositories will ever see. **"Permission is not destination"** — without
+`CI_RUNNER` set, the job still goes to a GitHub-hosted runner, so opening the
+door moved nothing. And **"never set it at organisation scope"**, which is the
+one command that would retarget a dozen repositories at once, public ones
+included.
+
+What the block keeps, unchanged and deliberately: an agent never registers a
+runner on its own initiative, and a repository on somebody else's account is not
+covered — that one is still decided case by case.
+
 ## 1.19.0 - ci.md stops forbidding a public repository, and says what stands where the prohibition stood
 
 The page that decides this is `docs/ci.md`, and [ADR-030](docs/decisions.md)
