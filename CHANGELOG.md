@@ -9,6 +9,42 @@ at `git commit` time.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 1.19.0 - ci.md stops forbidding a public repository, and says what stands where the prohibition stood
+
+The page that decides this is `docs/ci.md`, and [ADR-030](docs/decisions.md)
+changed two of its rules. This is the rewrite.
+
+**Rule 1** no longer forbids. It says every repository of the fleet may use the
+runner, public ones included — and then it says the thing a reversal is tempted
+to leave out: *"the reason has not gone away."* A pull request from any fork
+still runs its author's code on the machine, and rule 6 still describes what that
+means. So the rule names its replacement in the same breath: **fork pull request
+approval**, per repository, which is the only control that stands where the
+prohibition stood.
+
+**Rule 4** splits in two, because the owner's decision only moved one half of it.
+Joining is **pre-authorised** — no repository needs a case-by-case decision any
+more. Registering is **still the owner's act**: it needs a one-hour token and a
+shell on the machine, and the sentence that an agent never registers a runner on
+its own initiative stays exactly as it was written.
+
+*How a repository joins* loses the step that stopped at public and gains a step 6
+for public repositories: require approval for external contributors. It is phrased
+as what it is — not a recommendation, but the thing that keeps a stranger's code
+off a machine that grants effective root.
+
+The `⚠️` box at the top said the address stays out of what travels. It now says
+the opposite, with the one fact that makes it tolerable: `100.64.0.0/10` is RFC
+6598 shared space, so what gets published is the internal topology and not a
+route.
+
+One paragraph was left almost alone on purpose. The section about a
+collaborator's repository still says rule 6 is the real decision and still says it
+is the owner's call made each time — because ADR-030 pre-authorised **the fleet's
+own** repositories, and somebody else's account is not the fleet. A reversal that
+quietly widened to third parties would have been a different decision than the one
+that was taken.
+
 ## 1.19.0 - the self-hosted runner opens to every repository, and its address travels with the rule
 
 `1.18.0` gave the fleet's CI machine a page, two echo blocks and
