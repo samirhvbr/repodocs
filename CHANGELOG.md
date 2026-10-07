@@ -9,6 +9,62 @@ at `git commit` time.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 1.19.0 - the self-hosted runner opens to every repository, and its address travels with the rule
+
+`1.18.0` gave the fleet's CI machine a page, two echo blocks and
+[ADR-029](docs/decisions.md). Two of the things that page says were written to be
+safe by construction, and the owner reversed both on 07/10/2026.
+
+**Rule 1 was *"a public repository never gets this runner"*.** Its reason is rule
+6 of the same page: the `runner` user has passwordless `sudo` and sits in the
+`docker` group, so *"a workflow registered here has, in effect, root on a machine
+inside the office network"*. In a public repository, a pull request from any fork
+runs its author's code there. **39 of the fleet's 73 repositories are public** —
+measured today, more than half. That prohibition is gone.
+
+**And the address stayed behind on purpose.** `ci.md` carries `100.64.100.240`
+and the SSH user; the block that travels deliberately did not, *"because it is
+copied into public repositories"*, and `runbook.md` §6 carried a pre-flight line
+saying the address had to come out before this repository could ever be made
+public. The block now carries it, and that line goes.
+
+The cost is in [ADR-030](docs/decisions.md) in the words it deserves: on any of
+the 39 public repositories, a stranger's pull request can run arbitrary code with
+effective root on a VM inside the office network. That is not a side effect of
+the decision — it *is* the decision, and it was put to the owner that way, with
+the number, before the choice.
+
+Two facts make it smaller than it reads, and neither excuses it. **Permission is
+not destination:** the switch is `runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}`,
+so a repository reaches `cicd` only when somebody sets `CI_RUNNER` in it —
+reversing rule 1 moved no job anywhere. And the address is `100.64.0.0/10`, RFC
+6598 shared space, not routable from the internet: publishing it describes the
+internal topology rather than handing out a route.
+
+What the ADR is careful to name is **what carries the safety now that the
+boundary does not** — fork pull request approval, per repository, is the only
+control that stands where rule 1 stood, and `CI_RUNNER` must never be set at
+organisation scope, because that would retarget public repositories which are
+green today on free hosted minutes. Neither is imposed here. They are written
+down so the answer to *"what replaced rule 1?"* exists.
+
+One thing did not change, and the block keeps saying it in the same words:
+registration needs a token and a shell on the machine, and **an agent never
+registers a runner on its own initiative.** The decision opened who may join. It
+did not change who does the joining.
+
+There is a consequence this entry should state rather than leave implied: the
+address becomes public in 39 repositories the moment the stamping pass runs, and
+**editing a file afterwards does not take it back** — it will be in their
+history.
+
+**This delivery is documentation, so no automated test applies** — the exception
+[conventions.md §9](docs/conventions.md#9-a-change-in-behavior-ships-with-the-test-that-fails-when-the-behavior-breaks)
+clause 5 asks to be stated. What was checked instead: both pairs of twins diffed
+below the H1, a `grep` over `docs/` and `templates/` confirming no copy of the
+old prohibition survived, and the `commit-msg` hook verifying each subject
+against `version.md`.
+
 ## 1.18.0 - the fleet's CI runner is documented once, and its rule travels as an echo block
 
 The CI machine existed, worked, and was written down — inside one product repository. On 06/10/2026

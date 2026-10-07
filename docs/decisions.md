@@ -1530,3 +1530,86 @@ checked on the machine itself on the day. The page says so on its first lines.
 [`tools/test-fleet.sh`](../tools/test-fleet.sh) — the first test of it in the tree, which
 ADR-024's clause 4 asked for. `fleet.sh check` reports `CICD-RULE not stamped` in every
 repository until a pass stamps it. New repositories receive the block from the skeleton.
+
+---
+
+## ADR-030 — the self-hosted runner opens to every repository, public ones included, and its address travels with the rule
+
+**Status:** `ACCEPTED` · 07/10/2026 · **Reverses rule 1** and relaxes rule 4 of
+[ci.md](ci.md) · Amends
+[ADR-029](#adr-029--the-fleets-ci-machine-is-documented-once-and-its-rule-reaches-every-repository-as-an-echo-block),
+which decided *how* the rule travels and not *what* it says
+
+**Context.** ADR-029 gave the fleet's CI machine one page and one echo block.
+Two of the things that page says were written to be safe by construction, and
+both are reversed here:
+
+- **Rule 1** — *"A public repository never gets this runner."* The reason is
+  rule 6 of the same page: the `runner` user has passwordless `sudo` and sits in
+  the `docker` group, so *"a workflow registered here has, in effect, root on a
+  machine inside the office network."* In a public repository a pull request
+  from any fork runs its author's code on that machine.
+- **The address.** `ci.md` carries `100.64.100.240` and the SSH user; the echo
+  block deliberately does not, *"because it is copied into public
+  repositories"*, and `runbook.md` §6 carries a pre-flight line saying the
+  address has to come out before this repository is ever made public.
+
+Measured 07/10/2026: **39 of the fleet's 73 repositories are public** — more than
+half. And the block that carries the rule had reached **none** of them:
+`fleet.sh check` reports `CICD-RULE not stamped` in 57 of 57 repositories of
+ours. The rule that forbade was never actually read anywhere except here.
+
+**Decision.** The owner decided, on 07/10/2026, that **the `cicd` runner is open
+to every repository of the fleet, public ones included**, and that **the
+machine's address travels with the rule** instead of staying behind in the
+private source.
+
+Rule 4 relaxes with it: joining no longer needs a decision taken case by case.
+It is pre-authorised. **What does not change is who registers.** Registration
+needs a one-hour token and a shell on the machine, the jobs run with `sudo`
+inside the office network, and an agent **never registers a runner on its own
+initiative** — it says what is needed and asks. That sentence stays in the block
+exactly as it is.
+
+**The cost, stated plainly, because an ADR that lists only benefits is a
+decision that was not thought through.** On any of the 39 public repositories, a
+pull request opened by a stranger can run arbitrary code with effective root on
+a VM inside the office network. That is not a side effect of this decision; it
+*is* the decision. It was put to the owner in those words, with the number, and
+chosen with the threat in view.
+
+**Two things make the decision smaller than it reads, and neither is an excuse
+for it.** First, **permission is not destination**: the switch is
+`runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}`, so a repository goes to
+`cicd` only when somebody sets `CI_RUNNER` in it. Reversing rule 1 moves no job
+anywhere. Second, the address is **`100.64.0.0/10`** — RFC 6598 shared address
+space, not routable from the internet. Publishing it describes the internal
+topology; it does not hand anyone a route.
+
+**What carries the safety now that the boundary does not.** The prohibition was
+doing one job: keeping a stranger's code off the machine. With it gone, that job
+belongs to a setting rather than to a rule:
+
+- **Fork pull request approval** — *Settings → Actions → Fork pull request
+  workflows → Require approval for all external contributors*. Per repository,
+  scriptable, and the only control that actually stands where rule 1 stood.
+- **`CI_RUNNER` is never set at organisation scope.** An organisation variable
+  would retarget every repository at once, including public ones that are green
+  today on free hosted minutes — `blue3-rpi` and `blue3-debian-custom-iso` are
+  exactly that case.
+- **One runner per repository**, and the VM does nothing else, which is the
+  condition under which the machine's own runbook accepts passwordless `sudo` at
+  all.
+
+Neither of the first two is imposed by this ADR. They are named here so that the
+day somebody asks *"what replaced rule 1?"*, the answer is written down and not
+reconstructed.
+
+**Consequences.** `ci.md` rules 1 and 4 are rewritten, its `⚠️` box about the
+address goes, and *How a repository joins* loses its step 1 (*"check the
+repository is private… if it is public, stop"*). Both echo blocks —
+`CICD-RULE` and `CICD-RULE-PT` — change title and body, and begin carrying the
+address. `runbook.md` §6 loses the pre-flight line that protected it. The
+address becomes public in 39 repositories the moment the stamping pass runs, and
+**that is not reversible by editing a file afterwards**: it will be in their
+history.
