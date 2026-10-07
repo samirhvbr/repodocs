@@ -9,6 +9,35 @@ at `git commit` time.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 1.19.3 - check read the working tree and called a block present when only a topic branch had it
+
+`1.19.2` stopped the pass from stamping a repository that is not on its default
+branch. It left the other half of the same defect standing: **`check` went on
+reporting those repositories as conformant.**
+
+Every tree-based finding in `check` — the five echo blocks, the twins, the hooks,
+`release.sh` — greps the working tree. On a checkout sitting on a topic branch,
+each of those answers a question about **that branch** and reads as an answer
+about the repository. `BLUE3/BLUE3-INTRANET` is the live case: its topic branch
+carries all five blocks, so `check` listed it as stamped while `origin/master`
+carries none. The pass now skips it and the report called it done — the two
+disagreed in the one direction nobody looks at.
+
+`check` now says so, as a **finding** and not a note: *"checked out on 'X', not
+'master' — every finding above is about that branch, not about this
+repository."* A note would have been the wrong shape. The unknown-default case
+above it is a note because it is a fact about the clone that changes nothing
+else; this one invalidates every line printed above it, and a report that
+invalidates its own output has to say that in the count.
+
+The test gained two assertions, and the second is the one that needed thinking
+about. A repository whose own default is `dev` must **not** be called a topic
+branch — but it does carry a finding, because ADR-015 flags a default that is not
+`master` unless it is written down. So the assertion is not *"no findings"*; it
+is *"not this finding"*, scoped to that repository's own block in the report.
+Writing it the loose way made it fail against correct code, which is its own
+small lesson about what an assertion is measuring.
+
 ## 1.19.2 - the pass committed to whatever was checked out, and two stamps landed on a topic branch
 
 `1.19.0` stamped 44 repositories. **Two of them were not on their default

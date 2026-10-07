@@ -443,6 +443,12 @@ if [ "$MODE" = check ]; then
       # a fact about the clone, not about the repository, so it is a note and
       # not a finding — counting it would inflate a number meant to be acted on.
       notes+=("default branch not known locally — git remote set-head origin -a")
+    elif [ "$(git -C "$repo" rev-parse --abbrev-ref HEAD 2>/dev/null)" != "$defbr" ]; then
+      # Every finding above reads the WORKING TREE. On a topic branch they are
+      # findings about that branch, not about the repository, and a block present
+      # only there reads as present — which is how BLUE3-INTRANET reported five
+      # stamped blocks on 07/10/2026 while `origin/master` carried none.
+      bad+=("checked out on '$(git -C "$repo" rev-parse --abbrev-ref HEAD 2>/dev/null)', not '$defbr' — every finding above is about that branch, not about this repository")
     elif [ "$defbr" != master ]; then
       bad+=("default branch is '$defbr', not master (ADR-015)")
     fi
