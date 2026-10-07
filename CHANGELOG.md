@@ -9,6 +9,32 @@ at `git commit` time.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 1.19.0 - the stamped copies catch up, and the skeleton stops being born without RELEASES-RULE
+
+Changing a block changes nothing until the copies are regenerated, and the first
+copies are this repository's own. `CLAUDE.md` and `AGENTS.md` here and in the
+skeleton carried the old `CICD-RULE` verbatim — title, prohibition and all — so
+a `grep` for the reversed rule found four files still teaching it. They now carry
+the new block, and the only surviving copy of the old sentence is the one quoted
+inside [ADR-030](docs/decisions.md), where quoting it is the point.
+
+`runbook.md` §6 loses the pre-flight line that existed to protect the address
+before going public, and gains two in its place. The first keeps the rest of the
+rule standing while carving out exactly one exception, because *"no internal
+address"* with a silent hole in it is worse than either answer: the CI machine's
+address is published on purpose, it is RFC 6598 space, **and a second internal
+address would not inherit that decision**. The second is new and belongs to this
+version: a repository that uses `cicd` does not go public with fork pull request
+approval off.
+
+And a defect older than this delivery is fixed in the same pass, because the
+files were open: **the skeleton's twins carried four of the five echo blocks.**
+`RELEASES-RULE` was missing, while `templates/README.md` lists it as one every
+repository carries — so every repository created from the skeleton was born
+without the rule that says the bump and the Release are one act. It was found on
+28/09 and recorded nowhere; it is in now, which makes the skeleton's twins five
+blocks and the root's five too.
+
 ## 1.19.0 - the CICD blocks carry the address and the setting that replaced the prohibition
 
 The block is what actually reaches a repository, so this is where the reversal

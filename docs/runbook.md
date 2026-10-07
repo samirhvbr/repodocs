@@ -120,9 +120,15 @@ visibility:
       still in every clone.
 - [ ] Any secret ever committed has been **rotated**, not merely deleted.
 - [ ] No internal hostname, private IP range or infrastructure path that should
-      not be public. **In this repository that is [`ci.md`](ci.md)**, which carries
-      the CI machine's address and SSH user on purpose; the echo block
-      `CICD-RULE` does not, and is the only part of it that leaves the repository.
+      not be public — **except the CI machine's**, which since
+      [ADR-030](decisions.md) is published on purpose, in the `CICD-RULE` block,
+      in public repositories included. It is `100.64.0.0/10`: RFC 6598 shared
+      space, not routable from the internet. Everything else on this list still
+      applies, and a second internal address would not inherit that decision.
+- [ ] If the repository uses the `cicd` runner, **fork pull request approval is
+      on** — *Settings → Actions → Fork pull request workflows*. Going public
+      without it means any fork's pull request runs with `sudo` on a machine in
+      the office network ([ci.md](ci.md) rules 1 and 6).
 - [ ] `LICENSE` is present and `NOTICE` agrees with it about the license and the
       copyright holder.
 - [ ] `SECURITY.md` names a reporting address that is actually monitored.
