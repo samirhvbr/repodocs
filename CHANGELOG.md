@@ -9,6 +9,50 @@ at `git commit` time.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 1.19.1 - the echo pass left a stamped file behind in the one repository whose twin was never committed
+
+The stamping pass of `1.19.0` reached 48 repositories, applied 44 and refused 4.
+Three of the refusals are findings about those repositories: their twins already
+differed below the H1, so stamping both left them still differing and the ADR-007
+guard abandoned the commit, correctly. The fourth is a defect in this tool.
+
+**`SAMIRHV` has an `AGENTS.md` that has never been committed.** `fleet.sh`
+selected it anyway, because the gate asked whether the file exists *on disk*. The
+stamp went into both, the twins still differed, the commit was abandoned — and
+then `rollback_one` ran `git checkout -- CLAUDE.md AGENTS.md`, which git refuses
+as a **whole pathspec** when one of its paths is untracked. It restored neither,
+and `2>/dev/null` hid the refusal. The pass left a stamped, uncommitted
+`CLAUDE.md` in a repository it had decided not to touch.
+
+Two halves, because the defect has two:
+
+- **The rollback restores one path per call.** One untracked twin can no longer
+  block the other from being restored.
+- **The gate asks git, not the filesystem.** `git ls-files CLAUDE.md` and
+  `AGENTS.md` must both answer; a file that is not tracked cannot be committed by
+  a pathspec commit nor restored by a checkout, so stamping it was always going
+  to strand the other one. The skip reason says so and points at ADR-007.
+
+`tools/tests/fleet-echo-untracked-twin.sh` is the test, and it is the first one
+this repository has — which is itself overdue, since
+[ADR-024](docs/decisions.md) put `tools/` under the rule that a change in
+behavior ships with the test that fails when it breaks, and the fixture the
+`1.11.x` entries called *"how this script is tested"* has lived in a scratch
+directory ever since. It stands up a throwaway fleet of one, with `AGENTS.md` on
+disk and out of git, and asserts both halves: the repository is skipped with the
+reason naming the untracked twin, and `CLAUDE.md` is byte-identical afterwards.
+
+**Red before, green after**, as clause 2 asks: against the previous `fleet.sh`
+the fixture is *applied* instead of skipped and the file comes back changed —
+three of the four assertions fail. The hash check is what catches it, not `git
+status`, because in the old path the file was committed rather than left dirty.
+
+The three genuine ADR-007 findings are left alone on purpose: `000/hermes-agent`
+(1,402 divergent lines — two different documents), `SAMIRHV` (an `AGENTS.md`
+addressed to Codex, missing a section) and `SSHVTERM/SSHVTERM-MOBILE` (10 lines).
+Reconciling a pair of twins is a decision about which of the two is right, and
+that is not a decision a fleet pass gets to make.
+
 ## 1.19.0 - the stamped copies catch up, and the skeleton stops being born without RELEASES-RULE
 
 Changing a block changes nothing until the copies are regenerated, and the first

@@ -563,6 +563,12 @@ for row in "${OURS[@]}"; do
       if [ ! -f "$repo/CLAUDE.md" ] || [ ! -f "$repo/AGENTS.md" ]; then
         SKIPPED+=("$repo|no CLAUDE.md/AGENTS.md pair to stamp"); continue
       fi
+      if [ -z "$(git -C "$repo" ls-files CLAUDE.md)" ] || [ -z "$(git -C "$repo" ls-files AGENTS.md)" ]; then
+        # On disk is not the same as in git. An untracked twin cannot be
+        # committed by a pathspec commit and cannot be restored by a checkout,
+        # so stamping it strands the other one (SAMIRHV, 07/10/2026).
+        SKIPPED+=("$repo|CLAUDE.md or AGENTS.md is not tracked — commit the pair first (ADR-007)"); continue
+      fi
       touched="version.md CHANGELOG.md CLAUDE.md AGENTS.md"
       ;;
   esac
@@ -764,7 +770,14 @@ rollback_one() {    # $1 = repo, $2 = mode, $3 = had_hooks, $4 = had_config, $5.
     rmdir "$repo/tools/git-hooks" 2>/dev/null || true
     rmdir "$repo/tools" 2>/dev/null || true
   fi
-  [ "$mode" = echo ] && git -C "$repo" checkout -- CLAUDE.md AGENTS.md 2>/dev/null
+  # One path per call. `git checkout -- A B` refuses the WHOLE pathspec when one
+  # of them is untracked, restores neither, and the 2>/dev/null hides it —
+  # measured 07/10/2026 in SAMIRHV, whose AGENTS.md has never been committed:
+  # the pass left a stamped-but-uncommitted CLAUDE.md behind after rolling back.
+  if [ "$mode" = echo ]; then
+    git -C "$repo" checkout -- CLAUDE.md 2>/dev/null || true
+    git -C "$repo" checkout -- AGENTS.md 2>/dev/null || true
+  fi
   [ -z "$had_config" ] && git -C "$repo" config --unset core.hooksPath 2>/dev/null
   return 0
 }
