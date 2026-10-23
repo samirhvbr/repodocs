@@ -469,6 +469,16 @@ not, however alike the names look. `tools/fleet.sh` matched a prefix until
 1.19.4, and the day two `blue3-intranet-*` siblings changed owner it went on
 stamping them in Portuguese.
 
+**A change of owner moves the repository across the boundary, and no ADR is
+needed for that.** The rule already answers it: the owner is what decides. When
+the four repositories above left BLUE3-ISP on 23/10/2026, the owner confirmed
+the reading — *they follow the rule into English (US)*. Point `origin` at the new
+owner first (`git remote set-url origin …`), then run the echo pass: it swaps
+every block that has a Portuguese variant, and its subject says the variant
+changed. The text outside the markers — a language note, a commit example in
+`version.md` — is the repository's own and is fixed by hand in the same delivery.
+Nothing already written is translated because of the move.
+
 **Why they are exempt.** The English rule exists for a reader who does not read
 Portuguese and meets our text first. Nobody outside the company opens these
 repositories, and much of what is written into them is operational reasoning

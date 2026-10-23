@@ -153,6 +153,21 @@ pt_repository() {   # $1 = remote url
   return 1
 }
 
+# Which language the LANGUAGE-RULE block already in a file is written in, read
+# from the block's own heading: "pt", "en", or empty when there is no block.
+# A repository whose owner changed carries the other variant until the next
+# pass, and that pass has to say so instead of calling it a plain regeneration.
+stamped_language() {  # $1 = file
+  local h
+  h="$(awk '$0 == "<!-- LANGUAGE-RULE:repodocs -->" { f = 1; next }
+            f && $0 == "<!-- /LANGUAGE-RULE -->" { exit }
+            f && /^## / { print; exit }' "$1" 2>/dev/null)"
+  case "$h" in
+    '## Idioma'*) printf 'pt' ;;
+    '## Language'*) printf 'en' ;;
+  esac
+}
+
 owner_of() {        # $1 = remote url
   printf '%s' "$1" | sed -E 's#^(git@|https://|ssh://git@)##; s#^github\.com[:/]##; s#/.*$##'
 }
@@ -654,9 +669,50 @@ echo
 # before the commit (conventions §1). SUBJECT is set as a side effect because
 # the heading IS the subject and inventing it twice is how the two drift.
 SUBJECT=""
+# Set by apply_one before stamping: "pt>en" or "en>pt" when the LANGUAGE-RULE
+# already in the repository is the other variant from the one this pass writes.
+SWITCH=""
 write_entry() {     # $1 = file, $2 = remote, $3 = new version, $4 = escape var
   local f="$1" remote="$2" new="$3" ev="${4:-REPODOCS_NO_HOOK}"
-  if [ "$MODE" = hooks ]; then
+  local slug; slug="$(slug_of "$remote")"
+  if [ "$MODE" = echo ] && [ -n "$SWITCH" ]; then
+    # The owner on origin changed sides of the language boundary. Calling this a
+    # plain regeneration would hide the one thing the commit actually decides.
+    if [ "$SWITCH" = "en>pt" ]; then
+      SUBJECT="$new - os blocos de eco passam a português, seguindo o dono no GitHub"
+      cat > "$f" <<PTENTRY
+## $SUBJECT
+
+As regras marcadas de \`CLAUDE.md\` e \`AGENTS.md\` são reescritas a partir da
+fonte única em [samirhvbr/repodocs](https://github.com/samirhvbr/repodocs), e
+desta vez a variante muda: o repositório carregava os blocos em inglês, e o
+\`origin\` agora aponta para \`$slug\`, que está no conjunto escrito em português
+(\`BLUE3-ISP/*\`, \`samirhvbr/blue3-intranet\`, \`samirhvbr/blue3-ai-login\`). O
+idioma de um repositório segue o dono no GitHub, então todo bloco que tem
+variante em português chega em português.
+
+Só os blocos mudam neste commit. O texto fora dos marcadores é do próprio
+repositório, e o histórico não se reescreve.
+PTENTRY
+    else
+      SUBJECT="$new - the echo blocks switch to English (US), following the owner on GitHub"
+      cat > "$f" <<ENENTRY
+## $SUBJECT
+
+The marked rules in \`CLAUDE.md\` and \`AGENTS.md\` are rewritten from the single
+source at [samirhvbr/repodocs](https://github.com/samirhvbr/repodocs), and this
+time the variant changes: the repository carried the Portuguese blocks, and
+\`origin\` now names \`$slug\`, which is outside the Portuguese set
+(\`BLUE3-ISP/*\`, \`samirhvbr/blue3-intranet\`, \`samirhvbr/blue3-ai-login\`). The
+language of a repository follows its owner on GitHub, so every block that has a
+Portuguese variant arrives in English (US).
+
+Only the blocks change in this commit. Text written outside the markers is the
+repository's own, and history is not rewritten: Portuguese messages and
+documents already there stay as they are until they are next touched.
+ENENTRY
+    fi
+  elif [ "$MODE" = hooks ]; then
     if pt_repository "$remote"; then
       SUBJECT="$new - os hooks de git são regenerados a partir do repodocs"
       cat > "$f" <<PTENTRY
@@ -847,6 +903,17 @@ apply_one() {
     git -C "$repo" config core.hooksPath tools/git-hooks \
       || { ERR="cannot set core.hooksPath"; rollback_one "$repo" "$MODE" "$had_hooks" "$had_config" "${paths[@]}"; return 1; }
   else
+    # Read the language of what is there BEFORE overwriting it: afterwards the
+    # file only knows what this pass wrote.
+    SWITCH=""
+    case " $ECHO_BLOCKS " in
+      *" LANGUAGE-RULE "*)
+        local was now=en
+        was="$(stamped_language "$repo/CLAUDE.md")"
+        pt_repository "$remote" && now=pt
+        [ -n "$was" ] && [ "$was" != "$now" ] && SWITCH="$was>$now"
+        ;;
+    esac
     for b in $ECHO_BLOCKS; do
       src="$(block_source "$b" "$remote")"
       stamp_block "$repo/CLAUDE.md" "$b" "$src" || { ERR="cannot stamp $b into CLAUDE.md"; rollback_one "$repo" "$MODE" "$had_hooks" "$had_config" "${paths[@]}"; return 1; }

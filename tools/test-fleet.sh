@@ -133,7 +133,7 @@ for b in QUEUE-RULE RELEASES-RULE LANGUAGE-RULE COMMIT-RULE CICD-RULE; do
 done
 ok "the default pass stamps all five blocks, CICD-RULE included"
 
-# --- the Portuguese set is matched by whole name ------------------------------
+# --- the Portuguese set is matched by whole name, and a move switches it -------
 
 # `samirhvbr/blue3-intranet` is in the set; `samirhvbr/blue3-intranet-lscripts`
 # is not. Until 1.19.4 a prefix pattern put both in it, and on 23/10/2026 that
@@ -142,6 +142,7 @@ ROOT3="$TMP/three"
 mkdir -p "$ROOT3"
 make_repo "$ROOT3/intranet" 'git@github.com:samirhvbr/blue3-intranet.git'
 make_repo "$ROOT3/sibling"  'https://github.com/samirhvbr/blue3-intranet-lscripts.git'
+make_repo "$ROOT3/moved"    'https://github.com/BLUE3-ISP/blue3-rpi.git'
 FLEET_OWNERS="samirhvbr BLUE3-ISP" "$FLEET" echo --root "$ROOT3" --apply --no-push >/dev/null 2>&1 \
   || fail "the pass over the name-boundary fixture failed"
 grep -q '^## Idioma — este repositório é escrito em português' "$ROOT3/intranet/CLAUDE.md" \
@@ -149,6 +150,31 @@ grep -q '^## Idioma — este repositório é escrito em português' "$ROOT3/intr
 grep -q '^## Language — English (US)' "$ROOT3/sibling/CLAUDE.md" \
   || fail "samirhvbr/blue3-intranet-lscripts was read as blue3-intranet: a prefix match"
 ok "the samirhvbr repositories of the Portuguese set are matched whole, not as a prefix"
+
+# The move: same clone, origin now names the new owner. The next pass must swap
+# every variant and say so — a plain "regenerated" subject would hide the decision.
+git -C "$ROOT3/moved" config remote.origin.url 'https://github.com/samirhvbr/blue3-rpi.git'
+before_moved="$(commits "$ROOT3/moved")"
+FLEET_OWNERS="samirhvbr BLUE3-ISP" "$FLEET" echo --root "$ROOT3" --only moved --apply --no-push >/dev/null 2>&1 \
+  || fail "the pass after the move failed"
+[ "$(commits "$ROOT3/moved")" -eq $((before_moved + 1)) ] || fail "moved: expected exactly one commit"
+grep -q '^## Language — English (US)' "$ROOT3/moved/CLAUDE.md" || fail "moved: LANGUAGE-RULE did not switch to English"
+grep -qE '^## (Idioma|A fila|CI — o runner)' "$ROOT3/moved/CLAUDE.md" && fail "moved: a Portuguese block survived the switch"
+git -C "$ROOT3/moved" log -1 --format=%s \
+  | grep -q '^0\.1\.2 - the echo blocks switch to English (US), following the owner on GitHub$' \
+  || fail "moved: the subject does not name the switch: $(git -C "$ROOT3/moved" log -1 --format=%s)"
+grep -q '^## 0\.1\.2 - the echo blocks switch to English' "$ROOT3/moved/CHANGELOG.md" \
+  || fail "moved: the changelog heading is not the subject"
+grep -q 'samirhvbr/blue3-rpi' "$ROOT3/moved/CHANGELOG.md" || fail "moved: the entry does not name the new owner"
+diff -q <(tail -n +2 "$ROOT3/moved/CLAUDE.md") <(tail -n +2 "$ROOT3/moved/AGENTS.md") >/dev/null \
+  || fail "moved: the twins differ below the H1 (ADR-007)"
+ok "a repository that left BLUE3-ISP switches every variant to English, and the subject says so"
+
+before_moved="$(commits "$ROOT3/moved")"
+FLEET_OWNERS="samirhvbr BLUE3-ISP" "$FLEET" echo --root "$ROOT3" --only moved --apply --no-push >/dev/null 2>&1 \
+  || fail "the second pass after the move failed"
+[ "$(commits "$ROOT3/moved")" -eq "$before_moved" ] || fail "moved: a second pass made a commit"
+ok "after the switch, a second pass writes nothing"
 
 echo
 echo "$PASSED assertions passed."

@@ -9,6 +9,33 @@ at `git commit` time.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 1.19.4 - an echo pass that switches a repository's language now says so in its subject
+
+A full pass called every commit *"the echo blocks are regenerated from
+repodocs"*, with a body announcing `QUEUE-RULE` as new. For the four repositories
+that left `BLUE3-ISP` on 23/10/2026 both halves would be wrong: `QUEUE-RULE` has
+been there for weeks, and the one decision the commit actually makes — the
+repository changes language — would not be named anywhere in `git log`.
+
+Before stamping, the pass now reads the heading of the `LANGUAGE-RULE` already
+in `CLAUDE.md`. When it is the other variant from the one the owner on `origin`
+selects, the subject becomes
+`X.Y.Z - the echo blocks switch to English (US), following the owner on GitHub`
+— or `os blocos de eco passam a português, seguindo o dono no GitHub` for a
+repository that moved into the set — and the body names the new owner and says
+that only the blocks change: the text outside the markers is the repository's
+own, and nothing already written is translated.
+
+The fixture moves a `BLUE3-ISP` repository to `samirhvbr` and asserts one
+commit, no Portuguese heading left, the switch subject as the changelog heading,
+the new owner in the entry, the twins identical, and nothing written by a second
+pass.
+
+`docs/runbook.md` gives the order for a move — `git remote set-url` first, then
+the pass, then the text outside the markers by hand in a commit that repeats the
+version — and `docs/conventions.md` §8 says that a change of owner crosses the
+boundary without an ADR, because the rule already answers it.
+
 ## 1.19.4 - the Portuguese set matched blue3-intranet as a prefix, so two repositories that left BLUE3-ISP stayed Portuguese
 
 On 23/10/2026 four repositories moved from `BLUE3-ISP` to `samirhvbr`:

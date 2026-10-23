@@ -223,6 +223,15 @@ is what makes a block edited in place harmless, and what lets the old two-subjec
 have yet is inserted next to the ones it does. The `-PT` variant is chosen by the
 owner on `origin`, never by hand.
 
+**A repository that changed owner** is handled the same way, in this order:
+`git remote set-url origin <the new url>` first, then the pass. When the
+`LANGUAGE-RULE` already stamped is the other variant, every block that has one is
+swapped and the subject names the switch —
+`X.Y.Z - the echo blocks switch to English (US), following the owner on GitHub`,
+or its Portuguese twin — instead of calling it a plain regeneration. Text outside
+the markers is not the pass's to touch; fix it by hand in a second commit that
+repeats the version ([conventions.md §8](conventions.md#8-language)).
+
 The changelog has three cases, and the script tells them apart:
 
 | The repository has | What happens |
