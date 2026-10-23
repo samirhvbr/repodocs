@@ -50,14 +50,20 @@ echo "fleet echo fixture"
 
 # --- the templates themselves ------------------------------------------------
 
-# The block is copied into public repositories, so it must not carry the
-# machine's address or the way in. This is the property the whole design rests on.
+# The block is copied into public repositories. Until 1.19.0 that meant it carried
+# no address at all; since the owner's decision of 07/10/2026 it carries the
+# machine's address, and what makes that tolerable is that the address is RFC 6598
+# shared space (100.64.0.0/10), not routable from the internet. Any other address
+# appearing in the block would break the one property the decision rests on.
 for f in "$ECHO_SRC/CICD-RULE.md" "$ECHO_SRC/CICD-RULE-PT.md"; do
-  grep -qE '[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' "$f" && fail "$(basename "$f") carries an IP address"
-  grep -qE 'samir@|ssh [a-z]+@' "$f" && fail "$(basename "$f") carries an SSH target"
+  while IFS= read -r ip; do
+    IFS=. read -r a b _ _ <<<"$ip"
+    { [ "$a" -eq 100 ] && [ "$b" -ge 64 ] && [ "$b" -le 127 ]; } \
+      || fail "$(basename "$f") carries $ip, which is not RFC 6598 shared space"
+  done < <(grep -oE '[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' "$f")
   [ "$(grep -c 'CICD-RULE' "$f")" -eq 2 ] || fail "$(basename "$f") must have exactly one opening and one closing marker"
 done
-ok "the CI block carries no address and no SSH target, in both languages"
+ok "the CI block carries no address outside RFC 6598 shared space, in both languages"
 
 # --- a pass limited to the CI block -----------------------------------------
 
@@ -72,8 +78,8 @@ out="$("$FLEET" echo --root "$ROOT" --block CICD-RULE --apply --no-push 2>&1)" \
 
 grep -q '<!-- CICD-RULE:repodocs -->' "$ROOT/en/CLAUDE.md" || fail "en: CICD-RULE not stamped in CLAUDE.md"
 grep -q '<!-- CICD-RULE:repodocs -->' "$ROOT/en/AGENTS.md" || fail "en: CICD-RULE not stamped in AGENTS.md"
-grep -q 'never gets that runner' "$ROOT/en/CLAUDE.md" || fail "en: got the wrong language"
-grep -q 'nunca recebe esse runner' "$ROOT/pt/CLAUDE.md" || fail "pt: the Portuguese variant was not chosen by the owner on origin"
+grep -q 'Permission is not destination' "$ROOT/en/CLAUDE.md" || fail "en: got the wrong language"
+grep -q 'Permissão não é destino' "$ROOT/pt/CLAUDE.md" || fail "pt: the Portuguese variant was not chosen by the owner on origin"
 ok "the block is stamped in both files, and the variant follows the owner"
 
 for b in QUEUE-RULE RELEASES-RULE LANGUAGE-RULE COMMIT-RULE; do

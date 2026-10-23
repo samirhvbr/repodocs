@@ -9,6 +9,25 @@ at `git commit` time.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 1.19.4 - the fleet fixture had been failing since 1.19.0, on the CI block rule that 1.19.0 reversed
+
+`tools/test-fleet.sh` stopped on its first assertion on every run since 1.19.0.
+That assertion still required the CI block to carry **no** address and no SSH
+target — exactly the rule 1.19.0 reversed, when the owner opened the runner to
+every repository and its address travelled with the rule. A fixture that fails
+on line one measures nothing after it, so for two weeks the `--block` pass, the
+trailers, the twins and idempotence were unguarded.
+
+It now requires what the reversal rests on instead: any IPv4 address in either
+variant of the block is RFC 6598 shared space (`100.64.0.0/10`), not routable
+from the internet. The two language probes looked for sentences the rewritten
+block no longer has (*"never gets that runner"*, *"nunca recebe esse runner"*);
+they now look for *"Permission is not destination"* and *"Permissão não é
+destino"*.
+
+Found while adding the assertions of the next two commits, which could not be
+run behind it.
+
 ## 1.19.3 - check read the working tree and called a block present when only a topic branch had it
 
 `1.19.2` stopped the pass from stamping a repository that is not on its default
