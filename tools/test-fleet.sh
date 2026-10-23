@@ -133,5 +133,22 @@ for b in QUEUE-RULE RELEASES-RULE LANGUAGE-RULE COMMIT-RULE CICD-RULE; do
 done
 ok "the default pass stamps all five blocks, CICD-RULE included"
 
+# --- the Portuguese set is matched by whole name ------------------------------
+
+# `samirhvbr/blue3-intranet` is in the set; `samirhvbr/blue3-intranet-lscripts`
+# is not. Until 1.19.4 a prefix pattern put both in it, and on 23/10/2026 that
+# was live: two repositories that left BLUE3-ISP kept getting Portuguese blocks.
+ROOT3="$TMP/three"
+mkdir -p "$ROOT3"
+make_repo "$ROOT3/intranet" 'git@github.com:samirhvbr/blue3-intranet.git'
+make_repo "$ROOT3/sibling"  'https://github.com/samirhvbr/blue3-intranet-lscripts.git'
+FLEET_OWNERS="samirhvbr BLUE3-ISP" "$FLEET" echo --root "$ROOT3" --apply --no-push >/dev/null 2>&1 \
+  || fail "the pass over the name-boundary fixture failed"
+grep -q '^## Idioma — este repositório é escrito em português' "$ROOT3/intranet/CLAUDE.md" \
+  || fail "samirhvbr/blue3-intranet lost its Portuguese block"
+grep -q '^## Language — English (US)' "$ROOT3/sibling/CLAUDE.md" \
+  || fail "samirhvbr/blue3-intranet-lscripts was read as blue3-intranet: a prefix match"
+ok "the samirhvbr repositories of the Portuguese set are matched whole, not as a prefix"
+
 echo
 echo "$PASSED assertions passed."

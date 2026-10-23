@@ -135,11 +135,20 @@ excluded_reason() {   # $1 = remote url
 
 # The repositories written in Portuguese: the boundary is the owner on GitHub,
 # not the folder and not the name (ADR-020).
+#
+# The two samirhvbr repositories are matched by their WHOLE name, never as a
+# prefix. Until 1.19.4 the pattern was `samirhvbr/blue3-intranet*`, which was
+# harmless while every `blue3-intranet-*` sibling lived under BLUE3-ISP. On
+# 23/10/2026 `blue3-intranet-lscripts` and `blue3-intranet-ntheme` moved to
+# samirhvbr, and the prefix went on choosing Portuguese for them — the opposite
+# of what the owner rule says about a repository that left BLUE3-ISP.
 pt_repository() {   # $1 = remote url
-  case "$1" in
-    *github.com[:/]BLUE3-ISP/*) return 0 ;;
-    *github.com[:/]samirhvbr/blue3-intranet*) return 0 ;;
-    *github.com[:/]samirhvbr/blue3-ai-login*) return 0 ;;
+  local path="${1#*github.com[:/]}"
+  [ "$path" != "$1" ] || return 1      # not a GitHub url at all
+  path="${path%/}"; path="${path%.git}"
+  case "$path" in
+    BLUE3-ISP/*) return 0 ;;
+    samirhvbr/blue3-intranet|samirhvbr/blue3-ai-login) return 0 ;;
   esac
   return 1
 }

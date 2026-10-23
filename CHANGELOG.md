@@ -9,6 +9,29 @@ at `git commit` time.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 1.19.4 - the Portuguese set matched blue3-intranet as a prefix, so two repositories that left BLUE3-ISP stayed Portuguese
+
+On 23/10/2026 four repositories moved from `BLUE3-ISP` to `samirhvbr`:
+`blue3-rpi`, `blue3-debian-custom-iso`, `blue3-intranet-lscripts` and
+`blue3-intranet-ntheme`. By the owner rule they leave the Portuguese set, and the
+owner confirmed that reading the same day: they become English (US). With their
+`origin` pointed at the new owner, the dry run of `fleet.sh echo` chose English
+for the first two and **Portuguese for the other two**.
+
+The cause was `pt_repository`. It matched `samirhvbr/blue3-intranet*` — a prefix
+— while the rule it implements names `samirhvbr/blue3-intranet`, one repository.
+The difference was invisible while every `blue3-intranet-*` sibling lived under
+`BLUE3-ISP`, where it was Portuguese anyway; it surfaced the first day two of them
+changed owner. Both samirhvbr names are now matched whole, after stripping the
+`.git` and a trailing slash.
+
+The fixture asserts it: `samirhvbr/blue3-intranet` keeps the Portuguese block
+and `samirhvbr/blue3-intranet-lscripts` gets the English one. Run against the
+1.19.3 script, that assertion fails — measured, not assumed.
+
+`docs/conventions.md` §8 lists the four moved repositories under *not in the
+set* and says the two samirhvbr names are matched whole, never as a prefix.
+
 ## 1.19.4 - the fleet fixture had been failing since 1.19.0, on the CI block rule that 1.19.0 reversed
 
 `tools/test-fleet.sh` stopped on its first assertion on every run since 1.19.0.
