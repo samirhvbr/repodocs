@@ -12,7 +12,8 @@
 # Doing nothing is the normal outcome — the tag for the current version usually
 # already exists. Never fails a push over that.
 #
-# Norm: docs/versioning.md · docs/decisions.md ADR-011, ADR-013
+# Norm: docs/versioning.md · samirhvbr/repodocs docs/decisions.md ADR-011, ADR-013
+# https://github.com/samirhvbr/repodocs/blob/master/docs/decisions.md
 name: Release
 
 on:
@@ -42,11 +43,11 @@ concurrency:
 
 jobs:
   release:
-    runs-on: ubuntu-latest
+    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}
     permissions:
       contents: write          # only this job writes; creating a tag needs it
     steps:
-      # Pinned by full 40-character commit SHA, with the tag in the comment (ADR-025).
+      # Pinned by full 40-character commit SHA, with the tag in the comment (repodocs ADR-025).
       # A tag is a pointer its owner can move at any time, and this is the job that holds
       # `contents: write`.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7

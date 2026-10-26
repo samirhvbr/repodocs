@@ -9,6 +9,15 @@ at `git commit` time.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 1.19.6 - release workflows honor the repository runner selection
+
+Both release workflows now honor CI_RUNNER and retain ubuntu-latest as the
+fallback, matching the existing CI rule. ADR references identify their source
+repository. Actionlint passed for both identical copies. Neither repository has
+a CI_RUNNER variable configured, and this change registers no runner or changes
+any variable. Local validation does not diagnose or resolve the account's
+startup_failure executions.
+
 ## 1.19.6 - the security skeleton describes the permission policy adopted in ADR-028
 
 The skeleton still described force-push and hard reset as mechanically denied,
