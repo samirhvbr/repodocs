@@ -49,8 +49,8 @@ git config core.hooksPath tools/git-hooks
 Confirm both directions before you rely on them:
 
 ```bash
-git commit --allow-empty -m "feat: teste"                      # must be REJECTED
-git commit --allow-empty -m "0.1.0 - primeiro commit do repo"  # must be accepted
+git commit --allow-empty -m "feat: a test"                  # must be REJECTED
+git commit --allow-empty -m "0.1.0 - the first commit"      # must be accepted
 ```
 
 Rename `HOOK_ESCAPE_VAR` at the top of each hook to `<ENV_PREFIX>_NO_HOOK`.

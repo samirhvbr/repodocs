@@ -9,6 +9,15 @@ at `git commit` time.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 1.19.5 - the skeleton runbook's hook examples are in English
+
+The skeleton's `docs/runbook.md` tells whoever bootstraps a repository to confirm
+the hooks with two example commits, and both were Portuguese (`feat: teste` and
+`0.1.0 - primeiro commit do repo`) in a document whose language rule is English.
+They are now `feat: a test` and `0.1.0 - the first commit`, the wording repodocs's
+own runbook already uses. The commit-msg hook accepts and rejects them exactly as
+before; only the strings changed.
+
 ## 1.19.5 - the skeleton's dependabot.yml stops speaking as repodocs and quoting the old Portuguese commit format
 
 The skeleton's `.github/dependabot.yml` was copied from repodocs's own file and
