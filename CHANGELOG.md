@@ -9,6 +9,22 @@ at `git commit` time.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 1.19.5 - the skeleton's dependabot.yml stops speaking as repodocs and quoting the old Portuguese commit format
+
+The skeleton's `.github/dependabot.yml` was copied from repodocs's own file and
+still spoke as repodocs. It said repodocs holds documentation, shell hooks and
+templates, which is not true of the repository that receives the file, and it
+quoted the fleet commit format as `versão - comentário em português`, a format
+that has been English (US) since 03/09/2026 for every repository outside the Blue3
+internal set. Both comments are now written for the repository that receives the
+file: it starts with one workflow, `release.yml`, so `github-actions` is the only
+ecosystem listed, and the commit format is `X.Y.Z - description in English`.
+Only comments changed; no setting did.
+
+Found on 23/10/2026 while building a new repository from the skeleton, where the same
+two comments were corrected by hand. The owner asked for the correction here on
+26/10/2026.
+
 ## 1.19.4 - an echo pass that switches a repository's language now says so in its subject
 
 A full pass called every commit *"the echo blocks are regenerated from

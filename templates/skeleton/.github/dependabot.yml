@@ -1,9 +1,7 @@
-# Dependabot keeps the only dependency surface this repository has — the
-# actions used by any future workflow — from going stale.
-#
-# There is deliberately NO build workflow here: repodocs holds documentation,
-# shell hooks and templates, so a CI job would have nothing to prove. A red CI
-# on a docs repo teaches people to ignore CI, which is worse than no CI.
+# Dependabot keeps the dependency surface this repository has from going
+# stale. A new repository starts with one workflow, release.yml, so the only
+# ecosystem listed is github-actions; add the project's own (npm, composer,
+# pip, cargo, ...) when it gets a package manager.
 version: 2
 updates:
   - package-ecosystem: github-actions
@@ -11,7 +9,7 @@ updates:
     schedule:
       interval: weekly
     commit-message:
-      # The fleet commit format is `versão - comentário em português`, which
+      # The fleet commit format is `X.Y.Z - description in English`, which
       # Dependabot cannot produce. `prefix` is the closest it gets; a
       # Dependabot PR is therefore squashed by hand with a conforming message.
       prefix: "deps"
