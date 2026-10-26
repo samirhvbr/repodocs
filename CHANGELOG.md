@@ -9,6 +9,18 @@ at `git commit` time.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 1.19.5 - the two index rows that said a public repository never gets the runner now follow ADR-030
+
+Two index rows still described the CI rule as it stood before ADR-030 (07/10/2026).
+`docs/README.md` said "a public repository never gets it", and `templates/README.md`
+said the same and added that the echo block "carries no address". Since ADR-030
+every repository may use the runner, public ones included, and the block carries
+the machine's address on purpose; `docs/ci.md`, the echo block and the stamped
+copies across the fleet already said so, which left these two indexes as the only
+places that contradicted them. Both rows now follow ADR-030. The text that records
+the old rule — ADR-030's own context and the earlier changelog entries — is left
+as it was, because it is history.
+
 ## 1.19.5 - the skeleton runbook's hook examples are in English
 
 The skeleton's `docs/runbook.md` tells whoever bootstraps a repository to confirm
