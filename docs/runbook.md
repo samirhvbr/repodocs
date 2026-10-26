@@ -3,6 +3,13 @@
 > **Status:** `ACTIVE` · The operational path from an empty repository to one
 > that carries the fleet standard.
 
+This repository contains a documentation standard, not an application. Its
+runbook deliberately covers bootstrapping and maintenance, while the
+[skeleton's runbook](../templates/skeleton/docs/runbook.md) leaves application
+installation and deployment `PROPOSED` until the receiving project implements
+and verifies them. The downstream `docs/repodocs.md` map has no root copy here:
+this runbook is the procedure that map links to.
+
 ## 1. Copy the skeleton
 
 ```bash
@@ -89,13 +96,35 @@ Once per clone — including yours, and every collaborator's:
 git config core.hooksPath tools/git-hooks
 ```
 
-Confirm all three directions before you rely on them. The third is the one
-that catches a well-formed subject carrying the wrong number:
+Check the hook directly, without creating commits. Run from the repository
+root, outside a merge, with the hook's escape variable unset. `version.md` must
+already be in the index; stage it during initial bootstrap. The accepted subject
+uses that indexed version, including when a different version is unstaged.
 
 ```bash
-git commit --allow-empty -m "feat: a test"              # REJECTED — prefix
-git commit --allow-empty -m "9.9.9 - a test subject"    # REJECTED — version.md says otherwise
-git commit --allow-empty -m "0.1.0 - the first commit"  # accepted, at version.md 0.1.0
+(
+  set -euo pipefail
+  hook_version="$(git show :version.md | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sed -n '1p')"
+  test -n "$hook_version"
+  hook_other_version=0.0.0
+  if [ "$hook_version" = "$hook_other_version" ]; then hook_other_version=0.0.1; fi
+  hook_message="$(mktemp)"
+  trap 'rm -f "$hook_message"' EXIT
+
+  printf '%s\n' 'feat: a hook validation subject' > "$hook_message"
+  if bash tools/git-hooks/commit-msg "$hook_message"; then
+    echo 'ERROR: the hook accepted a Conventional Commits prefix' >&2
+    exit 1
+  fi
+  printf '%s - a hook validation subject\n' "$hook_other_version" > "$hook_message"
+  if bash tools/git-hooks/commit-msg "$hook_message"; then
+    echo 'ERROR: the hook accepted a version absent from the index' >&2
+    exit 1
+  fi
+  printf '%s - a hook validation subject\n' "$hook_version" > "$hook_message"
+  bash tools/git-hooks/commit-msg "$hook_message"
+  echo 'commit-msg: expected rejection and acceptance checks passed; no commit created'
+)
 ```
 
 ## 5. First commit
@@ -134,7 +163,8 @@ visibility:
 - [ ] `SECURITY.md` names a reporting address that is actually monitored.
 - [ ] Every prescriptive document declares its status; nothing reads as current
       while describing something abandoned.
-- [ ] `.continue/` holds no finished item and no half-page detail.
+- [ ] `.continue/` holds no finished item or detailed record of work that already
+      exists. Specifications of unbuilt work stay there, at any length.
 - [ ] `README.md` is in English and describes what the project **is**, not what
       it was going to be.
 

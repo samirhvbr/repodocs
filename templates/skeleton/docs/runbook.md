@@ -1,42 +1,44 @@
 # Runbook — <PROJECT_NAME>
 
-> **Status:** `ACTIVE` · From a clean machine to a running environment, and the
-> checklists that gate a release.
+> **Status:** `ACTIVE` for repository maintenance and release checks (§§5–7).
+> Application requirements, installation, configuration and deployment (§§1–4)
+> are `PROPOSED` placeholders until the project implements and verifies them.
 
-<!-- Sections 1–4 are yours to fill in. Sections 5–7 are inherited from the
-     fleet standard and are already correct — keep them. -->
+<!-- Replace sections 1–4 with measured project procedures, then update their
+     status above. Sections 5–7 are inherited repository maintenance checks. -->
 
 ## 1. Requirements
 
-_Fill in: runtimes and versions, system packages, accounts and access needed._
+No application runtime is defined by the skeleton. Record the runtimes and
+versions, system packages, accounts and access once the project requires them.
 
-## 2. From a clean machine to running
+## 2. Repository checkout; application installation pending
+
+These commands prepare the repository for documentation work only:
 
 ```bash
 git clone git@github.com:<OWNER_HANDLE>/<PROJECT_SLUG>.git
 cd <PROJECT_SLUG>
 git config core.hooksPath tools/git-hooks   # once per clone — see §5
-
-# install, configure, run — fill this in
-cp .env.example .env
 ```
 
-_Say which of the paths this is: running it with Docker, or developing with the
-whole chain. If there are two, say what each one requires and what to do when it
-does not come up._
+Add application installation and startup commands only after they have been
+implemented and verified on a clean environment. State the requirements of each
+supported path and how to diagnose a startup failure.
 
 ## 3. Configuration
 
-_Fill in: what each variable in `.env.example` means, which ones are required,
-and which ones are secrets that never get committed
-([security.md §5](security.md#5-secrets-and-configuration))._
+No application configuration or `.env.example` is supplied by the skeleton.
+When configuration exists, document each variable, its required or optional
+status, and whether it is secret. An `.env.example` must contain only empty or
+dummy values ([security.md §5](security.md#5-secrets-and-configuration)).
 
 ## 4. Deploy
 
-_Fill in: how a change reaches production, who may do it, what it restarts, and
-what to do when it fails halfway. Be specific about the traps — a
-`config:cache` newer than the `.env` means the `.env` does not apply, and a
-worker that loaded config at startup does not re-read it._
+There is no application deployment procedure yet. Once implemented, record how
+a change reaches production, what it restarts, how configuration is reloaded,
+and how to recover from a partial failure. Verify the procedure before marking
+it active.
 
 ## 5. The git hooks
 
@@ -46,11 +48,35 @@ Once per clone — yours, and every collaborator's:
 git config core.hooksPath tools/git-hooks
 ```
 
-Confirm both directions before you rely on them:
+Check the hook directly, without creating commits. Run from the repository
+root, outside a merge, with the hook's escape variable unset. `version.md` must
+already be in the index; stage it during initial bootstrap. The accepted subject
+uses that indexed version, including when a different version is unstaged.
 
 ```bash
-git commit --allow-empty -m "feat: a test"                  # must be REJECTED
-git commit --allow-empty -m "0.1.0 - the first commit"      # must be accepted
+(
+  set -euo pipefail
+  hook_version="$(git show :version.md | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sed -n '1p')"
+  test -n "$hook_version"
+  hook_other_version=0.0.0
+  if [ "$hook_version" = "$hook_other_version" ]; then hook_other_version=0.0.1; fi
+  hook_message="$(mktemp)"
+  trap 'rm -f "$hook_message"' EXIT
+
+  printf '%s\n' 'feat: a hook validation subject' > "$hook_message"
+  if bash tools/git-hooks/commit-msg "$hook_message"; then
+    echo 'ERROR: the hook accepted a Conventional Commits prefix' >&2
+    exit 1
+  fi
+  printf '%s - a hook validation subject\n' "$hook_other_version" > "$hook_message"
+  if bash tools/git-hooks/commit-msg "$hook_message"; then
+    echo 'ERROR: the hook accepted a version absent from the index' >&2
+    exit 1
+  fi
+  printf '%s - a hook validation subject\n' "$hook_version" > "$hook_message"
+  bash tools/git-hooks/commit-msg "$hook_message"
+  echo 'commit-msg: expected rejection and acceptance checks passed; no commit created'
+)
 ```
 
 Rename `HOOK_ESCAPE_VAR` at the top of each hook to `<ENV_PREFIX>_NO_HOOK`.
@@ -72,7 +98,8 @@ visibility:
 - [ ] `SECURITY.md` names a reporting address that is actually monitored.
 - [ ] Every prescriptive document declares its status; nothing reads as current
       while describing something abandoned.
-- [ ] `.continue/` holds no finished item and no half-page detail.
+- [ ] `.continue/` holds no finished item or detailed record of work that already
+      exists. Specifications of unbuilt work stay there, at any length.
 - [ ] `README.md` is in English and describes what the project **is**, not what
       it was going to be.
 - [ ] No placeholder left over from the skeleton:

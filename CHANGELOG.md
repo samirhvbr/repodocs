@@ -9,6 +9,17 @@ at `git commit` time.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 1.19.6 - bootstrap runbooks verify hooks without creating commits
+
+The runbooks invoke commit-msg directly with the indexed version, replacing
+examples that created empty commits or assumed 0.1.0. Rejection and acceptance
+checks passed, including a fresh repository with 0.0.0 staged and 0.0.1 unstaged;
+HEAD and the real index remained unchanged. Application procedures are explicitly
+pending in the skeleton, with no command to copy a nonexistent .env.example.
+Unbuilt specifications remain in the queue regardless of length. The root
+runbook records its deliberate difference: repodocs has a documentation
+bootstrap procedure, not an application deployment.
+
 ## 1.19.6 - release workflows honor the repository runner selection
 
 Both release workflows now honor CI_RUNNER and retain ubuntu-latest as the
