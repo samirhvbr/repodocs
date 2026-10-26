@@ -9,6 +9,14 @@ at `git commit` time.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 1.19.6 - the security skeleton describes the permission policy adopted in ADR-028
+
+The skeleton still described force-push and hard reset as mechanically denied,
+although ADR-028 removed those entries. It now distinguishes the rule of conduct
+from the inherited permission profile and links the fleet decision. The root
+security document already described the adopted policy correctly. The profile
+was compared with both documents; no permission setting changed.
+
 ## 1.19.5 - the two index rows that said a public repository never gets the runner now follow ADR-030
 
 Two index rows still described the CI rule as it stood before ADR-030 (07/10/2026).

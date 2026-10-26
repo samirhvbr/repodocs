@@ -56,9 +56,9 @@ model written for someone else's project protects someone else's project._
 | Asset | Threat | Mitigation |
 |---|---|---|
 | Credentials, tokens, private keys | Committed by accident, then valid forever in git history | §5. `.gitignore` covers the classes; a leak requires **rotation**, not a revert |
-| Agent permissions | An agent runs a destructive or history-rewriting command | `.claude/settings.json` deny-list; it always beats the allow-list |
+| Agent permissions | An agent runs a destructive or history-rewriting command | `.claude/settings.json`: `rm -rf` and `curl`/`wget` piped into a shell ask for confirmation; key reads are denied, and a denied rule always beats the allow-list. Reading `.env` is not restricted by the inherited profile ([repodocs ADR-028](https://github.com/samirhvbr/repodocs/blob/master/docs/decisions.md#adr-028--the-owners-permission-lists-five-commands-ask-seven-rules-leave-deny)) |
 | Documents read by an agent | Prompt injection through text the agent treats as instruction | §4.9 |
-| Published history | Force-push or hard reset destroys the audit trail | `git push --force`, `-f`, `reset --hard`, `clean -fd` are denied |
+| Published history | Force-push or hard reset destroys the audit trail | Rule of conduct §3.6, not a mechanical block: `git push --force`, `-f`, `reset --hard`, `clean -fd` are in no list in the inherited profile, and a force-push matches `Bash(git push:*)` ([repodocs ADR-028](https://github.com/samirhvbr/repodocs/blob/master/docs/decisions.md#adr-028--the-owners-permission-lists-five-commands-ask-seven-rules-leave-deny)) |
 | The repository's own visibility | A private repo made public with content that assumed privacy | The pre-flight checklist in [runbook.md](runbook.md) |
 | _this project's data_ | _to be filled in_ | _to be filled in_ |
 
@@ -75,8 +75,11 @@ model written for someone else's project protects someone else's project._
    boundary as hostile until validated.
 5. **Deny by default.** A new permission, route or capability starts closed and
    is opened deliberately, with the reason written down.
-6. **A published history is not rewritten.** Force-push and hard reset are
-   denied to everyone, the owner included.
+6. **A published history is not rewritten.** Nobody force-pushes or hard-resets
+   it, the owner included. The inherited `.claude/settings.json` does not block
+   either ([repodocs ADR-028](https://github.com/samirhvbr/repodocs/blob/master/docs/decisions.md#adr-028--the-owners-permission-lists-five-commands-ask-seven-rules-leave-deny)):
+   the rule holds by conduct. Record any project-specific restrictions in the
+   permission profile and its documentation.
 7. **A guard needs a declared escape hatch.** A control with no documented
    bypass gets bypassed with `--no-verify`, which disables every control at once.
 8. **A security fix becomes an ADR** in [decisions.md](decisions.md) when it
