@@ -9,6 +9,17 @@ at `git commit` time.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 1.19.6 - documentation maps reflect the current queue and echo rules
+
+The READMEs recognize the queue's working-language exception and use the
+existence of the described work as the migration trigger. The downstream map
+lists all five echo blocks and points to direct hook validation. The versioning
+template now describes the agent writing the changelog and committing, instead
+of an inactive commit automation; the ADR index no longer carries a stale count.
+Changed local link targets, instruction-file parity, JSON syntax and whitespace
+checks passed. No echo rule changed, so no stamping pass was needed, and no
+existing downstream repository was modified by this delivery.
+
 ## 1.19.6 - bootstrap runbooks verify hooks without creating commits
 
 The runbooks invoke commit-msg directly with the indexed version, replacing

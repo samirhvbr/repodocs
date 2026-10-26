@@ -45,9 +45,12 @@ change it.
 ## Language
 
 English (US) for everything in the repository — documents, commit messages,
-pull requests, issues, code comments — and nothing bilingual. Exactly one thing
-stays Portuguese: **end-user-facing strings**, because that is product i18n, not
-repository content.
+pull requests, issues, code comments — and nothing bilingual.
+**End-user-facing strings** may stay Portuguese for the Brazilian audience.
+**`.continue/` drafts** use the author's working language; when the work exists
+and the document moves to `docs/`, it becomes English (US). The separate rule for
+Blue3 internal repositories is defined in
+[conventions.md §8](https://github.com/samirhvbr/repodocs/blob/master/docs/conventions.md#8-language).
 
 **In a repository we do not own, the upstream's conventions win** — the language
 and the commit shape both. Check before opening a pull request or an issue

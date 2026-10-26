@@ -26,7 +26,7 @@ repodocs = SOURCE OF CONSULTATION (never a dependency)
 │
 ├── 0. WHAT TRAVELS, AND WHAT NEVER DOES
 │   ├── travels by copy ....... templates/skeleton/      → once, at bootstrap
-│   ├── travels by stamp ...... templates/echo-blocks/   → 3 blocks, regenerated in place
+│   ├── travels by stamp ...... templates/echo-blocks/   → 5 blocks, regenerated in place
 │   └── never travels ......... docs/conventions.md      → linked only (ADR-001)
 │                               a rule copied into 16 repositories is a rule
 │                               with 16 versions, 15 of them stale
@@ -73,7 +73,7 @@ repodocs = SOURCE OF CONSULTATION (never a dependency)
     ├── diff <(tail -n +2 CLAUDE.md) <(tail -n +2 AGENTS.md)   → empty
     ├── grep -rn '<[A-Z_]\+>' . --exclude-dir=.git             → empty
     ├── python3 -m json.tool .claude/settings.json             → ok
-    ├── a "feat: x" commit REJECTED / a "0.1.0 - …" commit ACCEPTED
+    ├── invoke commit-msg directly with rejected and accepted subjects (runbook §5)
     └── ./tools/release.sh --backfill --dry-run
 ```
 
@@ -168,7 +168,7 @@ repository more conforming than it was, and none of them depends on a later one.
 | # | What | Why here |
 |---|---|---|
 | 1 | `.claude/settings.json` + `.claude/README.md` | The posture comes first, before an agent starts working on the rest of the adoption |
-| 2 | `CLAUDE.md` + `AGENTS.md`, with the three echo blocks | The agent cannot follow rules it has not been given |
+| 2 | `CLAUDE.md` + `AGENTS.md`, with the five echo blocks | The agent cannot follow rules it has not been given |
 | 3 | `version.md` + `CHANGELOG.md` | Nothing after this point can be committed to convention without them |
 | 4 | `tools/git-hooks/` + `git config core.hooksPath tools/git-hooks` | Enforcement only makes sense once the format it enforces exists |
 | 5 | `docs/` — `README.md`, `versioning.md`, `decisions.md`, `security.md`, this page | The record. An existing document that already covers one of these is kept and linked, not replaced |
@@ -196,6 +196,8 @@ The rules that every repository must follow live inside `CLAUDE.md` and
 <!-- COMMIT-RULE:repodocs -->   …   <!-- /COMMIT-RULE -->
 <!-- RELEASES-RULE:repodocs -->  …  <!-- /RELEASES-RULE -->
 <!-- LANGUAGE-RULE:repodocs -->  …  <!-- /LANGUAGE-RULE -->
+<!-- QUEUE-RULE:repodocs -->     …  <!-- /QUEUE-RULE -->
+<!-- CICD-RULE:repodocs -->      …  <!-- /CICD-RULE -->
 ```
 
 Each carries a link back to its source in repodocs' `docs/`. **They are

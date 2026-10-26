@@ -102,8 +102,10 @@ behind them, are in [docs/versioning.md](docs/versioning.md).
 English for everything new, and for every edit to an existing document (rule in
 force 03/09/2026): documents, **commit messages**, pull requests, issues, code
 comments. **Nothing is bilingual** — not `LICENSE`, not a `README_br.md` pair.
-Exactly one thing stays Portuguese: **end-user-facing strings**, because that is
-product i18n for a Brazilian audience, not repository content.
+**End-user-facing strings** may stay Portuguese for the Brazilian audience.
+**`.continue/` drafts** use the author's working language; when the work exists
+and the document moves to `docs/`, it becomes English (US). The separate rule for
+Blue3 internal repositories is defined in [docs/conventions.md §8](docs/conventions.md#8-language).
 
 **In a repository we do not own, the upstream's conventions win** — the language
 and the commit shape both. Check before opening a pull request or an issue

@@ -116,9 +116,9 @@ that lands in git:
 <narrative body: what changed, why, and what it measured>
 ```
 
-This is not decoration. It is what lets a commit automation build the message
-without inventing one, and it means the changelog entry — not the commit — is
-the handoff artefact between an agent and whoever commits.
+Writing the entry first means the agent uses the same sentence for the
+changelog heading and the commit subject. The agent commits the work; there is
+no separate commit automation or handoff to another committer.
 
 Bodies are narrative, not bullet lists: the fleet's changelogs read as
 engineering post-mortems ("how it is proven", "where it came from", "measured",
