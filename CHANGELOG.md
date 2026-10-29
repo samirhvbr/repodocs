@@ -9,6 +9,15 @@ at `git commit` time.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 1.19.9 - model confirmed Latest edits in the combined release fixtures
+
+The freshness fixture now persists the badge edit made by its publisher stub, so the
+failure-status helper can verify the result as it does with the real API. This keeps the
+mid-run remote-advance scenario meaningful when both fixes are tested together. All
+34 failure-status, 15 freshness and 18 notes assertions pass in the combined helper;
+source/copy equality, shell syntax and whitespace checks also pass. No real publisher
+or remote service was used.
+
 ## 1.19.9 - return failure when release publication or verification is incomplete
 
 An unread release list was treated as empty, an unread rate budget became unlimited, and
