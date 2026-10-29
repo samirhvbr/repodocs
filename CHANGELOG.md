@@ -9,6 +9,23 @@ at `git commit` time.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 1.19.7 - samirhvbr/blue3-atendimento joins the Portuguese set by ADR-031
+
+The owner decided on 29/10/2026 that the Atendimento Digital, leaving the
+intranet for a repository of its own, is written in Portuguese. ADR-020 lets a
+repository outside BLUE3-ISP into the set only by a new ADR, so ADR-031 records
+it, and ADR-020 points to it. The conventions table, this repository's twins,
+both LANGUAGE-RULE variants, their copies in the twins and in the skeleton,
+`templates/README.md` and the two language-switch entries of `tools/fleet.sh`
+name the new repository. `pt_repository()` matches it whole: the new fixture in
+`tools/test-fleet.sh` proves `blue3-atendimento` gets the Portuguese block and
+`blue3-atendimento-app` does not. That assertion fails against the 1.19.6
+matcher; with the change, all 12 assertions pass.
+
+The LANGUAGE-RULE text changed, so the copies already stamped across the fleet
+are one name short. The stamping pass was not run: it commits and pushes in
+every repository it reaches, and it waits for the owner.
+
 ## 1.19.6 - documentation maps reflect the current queue and echo rules
 
 The READMEs recognize the queue's working-language exception and use the
