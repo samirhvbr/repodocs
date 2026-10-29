@@ -9,6 +9,19 @@ at `git commit` time.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 1.19.7 - derive release notes from the committed target version
+
+The release helper read CHANGELOG.md from the working tree, matched version prefixes and
+stopped at the first matching entry. That could publish uncommitted or later text, select
+1.2.30 for 1.2.3, or omit other commits sharing a version. Notes now come from the release
+target commit, match the complete version token and include every matching section in
+changelog order. Nested subsections and the existing fallback chain remain supported.
+
+The repository helper and skeleton template are identical. A regression script runs the
+real helper against temporary Git repositories and a stub publisher: nine checks failed
+before the correction and all sixteen passed after it. Shell syntax, mirrored-file and
+whitespace checks passed. No GitHub release was created or edited during validation.
+
 ## 1.19.6 - documentation maps reflect the current queue and echo rules
 
 The READMEs recognize the queue's working-language exception and use the
