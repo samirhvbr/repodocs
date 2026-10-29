@@ -20,6 +20,9 @@ case "$1 $2" in
   'release list')
     if [ -n "${FIXTURE_MOVE_SHA:-}" ]; then
       git update-ref refs/remotes/origin/master "$FIXTURE_MOVE_SHA"
+    fi
+    if [ -n "${FIXTURE_ADVANCE_SHA:-}" ]; then
+      git --git-dir="$FIXTURE_REMOTE" update-ref refs/heads/master "$FIXTURE_ADVANCE_SHA"
     fi ;;
   'release view') printf '%s\n' "$FIXTURE_LATEST" ;;
   'release edit') : ;;
@@ -55,6 +58,7 @@ new_case() {
   git clone -q "$CASE.git" "$CASE"
   cd "$CASE"
   export FIXTURE_CAPTURE="$CASE-capture" FIXTURE_LATEST=1.2.3 FIXTURE_MOVE_SHA=""
+  export FIXTURE_ADVANCE_SHA="" FIXTURE_REMOTE="$CASE.git"
   mkdir "$FIXTURE_CAPTURE"
 }
 update_remote() {
@@ -108,6 +112,37 @@ update_remote 1.2.4
 export FIXTURE_LATEST=1.2.4
 run_release --ref "$OLD_SHA"
 created "1.2.3 $OLD_SHA --latest=false" 'an explicit historical ref never takes the remote current version Latest badge'
+
+new_case restricted-fetch
+git --git-dir="$CASE.git" update-ref refs/heads/topic "$OLD_SHA"
+git config remote.origin.fetch '+refs/heads/topic:refs/remotes/origin/topic'
+update_remote 1.2.4
+export FIXTURE_LATEST=1.2.4
+run_release
+created "1.2.4 $REMOTE_SHA --latest" 'current refreshes the default even when the configured refspec excludes it'
+: > "$FIXTURE_CAPTURE/created"
+run_release --backfill
+created "1.2.3 $OLD_SHA --latest=false" 'a restricted fetch preserves historical backfill targets'
+created "1.2.4 $REMOTE_SHA --latest" 'backfill includes the current default despite a restricted fetch'
+
+new_case restricted-reconcile
+update_remote 1.2.4
+git --git-dir="$CASE.git" update-ref refs/heads/topic "$REMOTE_SHA"
+git --git-dir="$CASE.git" update-ref refs/heads/master "$OLD_SHA"
+git config remote.origin.fetch '+refs/heads/topic:refs/remotes/origin/topic'
+export FIXTURE_ADVANCE_SHA="$REMOTE_SHA"
+run_release
+created "1.2.3 $OLD_SHA --latest" 'a mid-run remote advance does not change the pinned release target'
+grep -Fq 'release edit 1.2.4 --repo fixture/release --latest' "$FIXTURE_CAPTURE/calls" \
+  && ok 'reconciliation refreshes the default despite a restricted fetch' \
+  || bad 'reconciliation left Latest on the old default version'
+
+new_case explicit-branch
+git -C "$CASE-writer" switch -qc topic
+BRANCH=topic
+update_remote 1.3.0
+run_release --ref origin/topic
+created "1.3.0 $REMOTE_SHA --latest=false" 'an explicit non-default history is refreshed and cannot take Latest'
 
 new_case unavailable
 git remote set-url origin "$TMP/no-such-remote.git"

@@ -9,6 +9,15 @@ at `git commit` time.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 1.19.8 - fetch the remote default even when the configured refspec excludes it
+
+A successful fetch can leave the default tracking branch stale when remote.origin.fetch
+covers only another branch. The independent review reproduced publication of the old
+version with a successful status. Refresh now resolves the advertised default and fetches
+that branch explicitly before selecting it, both at startup and during reconciliation.
+Four new assertions fail on the previous helper; all fifteen freshness checks and sixteen
+notes checks pass. Validation uses only local remotes and a stub publisher.
+
 ## 1.19.8 - select release targets from the refreshed remote default branch
 
 The helper selected its version before refreshing origin, so stale tracking refs could omit

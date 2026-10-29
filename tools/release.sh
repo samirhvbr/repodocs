@@ -72,8 +72,20 @@ first_semver() { grep -oE '[0-9]+\.[0-9]+\.[0-9]+' "$1" 2>/dev/null | head -n 1;
 # after refreshing it. A missing tracking HEAD must never select unpublished
 # work from the local branch; ask origin which branch is its default.
 refresh_origin() {
+  local advertised default_ref tracking_ref
+  advertised="$(git ls-remote --symref origin HEAD)" || die "cannot resolve origin's default branch"
+  default_ref="$(printf '%s\n' "$advertised" | awk '$1 == "ref:" && $3 == "HEAD" { print $2 }')"
+  case "$default_ref" in
+    refs/heads/?*) ;;
+    *) die "origin's HEAD does not name a branch" ;;
+  esac
+  git check-ref-format "$default_ref" >/dev/null 2>&1 || die "origin's default branch is invalid"
+  tracking_ref="refs/remotes/origin/${default_ref#refs/heads/}"
+  # Keep other configured histories fresh for --ref, then fetch the default
+  # explicitly: remote.origin.fetch may exclude it and leave a stale ref behind.
   git fetch --quiet origin || die "cannot refresh origin — nothing can be inferred from stale refs"
-  git remote set-head origin --auto >/dev/null || die "cannot resolve origin's default branch"
+  git fetch --quiet origin "+$default_ref:$tracking_ref" || die "cannot refresh origin's default branch"
+  git symbolic-ref refs/remotes/origin/HEAD "$tracking_ref" || die "cannot update origin's tracking HEAD"
 }
 refresh_origin
 DEFAULT_REF=refs/remotes/origin/HEAD
