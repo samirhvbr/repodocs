@@ -135,6 +135,10 @@ printf '## 1.2.3 - untracked\n\nLocal-only notes.\n' > CHANGELOG.md
 run_release HEAD
 has 'committed fallback subject' 'an absent committed changelog falls back to commit subjects'
 lacks 'Local-only notes.' 'an untracked changelog is never published'
+grep -Fxq '## Commits' "$FIXTURE_CAPTURE/notes" \
+  && ok 'the fallback heading occupies its own line' || bad 'the fallback heading lost its newline'
+grep -Fxq -- '- 1.2.3 - committed fallback subject' "$FIXTURE_CAPTURE/notes" \
+  && ok 'fallback commit subjects remain Markdown list items' || bad 'the fallback list lost its newline'
 
 new_case empty 1.2.3
 printf '## 1.2.3 - empty\n\n' > CHANGELOG.md

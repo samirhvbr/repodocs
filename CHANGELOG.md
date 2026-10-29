@@ -9,6 +9,14 @@ at `git commit` time.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 1.19.7 - preserve Markdown line breaks in fallback release notes
+
+The commit-subject fallback concatenated its heading with the first list item because
+command substitution stripped the requested trailing newlines. Keep those newlines as
+literal shell text. Two added regression assertions fail before the correction; all
+eighteen committed-notes checks pass afterward, using local Git fixtures and a stub
+publisher. The generated template and repository copy remain identical.
+
 ## 1.19.7 - derive release notes from the committed target version
 
 The release helper read CHANGELOG.md from the working tree, matched version prefixes and

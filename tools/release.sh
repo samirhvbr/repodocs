@@ -156,7 +156,7 @@ notes_for() {
   fi
   if [ -z "$(printf '%s' "$body" | tr -d '[:space:]')" ]; then
     body="$(git log --format='- %s' --grep="^$(printf '%s' "$ver" | sed 's/\./\\./g') - " "$sha" 2>/dev/null | head -n 40)"
-    [ -n "$body" ] && body="## Commits$(printf '\n\n')$body"
+    [ -n "$body" ] && body="## Commits"$'\n\n'"$body"
   fi
   printf '%s\n' "$body" > "$out"
   [ -s "$out" ] && [ -n "$(tr -d '[:space:]' < "$out")" ]
