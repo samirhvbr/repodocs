@@ -34,7 +34,7 @@ DRY=0
 REPO=""
 SLEEP=0.35          # throttle: ~2.8 req/s, well under GitHub's ceiling
 RATE_FLOOR=200      # stop and report rather than exhausting the budget
-REF=""             # --ref: which history to walk (default: HEAD). Use
+REF=""             # --ref: which history to walk (default: origin's default branch). Use
                     # origin/master where the local checkout is behind and a
                     # pull is refused by in-flight work — backfilling from a
                     # stale HEAD silently omits every version pushed since.
@@ -69,17 +69,24 @@ first_semver() { grep -oE '[0-9]+\.[0-9]+\.[0-9]+' "$1" 2>/dev/null | head -n 1;
 # THE RULE: the version.md ON GITHUB is what the Releases ON GITHUB must match.
 # The local checkout does not enter the calculation — it can be behind, ahead or
 # mid-work, and none of that is published. So the authority is the remote branch
-# when we can see it, and HEAD only when we cannot (which is the CI case, where
-# HEAD *is* the pushed commit).
-if [ -z "$REF" ]; then
-  REF="$(git symbolic-ref --quiet --short refs/remotes/origin/HEAD 2>/dev/null)"
-  [ -z "$REF" ] && REF="origin/$(git symbolic-ref --quiet --short HEAD 2>/dev/null)"
-  git rev-parse --verify --quiet "$REF" >/dev/null 2>&1 || REF="HEAD"
-fi
-git rev-parse --verify --quiet "$REF" >/dev/null || die "ref '$REF' does not exist"
+# after refreshing it. A missing tracking HEAD must never select unpublished
+# work from the local branch; ask origin which branch is its default.
+refresh_origin() {
+  git fetch --quiet origin || die "cannot refresh origin — nothing can be inferred from stale refs"
+  git remote set-head origin --auto >/dev/null || die "cannot resolve origin's default branch"
+}
+refresh_origin
+DEFAULT_REF=refs/remotes/origin/HEAD
+DEFAULT_SHA="$(git rev-parse --verify "$DEFAULT_REF^{commit}")" || die "origin's default branch does not resolve"
+[ -n "$REF" ] || REF="$DEFAULT_REF"
+# Pin the commit before reading version.md. Another fetch can move a tracking
+# ref while release/list runs; the notes, version and target must stay together.
+TARGET_SHA="$(git rev-parse --verify "$REF^{commit}")" || die "ref '$REF' does not exist"
 
-CURRENT="$(git show "$REF:version.md" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -n 1)"
+CURRENT="$(git show "$TARGET_SHA:version.md" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -n 1)"
 [ -n "$CURRENT" ] || die "version.md at $REF holds no X.Y.Z anywhere"
+DEFAULT_VERSION="$(git show "$DEFAULT_SHA:version.md" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -n 1)"
+[ -n "$DEFAULT_VERSION" ] || die "version.md at origin's default branch holds no X.Y.Z anywhere"
 
 # Informational only: a local tree that disagrees is normal mid-work, and it is
 # deliberately NOT published.
@@ -208,7 +215,7 @@ publish() {
   # while version.md said 1.2.80 stamped `--latest` on 1.2.80 minutes after a
   # push had moved the file to 1.2.81 — the Release for 1.2.81 existed, and the
   # badge sat on the older one.
-  [ "$ver" = "$CURRENT" ] && args+=(--latest)
+  if [ "$ver" = "$DEFAULT_VERSION" ]; then args+=(--latest); else args+=(--latest=false); fi
 
   # Creating a release is a "content-creating" request, which GitHub throttles
   # far more tightly than reads — a secondary limit that answers 403 with a
@@ -252,13 +259,13 @@ if [ "$MODE" = "current" ]; then
   # Tag the commit the version actually lives on, on the remote. Uncommitted or
   # unpushed bumps are not published — GitHub cannot tag a commit it does not
   # have, and a Release for a version nobody can fetch is a lie.
-  publish "$CURRENT" "$(git rev-parse "$REF")" 1
+  publish "$CURRENT" "$TARGET_SHA" 1
 else
   # Oldest first, so the newest version is created last and ends up "Latest".
   # For each distinct version, the tag points at the LAST commit that carried
   # it — the finished state of that version, not its first commit. Several
   # commits sharing one version is expected and allowed (ADR-003).
-  MAP="$(git log --reverse --format='%H%x09%s' "$REF" | awk -F'\t' '
+  MAP="$(git log --reverse --format='%H%x09%s' "$TARGET_SHA" | awk -F'\t' '
     { if (match($2, /^[0-9]+\.[0-9]+\.[0-9]+/)) {
         v = substr($2, RSTART, RLENGTH)
         if (!(v in seen)) { order[++n] = v; seen[v] = 1 }
@@ -280,9 +287,9 @@ fi
 # any time, leaves the badge on the version version.md names.
 reconcile_latest() {
   [ "$DRY" = "1" ] && return 0
-  git fetch --quiet origin 2>/dev/null
+  refresh_origin
   local now
-  now="$(git show "$REF:version.md" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -n 1)"
+  now="$(git show "$DEFAULT_REF:version.md" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -n 1)"
   [ -n "$now" ] || return 0
   local badge
   badge="$(gh release view --repo "$REPO" --json tagName -q .tagName 2>/dev/null)"
