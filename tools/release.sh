@@ -182,7 +182,13 @@ notes_for() {
 }
 
 # --- rate limit ---------------------------------------------------------------
-rate_left() { gh api rate_limit --jq '.resources.core.remaining' 2>/dev/null || echo 9999; }
+rate_left() {
+  local left
+  left="$(gh api rate_limit --jq '.resources.core.remaining' 2>/dev/null)" || return 1
+  case "$left" in ''|*[!0-9]*) return 1 ;; esac
+  [ "${#left}" -le 9 ] || return 1
+  printf '%s\n' "$left"
+}
 
 # --- what is already published ------------------------------------------------
 # Fetched ONCE per repo, not once per version. Asking `gh release view` for each
@@ -190,7 +196,8 @@ rate_left() { gh api rate_limit --jq '.resources.core.remaining' 2>/dev/null || 
 # fleet-wide before creating anything.
 EXISTING="$(mktemp)"
 trap 'rm -f "$EXISTING"' EXIT
-gh release list --repo "$REPO" --limit 1000 --json tagName --jq '.[].tagName' > "$EXISTING" 2>/dev/null || : > "$EXISTING"
+gh release list --repo "$REPO" --limit 1000 --json tagName --jq '.[].tagName' > "$EXISTING" 2>/dev/null \
+  || die "cannot list published releases — an unknown list is not an empty one"
 EXISTING_N="$(grep -c . "$EXISTING" || true)"
 # A version counts as published under EITHER name. Some repos in this fleet
 # published Releases with a `v` prefix before the bare-number rule existed, and
@@ -213,10 +220,14 @@ publish() {
     CREATED=$((CREATED+1)); return 0
   fi
 
-  local left; left="$(rate_left)"
-  if [ "$left" -lt "$RATE_FLOOR" ] 2>/dev/null; then
+  local left
+  if ! left="$(rate_left)"; then
+    printf 'release.sh: STOPPING — cannot determine the remaining API budget. Re-run later.\n' >&2
+    FAILED=$((FAILED+1)); return 9
+  fi
+  if [ "$left" -lt "$RATE_FLOOR" ]; then
     printf 'release.sh: STOPPING — only %s API calls left. Re-run later; it resumes.\n' "$left" >&2
-    return 9
+    FAILED=$((FAILED+1)); return 9
   fi
 
   local nf; nf="$(mktemp)"
@@ -256,6 +267,7 @@ publish() {
     # Three failures in a row is a wall, not a fluke — stop and let the operator
     # look, instead of burning the remaining budget against it.
     CONSEC_FAIL=$((CONSEC_FAIL+1))
+    rm -f "$nf" "$nf.err"
     [ "$CONSEC_FAIL" -ge 3 ] && { printf 'release.sh: STOPPING after 3 consecutive failures.\n' >&2; return 9; }
     return 0
   fi
@@ -295,29 +307,50 @@ fi
 
 # Reconcile the badge against the remote AS IT IS NOW, not as it was when this
 # run started. A push can land mid-run — that is not an edge case here, it is
-# what happened. This is also what makes the whole thing self-healing: any run,
-# any time, leaves the badge on the version version.md names.
+# what happened. If the new version has no release yet, report an incomplete
+# run; do not silently publish a version outside the selected history.
 reconcile_latest() {
   [ "$DRY" = "1" ] && return 0
   refresh_origin
   local now
   now="$(git show "$DEFAULT_REF:version.md" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -n 1)"
-  [ -n "$now" ] || return 0
+  [ -n "$now" ] || { printf 'release.sh: cannot read the current remote version for Latest.\n' >&2; return 1; }
   local badge
-  badge="$(gh release view --repo "$REPO" --json tagName -q .tagName 2>/dev/null)"
-  [ "$badge" = "$now" ] && return 0
-  if gh release view "$now" --repo "$REPO" >/dev/null 2>&1; then
-    if gh release edit "$now" --repo "$REPO" --latest >/dev/null 2>&1; then
-      printf 'release.sh: badge Latest movido de %s para %s (version.md manda)\n' "${badge:-nenhum}" "$now" >&2
-    fi
+  if ! badge="$(gh release view --repo "$REPO" --json tagName -q .tagName 2>/dev/null)" || [ -z "$badge" ]; then
+    printf 'release.sh: cannot read the Latest release.\n' >&2; return 1
   fi
+  { [ "$badge" = "$now" ] || [ "$badge" = "v$now" ]; } && return 0
+  local tag="$now"
+  if ! grep -Fxq "$now" "$EXISTING" && grep -Fxq "v$now" "$EXISTING"; then tag="v$now"; fi
+  if ! gh release view "$tag" --repo "$REPO" >/dev/null 2>&1; then
+    printf 'release.sh: cannot confirm a release for remote version %s; re-run after it is published.\n' "$now" >&2
+    return 1
+  fi
+  if ! gh release edit "$tag" --repo "$REPO" --latest >/dev/null 2>&1; then
+    printf 'release.sh: cannot move Latest to %s.\n' "$tag" >&2; return 1
+  fi
+  local observed
+  if ! observed="$(gh release view --repo "$REPO" --json tagName -q .tagName 2>/dev/null)"; then
+    printf 'release.sh: cannot verify Latest after editing %s.\n' "$tag" >&2; return 1
+  fi
+  if [ "$observed" != "$tag" ]; then
+    printf 'release.sh: Latest did not confirm %s after the edit.\n' "$tag" >&2; return 1
+  fi
+  printf 'release.sh: Latest moved from %s to %s (the remote version is the authority).\n' "$badge" "$tag" >&2
 }
-reconcile_latest
+if [ "$FAILED" -eq 0 ]; then
+  reconcile_latest || FAILED=$((FAILED+1))
+fi
+if [ "$DRY" != 1 ] && [ "$FAILED" -eq 0 ]; then
+  if ! git fetch --tags --quiet origin 2>/dev/null; then
+    printf 'release.sh: cannot refresh local tags after publication.\n' >&2
+    FAILED=$((FAILED+1))
+  fi
+fi
 
 if [ "$QUIET" = "1" ]; then
-  printf '%-34s %-12s versions=%-5s todo=%-5s have=%s\n' "$REPO" "$CURRENT" "$((CREATED+SKIPPED))" "$CREATED" "$SKIPPED"
+  printf '%-34s %-12s versions=%-5s todo=%-5s have=%s failed=%s\n' "$REPO" "$CURRENT" "$((CREATED+SKIPPED))" "$CREATED" "$SKIPPED" "$FAILED"
 else
   printf '\ncreated/would-create: %s   skipped: %s   failed: %s\n' "$CREATED" "$SKIPPED" "$FAILED"
 fi
-[ "$DRY" = 1 ] || git fetch --tags --quiet 2>/dev/null || true
 [ "$FAILED" -eq 0 ]

@@ -18,8 +18,9 @@ set -euo pipefail
 case "$1 $2" in
   'api rate_limit') echo 5000 ;;
   'release list') : ;;
-  'release view') printf '%s\n' "$FIXTURE_CURRENT" ;;
-  'release edit') : ;;
+  'release view')
+    if [ -f "$FIXTURE_CAPTURE/latest" ]; then cat "$FIXTURE_CAPTURE/latest"; else printf '%s\n' "$FIXTURE_CURRENT"; fi ;;
+  'release edit') printf '%s\n' "$3" > "$FIXTURE_CAPTURE/latest" ;;
   'release create')
     shift 3
     while [ "$#" -gt 0 ]; do
