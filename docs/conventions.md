@@ -458,12 +458,13 @@ not by the folder it sits in on disk, and not by its name:
 | Every repository under **`github.com/BLUE3-ISP`**, including any created there after 07/09/2026 | **`samirhvbr/meuip`** — named because it lives in the same working folder and is *not* in the set |
 | **`samirhvbr/blue3-intranet`** | **`samirhvbr/blue3-rpi`**, **`samirhvbr/blue3-debian-custom-iso`**, **`samirhvbr/blue3-intranet-lscripts`**, **`samirhvbr/blue3-intranet-ntheme`** — moved out of BLUE3-ISP on 23/10/2026, and English (US) from their next version on |
 | **`samirhvbr/blue3-ai-login`** | Every other repository of the fleet |
+| **`samirhvbr/blue3-atendimento`** — since 29/10/2026, by [ADR-031](decisions.md) | |
 
 ```bash
 git remote get-url origin    # this is what decides it, in one line
 ```
 
-**The two `samirhvbr` names are matched whole, never as a prefix.**
+**The `samirhvbr` names are matched whole, never as a prefix.**
 `samirhvbr/blue3-intranet` is in the set; `samirhvbr/blue3-intranet-lscripts` is
 not, however alike the names look. `tools/fleet.sh` matched a prefix until
 1.19.4, and the day two `blue3-intranet-*` siblings changed owner it went on
@@ -496,7 +497,9 @@ never checked the language and cannot.
 **A repository joins this set by an ADR, never by argument.** "Nobody foreign
 reads this one" is true of most of the fleet and is not a reason. The set is a
 written boundary; the rule stays a rule precisely because a repository cannot
-apply the test to itself.
+apply the test to itself. `samirhvbr/blue3-atendimento` joined this way, by
+[ADR-031](decisions.md) on 29/10/2026, when the owner decided it before its first
+commit.
 
 **These repositories get a different echo block.** A `LANGUAGE-RULE` reading
 *"everything here is English (US)"* stamped into one of them contradicts this

@@ -855,7 +855,9 @@ exception"* was written before this boundary existed and is false outside it.
 [ADR-014](#adr-014--everything-in-a-repository-is-english-us-commit-messages-included),
 bounded by owner · Sits beside
 [ADR-019](#adr-019--in-a-repository-that-is-not-ours-the-upstreams-conventions-win),
-which bounds the same rule by whose repository it is
+which bounds the same rule by whose repository it is · **Extended by
+[ADR-031](#adr-031--samirhvbrblue3-atendimento-joins-the-portuguese-set)**, which adds
+one name to its table
 
 **Context.** The English rule was never about English. It exists for a reader:
 the collaborator or the tool that does not read Portuguese and meets our text
@@ -1616,3 +1618,57 @@ address. `runbook.md` §6 loses the pre-flight line that protected it. The
 address becomes public in 39 repositories the moment the stamping pass runs, and
 **that is not reversible by editing a file afterwards**: it will be in their
 history.
+
+---
+
+## ADR-031 — `samirhvbr/blue3-atendimento` joins the Portuguese set
+
+**Status:** `ACCEPTED` · 29/10/2026 · Extends
+[ADR-020](#adr-020--the-blue3-internal-repositories-are-written-in-portuguese)
+by one name, through the route that ADR itself names for a repository outside
+`BLUE3-ISP`
+
+**Context.** The Atendimento Digital is Blue3's customer service channel: a web
+conversation page, WhatsApp through 360dialog and the customer app, meant to
+replace the OPA Suite. It was built inside `samirhvbr/blue3-intranet` from
+1.8.157 on. On 29/10/2026 the owner decided (D23, recorded in the intranet at
+1.8.212) that it becomes an application of its own, `samirhvbr/blue3-atendimento`,
+extracted before the pilot's F2c stage, while the pilot keeps running inside
+the intranet until then.
+
+By the owner rule, a repository created under `samirhvbr` with a name that is
+not in ADR-020's table is English (US) from its first commit. ADR-020 closes the
+other route on purpose: a repository outside `BLUE3-ISP` joins the Portuguese
+set by a new ADR, never by applying the test to itself.
+
+**Decision.** **`samirhvbr/blue3-atendimento` is written in Portuguese** —
+everything ADR-020 lists, from its first commit. The decision is the owner's,
+taken on 29/10/2026 before the repository existed, so no English history needs
+a boundary inside it. The name is matched whole, like the other two `samirhvbr`
+names: a future `samirhvbr/blue3-atendimento-*` is not in the set.
+
+**What arrives with it is already Portuguese.** The contract
+(`docs/ATENDIMENTO/ATENDIMENTO_DIGITAL.md`), the plan, the decisions and the
+queue (`.continue/ATENDIMENTO/`) move out of the intranet with the code, and all
+of it is written in Portuguese under ADR-020. That is context, not the reason:
+the reason is the owner's decision, and this ADR records it so that the set stays
+a written boundary.
+
+**Consequences.**
+
+- `pt_repository()` in `tools/fleet.sh` names it, both language-switch entries
+  list it, and `tools/test-fleet.sh` proves the whole-name match in both
+  directions — `blue3-atendimento` gets `LANGUAGE-RULE-PT`,
+  `blue3-atendimento-app` does not. The new assertion fails against the 1.19.6
+  matcher.
+- [conventions.md §8](conventions.md#the-blue3-internal-repositories-are-written-in-portuguese)
+  lists it in the table, and this repository's twins name it.
+- **Both `LANGUAGE-RULE` variants change text**, because both enumerate the set.
+  Every copy already stamped across the fleet is one name short until the next
+  `tools/fleet.sh echo --apply --block LANGUAGE-RULE` pass. That pass commits
+  and pushes in every repository it reaches, and it is not part of this
+  delivery: it waits for the owner's go.
+- The new repository is bootstrapped Portuguese from `0.1.0`. It carries
+  `LANGUAGE-RULE-PT`, `QUEUE-RULE-PT` and `CICD-RULE-PT`; `COMMIT-RULE` and
+  `RELEASES-RULE` have no Portuguese variant and arrive in English, as they do in
+  the intranet.

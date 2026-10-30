@@ -134,9 +134,10 @@ excluded_reason() {   # $1 = remote url
 }
 
 # The repositories written in Portuguese: the boundary is the owner on GitHub,
-# not the folder and not the name (ADR-020).
+# not the folder and not the name (ADR-020). A samirhvbr repository enters the
+# set only by name, through an ADR of its own (ADR-031: blue3-atendimento).
 #
-# The two samirhvbr repositories are matched by their WHOLE name, never as a
+# The samirhvbr repositories are matched by their WHOLE name, never as a
 # prefix. Until 1.19.4 the pattern was `samirhvbr/blue3-intranet*`, which was
 # harmless while every `blue3-intranet-*` sibling lived under BLUE3-ISP. On
 # 23/10/2026 `blue3-intranet-lscripts` and `blue3-intranet-ntheme` moved to
@@ -148,7 +149,7 @@ pt_repository() {   # $1 = remote url
   path="${path%/}"; path="${path%.git}"
   case "$path" in
     BLUE3-ISP/*) return 0 ;;
-    samirhvbr/blue3-intranet|samirhvbr/blue3-ai-login) return 0 ;;
+    samirhvbr/blue3-intranet|samirhvbr/blue3-ai-login|samirhvbr/blue3-atendimento) return 0 ;;
   esac
   return 1
 }
@@ -687,9 +688,9 @@ As regras marcadas de \`CLAUDE.md\` e \`AGENTS.md\` são reescritas a partir da
 fonte única em [samirhvbr/repodocs](https://github.com/samirhvbr/repodocs), e
 desta vez a variante muda: o repositório carregava os blocos em inglês, e o
 \`origin\` agora aponta para \`$slug\`, que está no conjunto escrito em português
-(\`BLUE3-ISP/*\`, \`samirhvbr/blue3-intranet\`, \`samirhvbr/blue3-ai-login\`). O
-idioma de um repositório segue o dono no GitHub, então todo bloco que tem
-variante em português chega em português.
+(\`BLUE3-ISP/*\`, \`samirhvbr/blue3-intranet\`, \`samirhvbr/blue3-ai-login\`,
+\`samirhvbr/blue3-atendimento\`). O idioma de um repositório segue o dono no
+GitHub, então todo bloco que tem variante em português chega em português.
 
 Só os blocos mudam neste commit. O texto fora dos marcadores é do próprio
 repositório, e o histórico não se reescreve.
@@ -703,9 +704,9 @@ The marked rules in \`CLAUDE.md\` and \`AGENTS.md\` are rewritten from the singl
 source at [samirhvbr/repodocs](https://github.com/samirhvbr/repodocs), and this
 time the variant changes: the repository carried the Portuguese blocks, and
 \`origin\` now names \`$slug\`, which is outside the Portuguese set
-(\`BLUE3-ISP/*\`, \`samirhvbr/blue3-intranet\`, \`samirhvbr/blue3-ai-login\`). The
-language of a repository follows its owner on GitHub, so every block that has a
-Portuguese variant arrives in English (US).
+(\`BLUE3-ISP/*\`, \`samirhvbr/blue3-intranet\`, \`samirhvbr/blue3-ai-login\`,
+\`samirhvbr/blue3-atendimento\`). The language of a repository follows its owner
+on GitHub, so every block that has a Portuguese variant arrives in English (US).
 
 Only the blocks change in this commit. Text written outside the markers is the
 repository's own, and history is not rewritten: Portuguese messages and

@@ -11,11 +11,11 @@ pull request, issues, comentários de código, entradas de changelog, notas de
 release.
 
 Este é um dos dois repositórios-exceção da regra de inglês da frota, e a
-fronteira é o **dono no GitHub**: `BLUE3-ISP/*`, `samirhvbr/blue3-intranet` e
-`samirhvbr/blue3-ai-login`. O motivo é o leitor: ninguém de fora da empresa abre
-estes repositórios, e boa parte do que se escreve neles é raciocínio operacional
-— um incidente, uma fila, um runbook — onde a precisão da frase é o valor.
-Traduzir custa mais do que rende.
+fronteira é o **dono no GitHub**: `BLUE3-ISP/*`, `samirhvbr/blue3-intranet`,
+`samirhvbr/blue3-ai-login` e `samirhvbr/blue3-atendimento`. O motivo é o leitor:
+ninguém de fora da empresa abre estes repositórios, e boa parte do que se
+escreve neles é raciocínio operacional — um incidente, uma fila, um runbook —
+onde a precisão da frase é o valor. Traduzir custa mais do que rende.
 
 **Só o idioma muda.** Formato do commit: `X.Y.Z - descrição curta em português`.
 A versão vem do `version.md` e é bumpada no mesmo commit. Prefixos de
