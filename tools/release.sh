@@ -115,17 +115,18 @@ fi
 BRANCH="$(git symbolic-ref --quiet --short HEAD 2>/dev/null || echo master)"
 
 # --- release notes ------------------------------------------------------------
-# Preference: the CHANGELOG section for this version → the commit subjects that
-# carried it → GitHub's own generated notes. EOP has no CHANGELOG.md at all, so
-# the fallback is not theoretical.
+# Preference: all CHANGELOG sections for this exact version at the release's
+# target commit → the commit subjects that carried it → GitHub's own generated
+# notes. The working tree may contain another version or unpublished edits.
+# EOP has no CHANGELOG.md at all, so the fallback is not theoretical.
 #
 # Two heading shapes exist in this fleet, and both are matched:
 #   ## 1.1.0 - título
 #   ### `0.17.0` — 2026-08-24 — título
 notes_for() {
-  local ver="$1" sha="$2" out="$3" body=""
-  if [ -f CHANGELOG.md ]; then
-    body="$(awk -v ver="$ver" '
+  local ver="$1" sha="$2" out="$3" body="" changelog=""
+  if changelog="$(git show "$sha:CHANGELOG.md" 2>/dev/null)"; then
+    body="$(printf '%s\n' "$changelog" | awk -v ver="$ver" '
       # Returns the heading level (2..4), or 0 for a non-heading line.
       function hlevel(line,   m) {
         if (match(line, /^#{2,4}[ \t]/)) { m = substr(line, 1, RLENGTH); gsub(/[ \t]/, "", m); return length(m) }
@@ -135,19 +136,27 @@ notes_for() {
       # fleet writes both `## 1.1.0 - x` and "### `0.17.0` - 2026-08-24 - x".
       function is_ours(line,   s) {
         s = line; sub(/^#+[ \t]*/, "", s); gsub(/`/, "", s)
-        return index(s, ver) == 1
+        return s == ver || index(s, ver " ") == 1 || index(s, ver "\t") == 1
       }
       { lv = hlevel($0)
-        if (!flag) { if (lv && is_ours($0)) { flag = 1; open_lv = lv } ; next }
         # Only a heading at the SAME level or higher ends the section — the
         # entry keeps its own ### subsections, which is where the substance is.
-        if (lv && lv <= open_lv) exit
+        if (flag && lv && lv <= open_lv) flag = 0
+        # Several commits may share a version; keep every matching section,
+        # including those after a different version, in changelog order.
+        if (!flag) {
+          if (lv && is_ours($0)) {
+            if (found++) print ""
+            flag = 1; open_lv = lv
+          }
+          next
+        }
         print }
-    ' CHANGELOG.md)"
+    ')"
   fi
   if [ -z "$(printf '%s' "$body" | tr -d '[:space:]')" ]; then
     body="$(git log --format='- %s' --grep="^$(printf '%s' "$ver" | sed 's/\./\\./g') - " "$sha" 2>/dev/null | head -n 40)"
-    [ -n "$body" ] && body="## Commits$(printf '\n\n')$body"
+    [ -n "$body" ] && body="## Commits"$'\n\n'"$body"
   fi
   printf '%s\n' "$body" > "$out"
   [ -s "$out" ] && [ -n "$(tr -d '[:space:]' < "$out")" ]

@@ -404,10 +404,13 @@ translate between the file, the tag and the Release.
 
 In order, first hit wins:
 
-1. **The `CHANGELOG.md` section for that version** — from its heading down to
-   the next heading *at the same level or higher*, so the entry keeps its own
-   `###` subsections, which is where the substance is. Both fleet heading shapes
-   are matched: `## 1.1.0 - título` and `` ### `0.17.0` — 2026-08-24 — título ``.
+1. **Every `CHANGELOG.md` section for that exact version, read from the release's
+   target commit** — never from the working tree or a later commit. Each section
+   runs from its heading down to the next heading *at the same level or higher*,
+   so the entry keeps its own `###` subsections. Several entries sharing one
+   version are included in changelog order; `1.2.3` never selects `1.2.30`. Both
+   fleet heading shapes are matched: `## 1.1.0 - title` and
+   `` ### `0.17.0` — 2026-08-24 — title ``.
 2. **The commit subjects carrying that version**, when there is no matching
    section. EOP has no `CHANGELOG.md` at all, so this is not a theoretical path.
 3. **GitHub's generated notes**, as the last resort.

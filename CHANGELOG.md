@@ -9,6 +9,26 @@ at `git commit` time.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 1.19.8 - preserve Markdown line breaks in fallback release notes
+
+The commit-subject fallback concatenated its heading with the first list item because
+command substitution stripped the requested trailing newlines. Keep those newlines as
+literal shell text. Two added regression assertions fail before the correction; all
+eighteen committed-notes checks pass afterward, using local Git fixtures and a stub
+publisher. The generated template and repository copy remain identical.
+
+## 1.19.8 - derive release notes from the committed target version
+
+The release helper read CHANGELOG.md from the working tree, matched version prefixes and
+stopped at the first matching entry. That could publish uncommitted or later text, select
+1.2.30 for 1.2.3, or omit other commits sharing a version. Notes now come from the release
+target commit, match the complete version token and include every matching section in
+changelog order. Nested subsections and the existing fallback chain remain supported.
+
+The repository helper and skeleton template are identical. A regression script runs the
+real helper against temporary Git repositories and a stub publisher: nine checks failed
+before the correction and all sixteen passed after it. Shell syntax, mirrored-file and
+whitespace checks passed. No GitHub release was created or edited during validation.
 ## 1.19.7 - samirhvbr/blue3-atendimento joins the Portuguese set by ADR-031
 
 The owner decided on 29/10/2026 that the Atendimento Digital, leaving the
