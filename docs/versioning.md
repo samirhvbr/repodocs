@@ -456,7 +456,16 @@ up with two versions, one of them wrong.
 It is **idempotent and resumable by construction** — anything already published
 is skipped, so re-running is free and an interrupted run simply continues. It
 throttles, and it **stops and reports** when the API budget runs low rather than
-exhausting it.
+exhausting it. A failed release-list read is not treated as an empty list, and an
+unreadable or malformed API budget is not permission to continue. Quota stops
+and other incomplete runs return a nonzero status, including after a partial
+backfill; rerunning skips the releases already published.
+
+Success also requires confirming the `Latest` badge. A failed read, failed edit,
+unconfirmed edit or failed final tag refresh is reported as failure. If the
+remote advances during a run to a version with no release yet, the run reports
+that gap and stops; it does not publish the newly arrived version implicitly.
+An existing legacy `v`-prefixed release is reused when reconciling the badge.
 
 In `--backfill`, for each distinct version the tag points at the **last** commit
 that carried it — the finished state of that version, not its first commit.

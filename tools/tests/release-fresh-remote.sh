@@ -24,8 +24,10 @@ case "$1 $2" in
     if [ -n "${FIXTURE_ADVANCE_SHA:-}" ]; then
       git --git-dir="$FIXTURE_REMOTE" update-ref refs/heads/master "$FIXTURE_ADVANCE_SHA"
     fi ;;
-  'release view') printf '%s\n' "$FIXTURE_LATEST" ;;
-  'release edit') : ;;
+  'release view')
+    if [ -f "$FIXTURE_CAPTURE/latest" ]; then cat "$FIXTURE_CAPTURE/latest"
+    else printf '%s\n' "$FIXTURE_LATEST"; fi ;;
+  'release edit') printf '%s\n' "$3" > "$FIXTURE_CAPTURE/latest" ;;
   'release create')
     version="$3"; target=""; latest="unspecified"; shift 3
     while [ "$#" -gt 0 ]; do

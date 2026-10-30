@@ -9,6 +9,30 @@ at `git commit` time.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 1.19.10 - model confirmed Latest edits in the combined release fixtures
+
+The freshness fixture now persists the badge edit made by its publisher stub, so the
+failure-status helper can verify the result as it does with the real API. This keeps the
+mid-run remote-advance scenario meaningful when both fixes are tested together. All
+34 failure-status, 15 freshness and 18 notes assertions pass in the combined helper;
+source/copy equality, shell syntax and whitespace checks also pass. No real publisher
+or remote service was used.
+
+## 1.19.10 - return failure when release publication or verification is incomplete
+
+An unread release list was treated as empty, an unread rate budget became unlimited, and
+quota stops could finish successfully without publishing. The helper now refuses unknown
+release state and invalid or insufficient budgets, returns failure after partial work, and
+skips badge mutations after a publication failure. Reconciliation confirms Latest after an
+edit, reuses existing legacy tags and reports a remote version with no release as an
+incomplete run. The final tag refresh explicitly uses origin and must succeed.
+
+The failure-status fixture reproduces 21 failing assertions before the correction and
+passes all 34 afterward, including resumable partial backfills without duplicate releases.
+All 18 committed-notes and 15 fresh-remote checks also pass after incorporating their
+reviewed fixes. Shell syntax, source/copy equality and whitespace checks pass. All remotes
+and publisher calls are local fixtures; no real release was created or edited.
+
 ## 1.19.9 - fetch the remote default even when the configured refspec excludes it
 
 A successful fetch can leave the default tracking branch stale when remote.origin.fetch
