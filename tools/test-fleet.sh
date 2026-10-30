@@ -143,12 +143,19 @@ mkdir -p "$ROOT3"
 make_repo "$ROOT3/intranet" 'git@github.com:samirhvbr/blue3-intranet.git'
 make_repo "$ROOT3/sibling"  'https://github.com/samirhvbr/blue3-intranet-lscripts.git'
 make_repo "$ROOT3/moved"    'https://github.com/BLUE3-ISP/blue3-rpi.git'
+# ADR-031 added a third samirhvbr name; it gets the same whole-name test.
+make_repo "$ROOT3/atendimento" 'git@github.com:samirhvbr/blue3-atendimento.git'
+make_repo "$ROOT3/atd-sibling" 'https://github.com/samirhvbr/blue3-atendimento-app.git'
 FLEET_OWNERS="samirhvbr BLUE3-ISP" "$FLEET" echo --root "$ROOT3" --apply --no-push >/dev/null 2>&1 \
   || fail "the pass over the name-boundary fixture failed"
 grep -q '^## Idioma — este repositório é escrito em português' "$ROOT3/intranet/CLAUDE.md" \
   || fail "samirhvbr/blue3-intranet lost its Portuguese block"
 grep -q '^## Language — English (US)' "$ROOT3/sibling/CLAUDE.md" \
   || fail "samirhvbr/blue3-intranet-lscripts was read as blue3-intranet: a prefix match"
+grep -q '^## Idioma — este repositório é escrito em português' "$ROOT3/atendimento/CLAUDE.md" \
+  || fail "samirhvbr/blue3-atendimento did not get the Portuguese block (ADR-031)"
+grep -q '^## Language — English (US)' "$ROOT3/atd-sibling/CLAUDE.md" \
+  || fail "samirhvbr/blue3-atendimento-app was read as blue3-atendimento: a prefix match"
 ok "the samirhvbr repositories of the Portuguese set are matched whole, not as a prefix"
 
 # The move: same clone, origin now names the new owner. The next pass must swap

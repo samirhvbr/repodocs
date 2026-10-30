@@ -16,10 +16,11 @@ Commit format: `X.Y.Z - short description in English`. The version comes from
 **Three carve-outs, and only three.** The first is end-user-facing strings — UI
 text, transactional email, product copy: product i18n for a Brazilian audience,
 not repository content. The second is the **Blue3 internal repositories**
-(`BLUE3-ISP/*`, `samirhvbr/blue3-intranet`, `samirhvbr/blue3-ai-login`), which
-are Portuguese throughout — if you are reading this block inside one of them,
-this is the wrong block: they carry `LANGUAGE-RULE-PT`. A repository joins that
-set by a written decision, never by argument.
+(`BLUE3-ISP/*`, `samirhvbr/blue3-intranet`, `samirhvbr/blue3-ai-login`,
+`samirhvbr/blue3-atendimento`), which are Portuguese throughout — if you are
+reading this block inside one of them, this is the wrong block: they carry
+`LANGUAGE-RULE-PT`. A repository joins that set by a written decision, never by
+argument.
 
 **The third is `.continue/`.** The queue is written in the language its author
 thinks in, and becomes English (US) when the work is **produced** and the

@@ -9,7 +9,7 @@ at `git commit` time.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
-## 1.19.7 - preserve Markdown line breaks in fallback release notes
+## 1.19.8 - preserve Markdown line breaks in fallback release notes
 
 The commit-subject fallback concatenated its heading with the first list item because
 command substitution stripped the requested trailing newlines. Keep those newlines as
@@ -17,7 +17,7 @@ literal shell text. Two added regression assertions fail before the correction; 
 eighteen committed-notes checks pass afterward, using local Git fixtures and a stub
 publisher. The generated template and repository copy remain identical.
 
-## 1.19.7 - derive release notes from the committed target version
+## 1.19.8 - derive release notes from the committed target version
 
 The release helper read CHANGELOG.md from the working tree, matched version prefixes and
 stopped at the first matching entry. That could publish uncommitted or later text, select
@@ -29,6 +29,22 @@ The repository helper and skeleton template are identical. A regression script r
 real helper against temporary Git repositories and a stub publisher: nine checks failed
 before the correction and all sixteen passed after it. Shell syntax, mirrored-file and
 whitespace checks passed. No GitHub release was created or edited during validation.
+## 1.19.7 - samirhvbr/blue3-atendimento joins the Portuguese set by ADR-031
+
+The owner decided on 29/10/2026 that the Atendimento Digital, leaving the
+intranet for a repository of its own, is written in Portuguese. ADR-020 lets a
+repository outside BLUE3-ISP into the set only by a new ADR, so ADR-031 records
+it, and ADR-020 points to it. The conventions table, this repository's twins,
+both LANGUAGE-RULE variants, their copies in the twins and in the skeleton,
+`templates/README.md` and the two language-switch entries of `tools/fleet.sh`
+name the new repository. `pt_repository()` matches it whole: the new fixture in
+`tools/test-fleet.sh` proves `blue3-atendimento` gets the Portuguese block and
+`blue3-atendimento-app` does not. That assertion fails against the 1.19.6
+matcher; with the change, all 12 assertions pass.
+
+The LANGUAGE-RULE text changed, so the copies already stamped across the fleet
+are one name short. The stamping pass was not run: it commits and pushes in
+every repository it reaches, and it waits for the owner.
 
 ## 1.19.6 - documentation maps reflect the current queue and echo rules
 
