@@ -328,10 +328,12 @@ mid-work, and none of that is published — GitHub cannot tag a commit it does n
 have, and a Release for a version nobody can fetch is a lie.
 
 So the authority is the **remote default branch**, not the working tree.
-`tools/release.sh` reads `version.md` from `origin/<default>` and tags that
-commit; when the remote branch is not resolvable — the CI case, where `HEAD`
-*is* the pushed commit — it falls back to `HEAD`. If the local file disagrees, it
-says so and publishes the remote's number anyway.
+`tools/release.sh` refreshes `origin`, resolves its default branch, and pins that
+commit before reading `version.md` or publishing. A missing or stale tracking
+ref never selects the local `HEAD`; a failed refresh stops the run. This also
+applies in CI. If the local file disagrees, the helper says so and publishes the
+remote's number anyway. An explicit `--ref` selects a history to walk, while the
+`Latest` badge still belongs to the version on the remote default branch.
 
 **What that looks like in practice.** An agent opens a PR at `1.3.25`. Nothing is
 published while it is a PR — the version is not on the default branch yet. The

@@ -28,7 +28,7 @@ case "$1 $2" in
         --generate-notes) touch "$FIXTURE_CAPTURE/generated" ;;
         --target) printf '%s\n' "$2" > "$FIXTURE_CAPTURE/target"; shift ;;
         --repo|--title) shift ;;
-        --latest) : ;;
+        --latest|--latest=false) : ;;
         *) echo "unexpected create argument: $1" >&2; exit 2 ;;
       esac
       shift

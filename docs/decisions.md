@@ -324,10 +324,13 @@ COMMITTER skill right after its own push succeeds. Both call the same
 
 **The authority is the remote, never the working tree** — stated by the owner as
 *"o version.md do GitHub = Releases do GitHub"*. `release.sh` reads `version.md`
-from `origin/<default branch>` and tags that commit, falling back to `HEAD` only
-when the remote ref is not resolvable (the CI case, where `HEAD` **is** the
-pushed commit). A local file that disagrees produces a note, not a different
-Release.
+from a freshly resolved `origin/<default branch>` and tags that exact commit. A
+local file that disagrees produces a note, not a different Release.
+
+**Implementation correction, 29/10/2026 (1.19.8):** the original fallback to local
+`HEAD` could select unpublished topic work when the tracking default was missing.
+The helper now refreshes and resolves the remote default before selecting a version,
+including in CI, and stops if it cannot. The remote-authority decision is unchanged.
 
 This is what makes the PR flow work with nothing to remember: a branch at
 `1.3.25` publishes nothing while it is a branch; the merge pushes `version.md`

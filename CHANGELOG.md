@@ -9,6 +9,29 @@ at `git commit` time.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 1.19.9 - fetch the remote default even when the configured refspec excludes it
+
+A successful fetch can leave the default tracking branch stale when remote.origin.fetch
+covers only another branch. The independent review reproduced publication of the old
+version with a successful status. Refresh now resolves the advertised default and fetches
+that branch explicitly before selecting it, both at startup and during reconciliation.
+Four new assertions fail on the previous helper; all fifteen freshness checks and sixteen
+notes checks pass. Validation uses only local remotes and a stub publisher.
+
+## 1.19.9 - select release targets from the refreshed remote default branch
+
+The helper selected its version before refreshing origin, so stale tracking refs could omit
+a pushed version and a missing default ref could publish local topic work. It now refreshes
+origin, resolves the remote default and pins the selected commit before reading version.md.
+The notes, version and release target stay together even if a later fetch moves a tracking
+ref. Explicit historical refs cannot take the current default version's Latest badge.
+A failed refresh stops before any GitHub operation; the remote-authority rule also applies
+in CI.
+
+Seven checks failed against the previous helper. The new local-remote/stub-publisher script
+passes all nine checks, and all sixteen committed-notes checks still pass. Shell syntax,
+source/copy equality and whitespace checks pass. No real release was created or edited.
+
 ## 1.19.8 - preserve Markdown line breaks in fallback release notes
 
 The commit-subject fallback concatenated its heading with the first list item because
